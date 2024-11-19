@@ -1,0 +1,86 @@
+# Virtual environment
+venv/
+env/
+django_env/
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django stuff:
+db.sqlite3
+db.sqlite3-journal
+
+# Django migrations
+**/migrations/
+!**/migrations/__init__.py
+
+# Static files and media uploads
+staticfiles/
+media/
+
+# Environment variables
+.env
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# macOS files
+.DS_Store
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+
+# pytest cache
+.pytest_cache/
+
+# MyPy cache
+.mypy_cache/
+
+# Logs and reports
+*.log
+*.pot
+coverage.xml
+*.out
+*.err
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# If using Docker
+docker-compose.override.yml
+.docker/
+
+# Other
+*.bak
+
+# Node.js dependencies
+node_modules/
+
+# Production build output
+dist/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Optional cache directories
+.cache/
+.vite/
+
+# IDE files
+.vscode/
+.idea/
+.DS_Store
+
+# Environment variables
+.env
+.env.local
+.env.*.local
