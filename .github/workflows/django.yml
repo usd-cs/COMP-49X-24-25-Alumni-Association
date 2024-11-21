@@ -29,6 +29,8 @@ jobs:
         python -m pip install Django
     - name: Run Tests
       run: |
+        pwd
+        ls
         cd AlumniProject
         cd AlumniProject
         python manage.py test
