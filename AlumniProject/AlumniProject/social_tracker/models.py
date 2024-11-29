@@ -1,6 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
-from datetime import datetime
+
 
 class Post(models.Model):
     post_ID = models.AutoField(primary_key=True)
@@ -12,4 +11,4 @@ class Post(models.Model):
     num_saves = models.IntegerField(default=0)
 
     class Meta:
-        ordering = ['-date_posted']
+        ordering = ["-date_posted"]
