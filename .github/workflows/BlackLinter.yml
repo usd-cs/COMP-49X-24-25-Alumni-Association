@@ -35,6 +35,9 @@ jobs:
         #that the linter also doesn't agree with. The linter will still process over all of the code that
         #we are actually writing.
 
+      - name: Checkout the branch
+        run: git checkout ${{ github.ref_name }}
+
       - name: Commit and Push Changes
         run: |
           git config --global user.name "GitHub Actions"
