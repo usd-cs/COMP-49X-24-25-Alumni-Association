@@ -35,15 +35,12 @@ jobs:
         #that the linter also doesn't agree with. The linter will still process over all of the code that
         #we are actually writing.
 
-      - name: Checkout the branch
-        run: git checkout ${{ github.ref_name }}
-
       - name: Commit and Push Changes
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add .
           git commit -m "Auto-fix Python code issues with Black"
-          git push
+          git push origin ${{ github.head_ref }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
