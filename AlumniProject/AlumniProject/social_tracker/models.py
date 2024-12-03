@@ -12,3 +12,4 @@ class Post(models.Model):
 
     class Meta:
         ordering = ["-date_posted"]
+        app_label = "social_tracker"
