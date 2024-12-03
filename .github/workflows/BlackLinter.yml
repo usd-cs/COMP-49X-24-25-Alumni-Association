@@ -29,7 +29,7 @@ jobs:
         run: black .
 
       - name: Run Flake8 (Linting)
-        run: flake8 . --exclude settings.py,dev.py,prod.py
+        run: flake8 . --exclude settings.py,dev.py,prod.py,AlumniProject/AlumniProject/AlumniProject/settings/__init__.py
         #These are necessary to ignore because we need to import the entire settings into the dev, prod
         #files but the linter doesn't like this. Settings.py is also set up by Django and has some lines
         #that the linter also doesn't agree with. The linter will still process over all of the code that
