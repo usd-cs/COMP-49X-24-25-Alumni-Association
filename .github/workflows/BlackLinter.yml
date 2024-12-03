@@ -1,0 +1,49 @@
+name: Lint and Auto-Fix Python Code
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11.3"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black flake8
+      
+      - name: Run Black (Auto-Fix Code)
+        run: black .
+
+      - name: Run Flake8 (Linting)
+        run: flake8 . --exclude settings.py,dev.py,prod.py
+        #These are necessary to ignore because we need to import the entire settings into the dev, prod
+        #files but the linter doesn't like this. Settings.py is also set up by Django and has some lines
+        #that the linter also doesn't agree with. The linter will still process over all of the code that
+        #we are actually writing.
+
+      - name: Checkout the PR source branch
+        run: git checkout ${{ github.head_ref }}
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add .
+          git commit -m "Auto-fix Python code issues with Black"
+          git push origin ${{ github.head_ref }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
