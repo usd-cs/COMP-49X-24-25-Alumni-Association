@@ -6,10 +6,10 @@ from django.contrib.auth.models import User
 
 
 """
-Test cases for the database. Django TestCase creates a mock temporary 
-mock database for the tests.Therefore, none of these test values are being put 
+Test cases for the database. Django TestCase creates a mock temporary
+mock database for the tests.Therefore, none of these test values are being put
 into the actual db.sqlite3 file that will be used for our live database.
-We are using the Django built in User model as well as the Post model 
+We are using the Django built in User model as well as the Post model
 defined in models.py.
 """
 class DatabaseTest(TestCase):
