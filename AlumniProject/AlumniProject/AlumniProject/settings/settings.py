@@ -12,7 +12,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 import os
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_DIR = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 
@@ -20,7 +22,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-@f2$%4ssc@6@#%)a9b&4gy=@ygc_r%wkow@ygu*%(#nc&3&7pd"
+SECRET_KEY = (
+    "django-insecure-@f2$%4ssc@6@#%)a9b&4gy=@ygc_r%wkow@ygu*%(#nc&3&7pd"
+)
 
 # SECURITY WARNING: don"t run with debug turned on in production!
 DEBUG = True
@@ -69,7 +73,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "AlumniProject.wsgi.application"
-USE_TZ = True #enable timezone support
+USE_TZ = True  # enable timezone support
 
 
 # Database

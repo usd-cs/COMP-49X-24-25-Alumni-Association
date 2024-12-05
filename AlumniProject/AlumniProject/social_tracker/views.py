@@ -7,6 +7,7 @@ import json
 
 ACCESS_TOKEN = None
 
+
 @csrf_exempt
 def save_access_token(request):
     """
@@ -20,9 +21,11 @@ def save_access_token(request):
         access_token_value = data.get("access_token")
 
         if not access_token_value:
-            return JsonResponse({"message": "Access token required."}, status=400)
+            return JsonResponse(
+                {"message": "Access token required."}, status=400
+            )
 
-        #save new access token- save function should delete old one automatically in the model
+        # save new access token- save function should delete old one automatically in the model
         access_token = AccessToken(token=access_token_value)
         access_token.save()
 
@@ -34,7 +37,8 @@ def save_access_token(request):
 def get_posts_view(request):
     access_token = AccessToken.objects.get()
     result = get_instagram_posts(access_token.token)
-    return JsonResponse({'message': result})
+    return JsonResponse({"message": result})
+
 
 def export_csv_view(request):
     return export_posts_to_csv()

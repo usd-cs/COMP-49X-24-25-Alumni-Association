@@ -19,7 +19,7 @@ class AccessToken(models.Model):
     token = models.TextField()
 
     def save(self, *args, **kwargs):
-        #there can only be one access token at once
+        # there can only be one access token at once
         if AccessToken.objects.exists() and not self.pk:
             AccessToken.objects.all().delete()
         super().save(*args, **kwargs)
