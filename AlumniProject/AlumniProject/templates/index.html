@@ -5,9 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Get Instagram Posts</title>
     <script>
+        async function saveAccessToken() {
+            // get access token value from input field
+            const accessToken = document.getElementById("accessToken").value;
+            if (!accessToken) {
+                alert("Please enter a valid access token.");
+                return;
+            }
+
+            try {
+                const response = await fetch("{% url 'save-access-token' %}", { //send access token to save-access-token endpoint
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}" // CSRF token for security
+                    },
+                    body: JSON.stringify({ access_token: accessToken }) // send token in request body
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(data.message); // display response message
+                } else {
+                    alert("unable to save access token. Please try again.");
+                }
+            } catch (error) {
+                console.error("Error occured while saving access token:", error);
+                alert("error occurred while saving access token.");
+            }
+        }
+
         async function getPosts() {
             try {
-
                 const response = await fetch("{% url 'get-posts' %}"); //wait for call to get post
                 if (response.ok) {
                     const data = await response.json();
@@ -29,6 +58,14 @@
 </head>
 <body>
     <h1>Get Instagram Post Info</h1>
+    
+    <div>
+        <label for="accessToken">Access Token:</label>
+        <!-- input field to enter access token -->
+        <input type="text" id="accessToken" placeholder="Enter your access token here" style="width: 300px;">
+        <button onclick="saveAccessToken()">Save Access Token</button> <!-- button to save access token -->
+    </div>
+    <br>
     <button onclick="getPosts()">Get Instagram Posts</button>
     <button onclick="exportCSV()">Export Posts to CSV</button>
 </body>
