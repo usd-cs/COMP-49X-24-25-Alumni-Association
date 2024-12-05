@@ -5,9 +5,10 @@ from social_tracker.models import Post
 
 def get_instagram_posts(access_token, num_posts=5):
     """
-    Gets recent Instagram posts using the provided access token and adds them to the database.
-    This function makes a GET request to the Instagram API to retrieve recent post data.
-    Any post not already in in the database is added.
+    Gets recent Instagram posts using the provided access token 
+    and adds them to the database. This function makes a GET request 
+    to the Instagram API to retrieve recent post data. Any post not 
+    already in in the database is added.
 
     Parameters:
     - access_token (str): A valid access token for the Instagram API.
@@ -24,7 +25,9 @@ def get_instagram_posts(access_token, num_posts=5):
     """
     url = "https://graph.instagram.com/me/media"
     params = {
-        "fields": "id,caption,media_url,media_type,timestamp,permalink,like_count,comments_count",
+        "fields": (
+            "id, caption,media_url,media_type,"
+            "timestamp,permalink,like_count,comments_count"),
         "access_token": access_token,
     }
 
