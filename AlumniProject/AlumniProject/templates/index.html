@@ -1,15 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Instagram Posts</title>
+    <script>
+        async function getPosts() {
+            try {
+
+                const response = await fetch("{% url 'get-posts' %}"); //wait for call to get post
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(data.message); 
+                } else {
+                    alert("unable to get posts. Please try again.");
+                }
+            } catch (error) {
+                console.error("Error occured wn getting posts:", error);
+                alert(" error occurred while getting posts.");
+            }
+        }
+
+        function exportCSV() {
+            //export csv end point prompts download of file
+            window.location.href = "{% url 'export-csv' %}";
+        }
+    </script>
 </head>
-
 <body>
-  Hello World
+    <h1>Get Instagram Post Info</h1>
+    <button onclick="getPosts()">Get Instagram Posts</button>
+    <button onclick="exportCSV()">Export Posts to CSV</button>
 </body>
-
 </html>

@@ -69,6 +69,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "AlumniProject.wsgi.application"
+USE_TZ = True #enable timezone support
 
 
 # Database
