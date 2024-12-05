@@ -5,7 +5,12 @@ from social_tracker.models import Post
 
 def export_posts_to_csv():
     """
-    Exports all post data from the Post model into a CSV file.
+    Exports all post data from the Post model in database to a CSV file.
+    Gets all records from the Post model and writes the data into a CSV file.
+    The file is returned in the HTTP response as a csv content downloable file
+
+    Returns:
+    - HttpResponse: A response containing the CSV file for download.
     """
     # creates HTTP response object that is CSV content type
     response = HttpResponse(content_type="text/csv")

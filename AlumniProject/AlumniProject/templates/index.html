@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Get Instagram Posts</title>
     <script>
+        /**
+         * Saves user-inputted access token to the database.
+         * Retrieves the access token from an input field and sends it to the server using a POST request. 
+         * Displays success or failure messages based on the server's response.
+         *
+         * @returns {void}
+         */
         async function saveAccessToken() {
             //get access token value from input field
             const accessToken = document.getElementById("accessToken").value;
@@ -35,6 +42,12 @@
             }
         }
 
+        /**
+         * Gets post data from the backend. Makes a GET request to retrieve posts and displays
+         * the server's response message as an alert overlay.
+         *
+         * @returns {void}
+         */
         async function getPosts() {
             try {
                 const response = await fetch("{% url 'get-posts' %}"); //wait for call to get post
@@ -49,9 +62,13 @@
                 alert(" error occurred while getting posts.");
             }
         }
-
+        /**
+         * Button function to export posts to csv file. Calls the export-csv url to
+         * run the script that generates the downloadable csv file.
+         *
+         * @returns {void}
+         */
         function exportCSV() {
-            //export csv end point prompts download of file
             window.location.href = "{% url 'export-csv' %}";
         }
     </script>
