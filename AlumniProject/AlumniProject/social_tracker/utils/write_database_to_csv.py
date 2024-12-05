@@ -15,7 +15,7 @@ def export_posts_to_csv():
     # creates HTTP response object that is CSV content type
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = (
-        'attachment; filename="posts.csv"'  
+        'attachment; filename="posts.csv"'
         # attachment content-disposition tells browser to download the file
     )
 

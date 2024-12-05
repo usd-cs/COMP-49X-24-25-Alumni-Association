@@ -5,9 +5,9 @@ from social_tracker.models import Post
 
 def get_instagram_posts(access_token, num_posts=5):
     """
-    Gets recent Instagram posts using the provided access token 
-    and adds them to the database. This function makes a GET request 
-    to the Instagram API to retrieve recent post data. Any post not 
+    Gets recent Instagram posts using the provided access token
+    and adds them to the database. This function makes a GET request
+    to the Instagram API to retrieve recent post data. Any post not
     already in in the database is added.
 
     Parameters:
@@ -27,7 +27,8 @@ def get_instagram_posts(access_token, num_posts=5):
     params = {
         "fields": (
             "id, caption,media_url,media_type,"
-            "timestamp,permalink,like_count,comments_count"),
+            "timestamp,permalink,like_count,comments_count"
+        ),
         "access_token": access_token,
     }
 
@@ -57,9 +58,7 @@ def get_instagram_posts(access_token, num_posts=5):
                         num_comments=num_comments,
                     )
                 else:
-                    print(
-                        f"Duplicate post, not added to database: {permalink}"
-                    )
+                    print(f"Duplicate post, not added: {permalink}")
 
             return "Posts processed successfully."
         else:

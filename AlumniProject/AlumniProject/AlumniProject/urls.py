@@ -26,6 +26,7 @@ urlpatterns = [
     path("get-posts/", views.get_posts_view, name="get-posts"),
     path("export-csv/", views.export_csv_view, name="export-csv"),
     path(
-        "save-access-token/", views.save_access_token, name="save-access-token"
+        "save-access-token/", views.save_access_token, 
+        name="save-access-token"
     ),
 ]

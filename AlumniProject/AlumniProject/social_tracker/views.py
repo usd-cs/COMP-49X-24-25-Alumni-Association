@@ -11,8 +11,8 @@ ACCESS_TOKEN = None
 @csrf_exempt
 def save_access_token(request):
     """
-    Accepts POST requests containing an access token and saves it to 
-    the database. It ensures that only one access token exists and 
+    Accepts POST requests containing an access token and saves it to
+    the database. It ensures that only one access token exists and
     automatically replaces the old tokenwhen a new one is provided.
 
     Parameters:
@@ -41,24 +41,22 @@ def save_access_token(request):
         # save function should delete old one automatically
         access_token.save()
 
-        return JsonResponse({"message": 
-                             "Access token saved successfully."})
+        return JsonResponse({"message": "Access token saved successfully."})
     except json.JSONDecodeError:
-        return JsonResponse({"message": "Invalid token."}, 
-                            status=400)
+        return JsonResponse({"message": "Invalid token."}, status=400)
 
 
 def get_posts_view(request):
     """
-    Fetches Instagram posts using the stored access token 
-    and uses it to call the Instagram API. The results of 
+    Fetches Instagram posts using the stored access token
+    and uses it to call the Instagram API. The results of
     the API call are returned as a JSON response.
 
     Parameters:
     - request: HttpRequest object.
 
     Returns:
-    - JsonResponse: A JSON response that is 
+    - JsonResponse: A JSON response that is
     the result of the API call.
     """
     access_token = AccessToken.objects.get()
@@ -68,7 +66,7 @@ def get_posts_view(request):
 
 def export_csv_view(request):
     """
-    Exports Instagram post data to a CSV file. 
+    Exports Instagram post data to a CSV file.
     Calls a script to export post data stored in the database to a CSV file.
 
     Parameters:
