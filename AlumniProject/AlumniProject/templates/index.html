@@ -6,7 +6,7 @@
     <title>Get Instagram Posts</title>
     <script>
         async function saveAccessToken() {
-            // get access token value from input field
+            //get access token value from input field
             const accessToken = document.getElementById("accessToken").value;
             if (!accessToken) {
                 alert("Please enter a valid access token.");
@@ -18,14 +18,14 @@
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "X-CSRFToken": "{{ csrf_token }}" // CSRF token for security
+                        "X-CSRFToken": "{{ csrf_token }}" //CSRF token
                     },
-                    body: JSON.stringify({ access_token: accessToken }) // send token in request body
+                    body: JSON.stringify({ access_token: accessToken }) //send token in request body to be saved
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    alert(data.message); // display response message
+                    alert(data.message); //display response message as a popup on screen
                 } else {
                     alert("unable to save access token. Please try again.");
                 }
