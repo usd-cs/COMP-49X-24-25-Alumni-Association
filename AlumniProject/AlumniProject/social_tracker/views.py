@@ -25,7 +25,7 @@ def save_access_token(request):
         - 405: If the request is invalid.
     """
     if request.method != "POST":
-        return JsonResponse({"message": "Invalid request."}, 
+        return JsonResponse({"message": "Invalid request."},
                             status=405)
 
     try:
@@ -35,7 +35,7 @@ def save_access_token(request):
         if not access_token_value:
             return JsonResponse(
                 {"message": "Access token required."},
-                  status=400
+                status=400
             )
 
         # save new access token
@@ -43,10 +43,10 @@ def save_access_token(request):
         # save function should delete old one automatically
         access_token.save()
 
-        return JsonResponse({"message": 
-             "Access token saved successfully."})
+        return JsonResponse({"message":
+                            "Access token saved successfully."})
     except json.JSONDecodeError:
-        return JsonResponse({"message": "Invalid token."}, 
+        return JsonResponse({"message": "Invalid token."},
                             status=400)
 
 
