@@ -25,7 +25,8 @@ def save_access_token(request):
         - 405: If the request is invalid.
     """
     if request.method != "POST":
-        return JsonResponse({"message": "Invalid request."}, status=405)
+        return JsonResponse({"message": "Invalid request."}, 
+                            status=405)
 
     try:
         data = json.loads(request.body)
@@ -43,9 +44,10 @@ def save_access_token(request):
         access_token.save()
 
         return JsonResponse({"message": 
-                             "Access token saved successfully."})
+             "Access token saved successfully."})
     except json.JSONDecodeError:
-        return JsonResponse({"message": "Invalid token."}, status=400)
+        return JsonResponse({"message": "Invalid token."}, 
+                            status=400)
 
 
 def get_posts_view(request):

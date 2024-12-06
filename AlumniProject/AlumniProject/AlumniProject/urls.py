@@ -22,14 +22,16 @@ from social_tracker import views
 
 urlpatterns = [
     path("", 
-         TemplateView.as_view(template_name="index.html")),
+         TemplateView.as_view(
+             template_name="index.html")),
     path("admin/", admin.site.urls),
     path("get-posts/", views.get_posts_view, 
          name="get-posts"),
     path("export-csv/", views.export_csv_view, 
          name="export-csv"),
     path(
-        "save-access-token/", views.save_access_token, 
+        "save-access-token/", 
+        views.save_access_token, 
         name="save-access-token"
     ),
 ]
