@@ -19,7 +19,7 @@ def save_access_token(request):
     - request: HttpRequest object that contains the access token.
 
     Returns:
-    - JsonResponse: A JSON response indicating success or failure
+    - JsonResponse: JSON response indicating success or failure
         - 200: If access token is saved successfully.
         - 400: If access token is missing or invalid.
         - 405: If the request is invalid.
