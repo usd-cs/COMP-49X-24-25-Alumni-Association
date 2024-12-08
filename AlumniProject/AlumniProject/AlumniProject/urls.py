@@ -17,9 +17,10 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from django.views.generic import TemplateView
+from social_tracker.views import user_login, home
 
 urlpatterns = [
-    path("", TemplateView.as_view(template_name="index.html")),
+    path("", home, name="home"),
+    path("login", user_login, name="login"),
     path("admin/", admin.site.urls),
 ]
