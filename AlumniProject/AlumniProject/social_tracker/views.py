@@ -27,10 +27,10 @@ def save_access_token(request):
     if request.method != "POST":
         return JsonResponse({"message": "Invalid request."},
                             status=405)
-
     try:
         data = json.loads(request.body)
         access_token_value = data.get("access_token")
+
 
         if not access_token_value:
             return JsonResponse(
