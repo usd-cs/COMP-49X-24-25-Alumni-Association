@@ -27,3 +27,12 @@ class LoginTests(TestCase):
     def test_bad_both(self):
         response = self.client.post(reverse("login"), {"email":"bad@sandiego.edu", "password":"notmypass"})
         self.assertEqual(response.status_code, 401)
+    
+    def test_home_logged_in(self):
+        self.client.post(reverse("login"), {"email":"user@sandiego.edu", "password":"passw0rd"})
+        response = self.client.get(reverse("home"))
+        self.assertEqual(response.status_code, 200)
+    
+    def test_home_not_logged_in(self):
+        response = self.client.get(reverse("home"))
+        self.assertRedirects(response, reverse("login") + "?next=" + reverse("home"))
