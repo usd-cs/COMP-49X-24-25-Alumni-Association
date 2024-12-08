@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
     Handles user login functionality.
 
     If authentication is successful:
-        - Logs in the user 
+        - Logs in the user
         - Redirects to the "home" page with an HTTP 200 status code.
 
     If authentication fails:
@@ -15,11 +15,11 @@ from django.contrib.auth.decorators import login_required
         - Returns an HTTP 401 status code.
 
     Args:
-        request (HttpRequest): 
+        request (HttpRequest):
         The HTTP request object containing metadata about the request.
 
     Returns:
-        HttpResponse: 
+        HttpResponse:
         A redirect to the "home" page on success or the login page on failure.
 """
 def user_login(request):
@@ -52,11 +52,11 @@ def user_login(request):
     Home page. Requires users to be logged in using @login_required
 
     Args:
-        request (HttpRequest): 
+        request (HttpRequest):
             The HTTP request object containing metadata about the request.
 
     Returns:
-        HttpResponse: 
+        HttpResponse:
             A redirect to home page on success or the login page on failure.
 """
 @login_required
