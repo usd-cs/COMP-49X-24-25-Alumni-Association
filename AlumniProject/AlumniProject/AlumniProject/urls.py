@@ -23,7 +23,6 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from social_tracker.views import user_login, home
-from django.views.generic import TemplateView
 from social_tracker import views
 
 urlpatterns = [
