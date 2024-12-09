@@ -25,29 +25,22 @@ def save_access_token(request):
         - 405: If the request is invalid.
     """
     if request.method != "POST":
-        return JsonResponse({"message": "Invalid request."},
-                            status=405)
+        return JsonResponse({"message": "Invalid request."}, status=405)
     try:
         data = json.loads(request.body)
         access_token_value = data.get("access_token")
 
-
         if not access_token_value:
-            return JsonResponse(
-                {"message": "Access token required."},
-                status=400
-            )
+            return JsonResponse({"message": "Access token required."}, status=400)
 
         # save new access token
         access_token = AccessToken(token=access_token_value)
         # save function should delete old one automatically
         access_token.save()
 
-        return JsonResponse({"message":
-                            "Access token saved successfully."})
+        return JsonResponse({"message": "Access token saved successfully."})
     except json.JSONDecodeError:
-        return JsonResponse({"message": "Invalid token."},
-                            status=400)
+        return JsonResponse({"message": "Invalid token."}, status=400)
 
 
 def get_posts_view(request):
