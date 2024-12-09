@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 
 """
-Test cases for logins. Again, Django test function from
+Test cases for login. Again, Django test function from
 manage.py creates a mock database so any data put
 into the database during tests is not permanent
 and is not put into our actual database.
