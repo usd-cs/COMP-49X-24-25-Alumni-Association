@@ -2,6 +2,12 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from .utils.get_instagram_data import get_instagram_posts
+from .utils.write_database_to_csv import export_posts_to_csv
+from django.views.decorators.csrf import csrf_exempt
+from .models import AccessToken
+import json
 
 """
     Handles user login functionality.
@@ -63,15 +69,6 @@ def user_login(request):
 @login_required
 def home(request):
     return render(request, "index.html")
-
-from django.http import JsonResponse
-from .utils.get_instagram_data import get_instagram_posts
-from .utils.write_database_to_csv import export_posts_to_csv
-from django.views.decorators.csrf import csrf_exempt
-from .models import AccessToken
-import json
-
-ACCESS_TOKEN = None
 
 
 @csrf_exempt
