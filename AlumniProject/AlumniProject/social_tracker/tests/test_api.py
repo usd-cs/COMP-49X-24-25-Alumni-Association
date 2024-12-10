@@ -2,14 +2,12 @@ import unittest
 from unittest.mock import patch, Mock
 import sys
 import os
-
-# Add the project root to the Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import requests
 from social_tracker.utils.get_instagram_data import get_instagram_posts
 from social_tracker.models import Post
-from django.utils import timezone
+
+# Add the project root to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 class GetInstagramPostsTest(unittest.TestCase):
     """
