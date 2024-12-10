@@ -19,7 +19,7 @@ class GetInstagramPostsTest(unittest.TestCase):
     including successful retrieval and processing of posts, handling no posts found, and API call failures.
     """
 
-    @patch('AlumniProject.social_tracker.utils.get_instagram_data.requests.get')
+    @patch('social_tracker.utils.get_instagram_data.requests.get')
     def test_get_instagram_posts_success(self, mock_get):
         """
         Test successful retrieval and processing of Instagram posts.
@@ -50,7 +50,7 @@ class GetInstagramPostsTest(unittest.TestCase):
         self.assertEqual(result, "Posts processed successfully.")
         self.assertEqual(Post.objects.count(), 2)
 
-    @patch('AlumniProject.social_tracker.utils.get_instagram_data.requests.get')
+    @patch('social_tracker.utils.get_instagram_data.requests.get')
     def test_get_instagram_posts_no_posts(self, mock_get):
         """
         Test handling of no posts found.
@@ -64,7 +64,7 @@ class GetInstagramPostsTest(unittest.TestCase):
         self.assertEqual(result, "No posts found.")
         self.assertEqual(Post.objects.count(), 0)
 
-    @patch('AlumniProject.social_tracker.utils.get_instagram_data.requests.get')
+    @patch('social_tracker.utils.get_instagram_data.requests.get')
     def test_get_instagram_posts_api_failure(self, mock_get):
         """
         Test handling of API call failure.
