@@ -4,16 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Get Instagram Posts</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --founders-blue: #003b70;
+            --immaculata-blue: #0074c8;
+            --torero-blue: #75bee9;
+            --alcala-white: #ffffff;
+        }
+
+        body {
+            background: linear-gradient(135deg, #003b70, #0074c8);
+            height: 100vh;
+            color: white;
+        }
+
+        .container {
+            background-color: var(--torero-blue);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            margin-top: 50px;
+        }
+
+        .btn {
+            background-color: var(--founders-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            background-color: var(--immaculata-blue);
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .input-group {
+          display: flex;
+          justify-content: center;  
+          margin-bottom: 20px;
+        }
+
+        .input-group .form-control,
+        .input-group .btn {
+          width: 90%;
+          max-width: 500px;
+          padding: 10px;
+          border-radius: 5px;
+          font-size: 16px;
+        }
+        .input-group .btn {
+          width: auto;
+          margin-left: 10px;
+          padding: 10px;
+          font-size: 16px;
+        }
+    </style>
     <script>
-        /**
-         * Saves user-inputted access token to the database.
-         * Retrieves the access token from an input field and sends it to the server using a POST request. 
-         * Displays success or failure messages based on the server's response.
-         *
-         * @returns {void}
-         */
+        // Your existing JavaScript remains the same
         async function saveAccessToken() {
-            //get access token value from input field
             const accessToken = document.getElementById("accessToken").value;
             if (!accessToken) {
                 alert("Please enter a valid access token.");
@@ -21,18 +84,18 @@
             }
 
             try {
-                const response = await fetch("{% url 'save-access-token' %}", { //send access token to save-access-token endpoint
+                const response = await fetch("{% url 'save-access-token' %}", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "X-CSRFToken": "{{ csrf_token }}" //CSRF token
+                        "X-CSRFToken": "{{ csrf_token }}"
                     },
-                    body: JSON.stringify({ access_token: accessToken }) //send token in request body to be saved
+                    body: JSON.stringify({ access_token: accessToken })
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    alert(data.message); //display response message as a popup on screen
+                    alert(data.message);
                 } else {
                     alert("unable to save access token. Please try again.");
                 }
@@ -42,15 +105,9 @@
             }
         }
 
-        /**
-         * Gets post data from the backend. Makes a GET request to retrieve posts and displays
-         * the server's response message as an alert overlay.
-         *
-         * @returns {void}
-         */
         async function getPosts() {
             try {
-                const response = await fetch("{% url 'get-posts' %}"); //wait for call to get post
+                const response = await fetch("{% url 'get-posts' %}");
                 if (response.ok) {
                     const data = await response.json();
                     alert(data.message); 
@@ -62,28 +119,30 @@
                 alert(" error occurred while getting posts.");
             }
         }
-        /**
-         * Button function to export posts to csv file. Calls the export-csv url to
-         * run the script that generates the downloadable csv file.
-         *
-         * @returns {void}
-         */
+
         function exportCSV() {
             window.location.href = "{% url 'export-csv' %}";
         }
     </script>
 </head>
 <body>
-    <h1>Get Instagram Post Info</h1>
-    
-    <div>
-        <label for="accessToken">Access Token:</label>
-        <!-- input field to enter access token -->
-        <input type="text" id="accessToken" placeholder="Enter your access token here" style="width: 300px;">
-        <button onclick="saveAccessToken()">Save Access Token</button> <!-- button to save access token -->
+    <div class="container">
+        <h1>Get Instagram Post Info</h1>
+        
+        <div class="input-group justify-content-center">
+            <label for="accessToken" class="form-label visually-hidden">Access Token:</label>
+            <div class="d-flex align-items-center">
+                <input type="text" id="accessToken" class="form-control" placeholder="Enter your access token here">
+                <button onclick="saveAccessToken()" class="btn">Save Access Token</button>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3">
+            <button onclick="getPosts()" class="btn">Get Instagram Posts</button>
+            <button onclick="exportCSV()" class="btn">Export Posts to CSV</button>
+        </div>
     </div>
-    <br>
-    <button onclick="getPosts()">Get Instagram Posts</button>
-    <button onclick="exportCSV()">Export Posts to CSV</button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
