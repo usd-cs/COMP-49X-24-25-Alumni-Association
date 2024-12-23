@@ -5,9 +5,11 @@ The Alumni Association project is a web-based solution aimed at tracking social 
 ## Installation
 Clone Git repository to your local machine.
 
-Run ```sh envsetup.sh``` if you do not have a proper Django-equipped virtual environment setup already. This command will create the environment, install Django on the environment, and start the environment.
+Run ```python3 -m venv env``` if you do not have a proper Django-equipped virtual environment setup already. This command will create the environment.
 
 If you have the environment already, run ```source env/bin/activate``` on Mac or ```env\\Scripts\\activate``` on Windows.
+
+To install dependencies run ```python -m pip install --upgrade pip``` followed by ```pip install Django``` and ```pip install requests```
 
 From here you can use the command
 
@@ -19,18 +21,22 @@ From here you can use the command
 
 ```python manage.py migrate```
 
+You will need to create a user in order to use the website properly. Run ```python manage.py createsuperuser``` in order to create an admin user.
+
 ## Usage
 
 ```python
 #Open terminal and run:
 
-python manage.py runserver
+sh run.sh dev
 
 #Navigate to http://127.0.0.1:8000/ in any browser
 ```
-Once we are on the web page, use the credentials to login.
+Once we are on the web page, you will be redirected to the login page. Use the credentials created in the last step to login.
 
-After successfully logging in, we can download the Alumni Instagram data by pressing the download button.
+After successfully logging in, navigate to the homepage where you can input your Instagram API code and download your data.
+
+To run code tests please use ```python manage.py test``` in order to run tests correctly on a mock database.
 
 ## Contributing
 
