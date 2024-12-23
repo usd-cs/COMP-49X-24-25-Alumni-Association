@@ -1,43 +1,57 @@
-# COMP-49X-24-25-Alumni-Association
-
-
-The Alumni Association project deals with handling metrics on the USD Alumni instagram page to better serve the recent graduates of USD.
+The Alumni Association project is a web-based solution aimed at tracking social media engagement to help the University of San Diego's Alumni Association better connect with alumnis. 
 
 ## Installation
-UPDATE THIS
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install foobar.
+Clone Git repository to your local machine.
 
-```bash
-UPDATE THIS
-```
+Run ```python3 -m venv env``` if you do not have a proper Django-equipped virtual environment setup already. This command will create the environment.
+
+If you have the environment already, run ```source env/bin/activate``` on Mac or ```env\\Scripts\\activate``` on Windows.
+
+To install dependencies run ```python -m pip install --upgrade pip``` followed by ```pip install Django``` and ```pip install requests```
+
+From here you can use the command
+
+ ```cd AlumniProject``` 
+ 
+ and then you will need to migrate the database by doing 
+
+```python manage.py makemigrations```
+
+```python manage.py migrate```
+
+You will need to create a user in order to use the website properly. Run ```python manage.py createsuperuser``` in order to create an admin user.
 
 ## Usage
 
 ```python
-UPDATE THIS
+
+#Open terminal and run:
+
+sh run.sh dev
+
+#Navigate to http://127.0.0.1:8000/ in any browser
 ```
+Once we are on the web page, you will be redirected to the login page. Use the credentials created in the last step to login.
+
+After successfully logging in, navigate to the homepage where you can input your Instagram API code and download your data.
+
+To run code tests please use ```python manage.py test``` in order to run tests correctly on a mock database.
 
 ## Contributing
-Members
 
-Connor Boll
+This project was created by
+Bill Erdene Ochir, Connor Boll, Audrey Naidu, and Eli Zublin
 
-Bill Erdene Ochir
+## Contacts
 
-Audrey Naidu 
+berdeneochir@sandiego.edu
 
-Eli Zublin 
+cboll@sandiego.edu
 
-Pull requests are welcome. For major changes, please open an issue first
-to discuss what you would like to change.
+anaidu@sandiego.edu
 
-Please make sure to update tests as appropriate.
+ezublin@sandiego.edu
 
-## Tests
-to run tests navigate to AlumniProject/AlumniProject and run:
-```bash 
-python3 manage.py test social_tracker.tests
-```
 
 ## License
 

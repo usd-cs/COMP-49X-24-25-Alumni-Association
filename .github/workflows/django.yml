@@ -13,7 +13,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.8, 3.9]
 
     steps:
     - uses: actions/checkout@v4
@@ -24,7 +24,6 @@ jobs:
     - name: Install Dependencies
       run: |
         python3 -m venv env
-        env/bin/activate
         python -m pip install --upgrade pip
         python -m pip install Django
         python -m pip install requests
