@@ -1,5 +1,3 @@
-# COMP-49X-24-25-Alumni-Association
-
 The Alumni Association project is a web-based solution aimed at tracking social media engagement to help the University of San Diego's Alumni Association better connect with alumnis. 
 
 ## Installation
@@ -26,6 +24,7 @@ You will need to create a user in order to use the website properly. Run ```pyth
 ## Usage
 
 ```python
+
 #Open terminal and run:
 
 sh run.sh dev
