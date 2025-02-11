@@ -40,7 +40,7 @@ To run code tests please use ```python manage.py test``` in order to run tests c
 ## Contributing
 
 This project was created by
-Bill Erdene Ochir, Connor Boll, Audrey Naidu, and Eli Zublin
+Audrey Naidu, Bill Erdene Ochir, Connor Boll, and Eli Zublin
 
 ## Contacts
 
