@@ -1,0 +1,9 @@
+services:
+  web: 
+    build:
+      context: AlumniProject
+      target: builder
+    volumes:
+      - ./AlumniProject/db.sqlite3:/AlumniProject/db.sqlite3
+    ports: 
+      - '8000:8000'
