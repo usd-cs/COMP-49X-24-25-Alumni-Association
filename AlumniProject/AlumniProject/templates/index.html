@@ -145,15 +145,16 @@
                 console.error("Error pulling post data from site database.")
                 alert("Error pulling post data from site database.")
             }*/
-            const testData = {"post1": {"likes": 5, "comments": 6}, "post2": {"likes": 50, "comments": 60}};
-            console.log(typeof(testData));
+            //url api/posts/list name=list-posts
+            //will be getting id, date_posted, post_link, likes, comments, shares, saves
+            const testData = {"post1": {"date_posted": "01/01", "likes": 5, "comments": 6}, "post2": {"date_posted": "02/02", "likes": 50, "comments": 60}};
             displayPostData(testData);
         }
 
         function displayPostData(postData) {
             let htmlString = "";
             Object.entries(postData).forEach(([post, info])=>{
-                htmlString += "<li>" + info.likes + " " + info.comments + "</li>";
+                htmlString += "<li>" + info.date_posted + " " +info.likes + " " + info.comments + "</li>";
             })
             console.log(htmlString)
             document.getElementById("postList").innerHTML = htmlString;
