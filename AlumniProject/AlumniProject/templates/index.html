@@ -75,7 +75,12 @@
         }
     </style>
     <script>
-        // Your existing JavaScript remains the same
+        //These lines are declaring our postData variable and then calling the getPostData() when the page loads.
+        window.onload = function () { 
+            getPostData();
+        };
+
+        //This function saves the Instagram access token
         async function saveAccessToken() {
             const accessToken = document.getElementById("accessToken").value;
             if (!accessToken) {
@@ -105,6 +110,7 @@
             }
         }
 
+        //This function updates the posts from Instagram.
         async function getPosts() {
             try {
                 const response = await fetch("{% url 'get-posts' %}");
@@ -112,7 +118,7 @@
                     const data = await response.json();
                     alert(data.message); 
                 } else {
-                    alert("unable to get posts. Please try again.");
+                    alert("Unable to pull post data from Instagram. Please try again.");
                 }
             } catch (error) {
                 console.error("Error occured wn getting posts:", error);
@@ -120,8 +126,37 @@
             }
         }
 
+        //This function downloads the CSV file
         function exportCSV() {
             window.location.href = "{% url 'export-csv' %}";
+        }
+
+        async function getPostData() {
+            /*try {
+                const response = await fetch("{% url 'export-csv' %}");
+                if (response.ok) {
+                    const postData = await response.json();
+                    alert(data.message);
+                    displayPostData(postData)
+                } else {
+                    alert("Unable to pull post data from site database. Please try again.");
+                }
+            } catch (error) {
+                console.error("Error pulling post data from site database.")
+                alert("Error pulling post data from site database.")
+            }*/
+            const testData = {"post1": {"likes": 5, "comments": 6}, "post2": {"likes": 50, "comments": 60}};
+            console.log(typeof(testData));
+            displayPostData(testData);
+        }
+
+        function displayPostData(postData) {
+            let htmlString = "";
+            Object.entries(postData).forEach(([post, info])=>{
+                htmlString += "<li>" + info.likes + " " + info.comments + "</li>";
+            })
+            console.log(htmlString)
+            document.getElementById("postList").innerHTML = htmlString;
         }
     </script>
 </head>
@@ -141,6 +176,8 @@
             <button onclick="getPosts()" class="btn">Get Instagram Posts</button>
             <button onclick="exportCSV()" class="btn">Export Posts to CSV</button>
         </div>
+
+        <div id="postList"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
