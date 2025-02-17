@@ -150,7 +150,7 @@
             }*/
             //url api/posts/list name=list-posts
             //will be getting id, date_posted, post_link, likes, comments, shares, saves
-            const testData = {"post1": {"date_posted": "01/01", "likes": 5, "comments": 6, "post_link": "ig.com/yeah", "shares": 5, "saves": 2}, "post2": {"date_posted": "02/02", "likes": 50, "comments": 60, "post_link": "ig.com/no", "shares": 1, "saves": 20}};
+            const testData = {"post1": {"date_posted": "01/01", "likes": 5, "comments": 6, "post_link": "www.instagram.com/p/DDYDMApyF2d/", "shares": 5, "saves": 2}, "post2": {"date_posted": "02/02", "likes": 50, "comments": 60, "post_link": "www.instagram.com/p/DDYDMApyF2d/", "shares": 1, "saves": 20}};
             displayPostData(testData);
         }
 
@@ -196,6 +196,7 @@
             <button onclick="exportCSV()" class="btn">Export Posts to CSV</button>
         </div>
 
+        <!-- This is the table headers, probably where we can add buttons for sorting. -->
         <div class="table-responsive">
             <table class="table table-striped table-bordered text-center">
                 <thead class="table-dark">
