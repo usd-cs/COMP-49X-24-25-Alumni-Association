@@ -149,23 +149,23 @@
          * @return {None}
          */
         async function getPostData() {
-            /*try {
-                const response = await fetch("{% url 'export-csv' %}");
+            try {
+                const response = await fetch("{% url 'list-posts' %}");
+                console.log(response)
                 if (response.ok) {
                     const postData = await response.json();
-                    alert(data.message);
-                    displayPostData(postData)
+                    displayPostData(postData.data);
                 } else {
                     alert("Unable to pull post data from site database. Please try again.");
                 }
             } catch (error) {
-                console.error("Error pulling post data from site database.")
+                console.error("Error pulling post data from site database.", error)
                 alert("Error pulling post data from site database.")
-            }*/
+            }
             //url api/posts/list name=list-posts
             //will be getting id, date_posted, post_link, likes, comments, shares, saves
-            const testData = {"post1": {"date_posted": "01/01", "likes": 5, "comments": 6, "post_link": "www.instagram.com/p/DDYDMApyF2d/", "shares": 5, "saves": 2}, "post2": {"date_posted": "02/02", "likes": 50, "comments": 60, "post_link": "www.instagram.com/p/DDYDMApyF2d/", "shares": 1, "saves": 20}};
-            displayPostData(testData);
+            //const testData = {"post1": {"date_posted": "01/01", "likes": 5, "comments": 6, "post_link": "www.instagram.com/p/DDYDMApyF2d/", "shares": 5, "saves": 2}, "post2": {"date_posted": "02/02", "likes": 50, "comments": 60, "post_link": "www.instagram.com/p/DDYDMApyF2d/", "shares": 1, "saves": 20}};
+            //displayPostData(testData);
         }
 
         /**
@@ -178,6 +178,7 @@
             
             Object.entries(postData).forEach(([post, info]) => {
                 try {
+                    console.log(typeof(info.date_posted))
                     htmlString += `
                     <tr>
                         <td>${info.date_posted}</td>
@@ -186,7 +187,7 @@
                         <td>${info.shares}</td>
                         <td>${info.saves}</td>
                         <td>
-                            <a href="https://${info.post_link}" target="_blank" class="btn btn-primary btn-sm">
+                            <a href="${info.post_link}" target="_blank" class="btn btn-primary btn-sm">
                                 View Post
                             </a>
                         </td>
