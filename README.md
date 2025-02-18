@@ -19,6 +19,10 @@ From here you can use the command
 
 ```python manage.py migrate```
 
+it is possible you may need to also run 
+
+```python manage.py migrate social tracker```
+
 You will need to create a user in order to use the website properly. Run ```python manage.py createsuperuser``` in order to create an admin user.
 
 ## Usage
