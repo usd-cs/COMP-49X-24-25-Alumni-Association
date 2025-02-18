@@ -1,11 +1,13 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
+from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from .utils.get_instagram_data import get_instagram_posts
 from .utils.write_database_to_csv import export_posts_to_csv
 from django.views.decorators.csrf import csrf_exempt
+from .models import Post
 from .models import AccessToken
 import json
 
@@ -123,6 +125,115 @@ def get_posts_view(request):
     result = get_instagram_posts(access_token.token)
     return JsonResponse({"message": result})
 
+def list_stored_posts(request):
+    """
+    Returns a JSON response containing all posts stored in the database.
+
+    Parameters:
+    - request: HttpRequest object.
+
+    Returns:
+    - JsonResponse: A JSON response that is
+    the result of the API call.
+    """
+    try:
+        posts = Post.objects.all()
+
+        #Get filter parameters from request
+        date_from = request.GET.get('date_from')
+        date_to = request.GET.get('date_to')
+        min_likes = request.GET.get('min_likes')
+        min_comments = request.GET.get('min_comments')
+        min_shares = request.GET.get('min_shares')
+        min_saves = request.GET.get('min_saves')
+        
+        #Apply date filters if provided
+        if date_from:
+            try:
+                date_from = datetime.strptime(date_from, '%Y-%m-%d')
+                posts = posts.filter(date_posted__gte=date_from)
+            except ValueError:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid date format for date_from'
+                }, status=400)
+            
+        if date_to:
+            try:
+                date_to = datetime.strptime(date_to, '%Y-%m-%d')
+                posts = posts.filter(date_posted__lte=date_to)
+            except ValueError:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid date format for date_to'
+                }, status=400)
+            
+        #Apply engagement filters if provided
+        if min_likes:
+            try:
+                min_likes = int(min_likes)
+                posts = posts.filter(num_likes__gte=min_likes)
+            except ValueError:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid min_likes value'
+                }, status=400)
+            
+        if min_comments:
+            try:
+                min_comments = int(min_comments)
+                posts = posts.filter(num_comments__gte=min_comments)
+            except ValueError:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid min_comments value'
+                }, status=400)
+            
+        if min_shares:
+            try:
+                min_shares = int(min_shares)
+                posts = posts.filter(num_shares__gte=min_shares)
+            except ValueError:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid min_shares value'
+                }, status=400)
+            
+        if min_saves:
+            try:
+                min_saves = int(min_saves)
+                posts = posts.filter(num_saves__gte=min_saves)
+            except ValueError:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid min_saves value'
+                }, status=400)
+            
+        #Get posts data
+        posts_data = [
+            {
+                'id': post.post_ID,
+                'date_posted': post.date_posted,
+                'post_link': post.post_link,
+                'likes': post.num_likes,
+                'comments': post.num_comments,
+                'shares': post.num_shares,
+                'saves': post.num_saves
+            }
+            for post in posts
+        ]
+        return JsonResponse({
+            'success': True,
+            'data': posts_data,
+            'message': 'Posts retrieved successfully'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'data': posts_data,
+            'message': f'Error retrieving posts: {str(e)}'
+        }, status=500)
+    
 
 def export_csv_view(request):
     """
