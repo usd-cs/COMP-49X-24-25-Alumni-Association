@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from social_tracker.models import Post
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 
 class ListStoredPostsTests(TestCase):
