@@ -73,6 +73,22 @@
           padding: 10px;
           font-size: 16px;
         }
+        .post-table-head {
+            --bs-table-color: var(--alcala-white);
+            --bs-table-bg: var(--founders-blue);
+            --bs-table-border-color: #373b3e;
+            --bs-table-striped-color: var(--alcala-white);
+            --bs-table-active-bg: var(--founders-blue);
+            --bs-table-active-color: var(--alcala-white);
+            --bs-table-hover-bg: var(--founders-blue);
+            --bs-table-hover-color: var(--alcala-white);
+            color: var(--bs-table-color);
+            border-color: var(--bs-table-border-color);
+        }
+        .table-curved-border {
+            margin-top: 10px;
+            border-radius: 6px;
+        }
         #postList {
             margin-top: 20px;
         }
@@ -215,16 +231,16 @@
         </div>
 
         <!-- This is the table headers, probably where we can add buttons for sorting. -->
-        <div class="table-responsive">
+        <div class="table-responsive table-curved-border">
             <table class="table table-striped table-bordered text-center">
-                <thead class="table-dark">
+                <thead class="post-table-head">
                     <tr>
                         <th>Date Posted</th>
                         <th>Likes</th>
                         <th>Comments</th>
                         <th>Shares</th>
                         <th>Saves</th>
-                        <th>Post Link</th>
+                        <th>Instagram Link</th>
                     </tr>
                 </thead>
                 <tbody id="postList"></tbody>
