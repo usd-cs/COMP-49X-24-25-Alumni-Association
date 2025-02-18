@@ -30,6 +30,7 @@ urlpatterns = [
     path("login", user_login, name="login"),
     path("admin/", admin.site.urls),
     path("get-posts/", views.get_posts_view, name="get-posts"),
+    path("api/posts/list/", views.list_stored_posts, name="list-posts"),
     path("export-csv/", views.export_csv_view, name="export-csv"),
     path("save-access-token/", views.save_access_token, name="save-access-token"),
 ]
