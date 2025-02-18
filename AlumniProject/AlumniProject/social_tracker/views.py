@@ -212,7 +212,7 @@ def list_stored_posts(request):
         posts_data = [
             {
                 "id": post.post_ID,
-                "date_posted": post.date_posted,
+                "date_posted": post.date_posted.strftime("%m/%d/%Y"),
                 "post_link": post.post_link,
                 "likes": post.num_likes,
                 "comments": post.num_comments,
