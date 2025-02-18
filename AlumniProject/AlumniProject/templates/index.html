@@ -78,12 +78,15 @@
         }
     </style>
     <script>
-        //These lines are declaring our postData variable and then calling the getPostData() when the page loads.
+        //This line calls the getPostData function when the page is first loaded.
         window.onload = function () { 
             getPostData();
         };
 
-        //This function saves the Instagram access token
+        /**
+         * This function saves the Instagram access token from the form on the page to the database.
+         * @return {None}
+         */
         async function saveAccessToken() {
             const accessToken = document.getElementById("accessToken").value;
             if (!accessToken) {
@@ -113,27 +116,38 @@
             }
         }
 
-        //This function updates the posts from Instagram.
-        async function getPosts() {
+        /**
+         * This function utilizes the Instagram API to update the database with new post data.
+         * @return {None}
+         */
+        async function getIGPosts() {
             try {
                 const response = await fetch("{% url 'get-posts' %}");
                 if (response.ok) {
                     const data = await response.json();
                     alert(data.message); 
+                    getPostData();
                 } else {
                     alert("Unable to pull post data from Instagram. Please try again.");
                 }
             } catch (error) {
-                console.error("Error occured wn getting posts:", error);
+                console.error("Error occured while getting posts:", error);
                 alert(" error occurred while getting posts.");
             }
         }
 
-        //This function downloads the CSV file
+        /**
+         * This function downloads the CSV file.
+         * @return {None}
+         */
         function exportCSV() {
             window.location.href = "{% url 'export-csv' %}";
         }
 
+        /**
+         * Calls the backend API in order to get the post information.
+         * @return {None}
+         */
         async function getPostData() {
             /*try {
                 const response = await fetch("{% url 'export-csv' %}");
@@ -154,11 +168,17 @@
             displayPostData(testData);
         }
 
+        /**
+         * Displays the post information in the HTML of the page.
+         * @param {Object} postData Information about the posts passed in an object form
+         * @return {None}
+         */
         function displayPostData(postData) {
             let htmlString = "";
             
             Object.entries(postData).forEach(([post, info]) => {
-                htmlString += `
+                try {
+                    htmlString += `
                     <tr>
                         <td>${info.date_posted}</td>
                         <td>${info.likes}</td>
@@ -172,8 +192,10 @@
                         </td>
                     </tr>
                 `;
+                } catch (error) {
+                console.error("A post was not loaded correctly.", error);
+                }
             });
-
             document.getElementById("postList").innerHTML = htmlString;
         }
 
@@ -192,7 +214,7 @@
         </div>
 
         <div class="d-flex justify-content-center gap-3">
-            <button onclick="getPosts()" class="btn">Get Instagram Posts</button>
+            <button onclick="getIGPosts()" class="btn">Get Instagram Posts</button>
             <button onclick="exportCSV()" class="btn">Export Posts to CSV</button>
         </div>
 
