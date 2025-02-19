@@ -67,18 +67,20 @@
           border-radius: 5px;
           font-size: 16px;
         }
-        .input-group .btn {
-          width: auto;
-          margin-left: 10px;
-          padding: 10px;
-          font-size: 16px;
-        }
+
         #postList {
             margin-top: 20px;
         }
+
+        .sort-btn {
+            font-size: 14px;
+            padding: 5px 10px;
+            margin-left: 5px;
+        }
     </style>
+
     <script>
-        //This line calls the getPostData function when the page is first loaded.
+        // This line calls the getPostData function when the page is first loaded.
         window.onload = function () { 
             getPostData();
         };
@@ -108,11 +110,11 @@
                     const data = await response.json();
                     alert(data.message);
                 } else {
-                    alert("unable to save access token. Please try again.");
+                    alert("Unable to save access token. Please try again.");
                 }
             } catch (error) {
-                console.error("Error occured while saving access token:", error);
-                alert("error occurred while saving access token.");
+                console.error("Error occurred while saving access token:", error);
+                alert("Error occurred while saving access token.");
             }
         }
 
@@ -126,13 +128,13 @@
                 if (response.ok) {
                     const data = await response.json();
                     alert(data.message); 
-                    getPostData();
+                    getPostData(); // Refresh post data after pulling new posts
                 } else {
                     alert("Unable to pull post data from Instagram. Please try again.");
                 }
             } catch (error) {
-                console.error("Error occured while getting posts:", error);
-                alert(" error occurred while getting posts.");
+                console.error("Error occurred while getting posts:", error);
+                alert("Error occurred while getting posts.");
             }
         }
 
@@ -151,27 +153,26 @@
         async function getPostData() {
             try {
                 const response = await fetch("{% url 'list-posts' %}");
-                console.log(response)
                 if (response.ok) {
                     const postData = await response.json();
-                    displayPostData(postData.data);
+                    displayPostData(postData.data); // Display post data in the table
                 } else {
                     alert("Unable to pull post data from site database. Please try again.");
                 }
             } catch (error) {
-                console.error("Error pulling post data from site database.", error)
-                alert("Error pulling post data from site database.")
+                console.error("Error pulling post data from site database.", error);
+                alert("Error pulling post data from site database.");
             }
         }
 
         /**
-         * Displays the post information in the HTML of the page.
-         * @param {Object} postData Information about the posts passed in an object form
+         * Displays the post information in the HTML table.
+         * @param {Object} postData - Information about the posts in object form.
          * @return {None}
          */
         function displayPostData(postData) {
             let htmlString = "";
-            
+
             Object.entries(postData).forEach(([post, info]) => {
                 try {
                     htmlString += `
@@ -187,22 +188,69 @@
                             </a>
                         </td>
                     </tr>
-                `;
+                    `; // Add post data to the table rows
                 } catch (error) {
-                console.error("A post was not loaded correctly.", error);
+                    console.error("A post was not loaded correctly.", error);
                 }
             });
-            document.getElementById("postList").innerHTML = htmlString;
+            document.getElementById("postList").innerHTML = htmlString; // Update the table with new rows
         }
 
+        /**
+         * Object to track the sorting direction (ascending/descending) for each column.
+         */
+        const sortDirections = { date_posted: true, likes: true, comments: true, shares: true, saves: true };
+
+        /**
+         * Sorts the table based on the selected column.
+         * Clicking the same column toggles between ascending and descending order.
+         * 
+         * @param {string} column - Column to sort ('date_posted', 'likes', 'comments', 'shares', 'saves').
+         * @return {None}
+         */
+        function sortTable(column) {
+            const tableBody = document.getElementById("postList"); // Get the table body element
+            const rows = Array.from(tableBody.querySelectorAll("tr")); // Convert rows into an array for sorting
+
+            // Map columns to their respective indices
+            const columnIndices = {
+                date_posted: 0,
+                likes: 1,
+                comments: 2,
+                shares: 3,
+                saves: 4
+            };
+
+            const columnIndex = columnIndices[column];
+
+            // Toggle the sorting direction for the column
+            sortDirections[column] = !sortDirections[column];
+
+            // Perform sorting based on column type
+            rows.sort((rowA, rowB) => {
+                const valA = rowA.children[columnIndex].innerText;
+                const valB = rowB.children[columnIndex].innerText;
+
+                if (column === "date_posted") {
+                    // Compare dates after converting them to Date objects
+                    return sortDirections[column] ? new Date(valA) - new Date(valB) : new Date(valB) - new Date(valA);
+                } else {
+                    // Compare numerical values
+                    return sortDirections[column] ? parseInt(valA) - parseInt(valB) : parseInt(valB) - parseInt(valA);
+                }
+            });
+
+            // Re-append sorted rows to the table body
+            rows.forEach(row => tableBody.appendChild(row));
+        }
     </script>
 </head>
 <body>
     <div class="container">
         <h1>Get Instagram Post Info</h1>
-        
+
         <div class="input-group justify-content-center">
-            <label for="accessToken" class="form-label visually-hidden">Access Token:</label>
+            <label for="accessToken" class="visually-hidden">Access Token:</label>
             <div class="d-flex align-items-center">
                 <input type="text" id="accessToken" class="form-control" placeholder="Enter your access token here">
                 <button onclick="saveAccessToken()" class="btn">Save Access Token</button>
@@ -214,23 +262,37 @@
             <button onclick="exportCSV()" class="btn">Export Posts to CSV</button>
         </div>
 
-        <!-- This is the table headers, probably where we can add buttons for sorting. -->
-        <div class="table-responsive">
+        <!-- Table displaying Instagram post data with sortable columns -->
+        <div class="table-responsive mt-4">
             <table class="table table-striped table-bordered text-center">
                 <thead class="table-dark">
                     <tr>
-                        <th>Date Posted</th>
-                        <th>Likes</th>
-                        <th>Comments</th>
-                        <th>Shares</th>
-                        <th>Saves</th>
+                        <th>
+                            Date Posted
+                            <button onclick="sortTable('date_posted')" class="btn sort-btn">Sort</button>
+                        </th>
+                        <th>
+                            Likes
+                            <button onclick="sortTable('likes')" class="btn sort-btn">Sort</button>
+                        </th>
+                        <th>
+                            Comments
+                            <button onclick="sortTable('comments')" class="btn sort-btn">Sort</button>
+                        </th>
+                        <th>
+                            Shares
+                            <button onclick="sortTable('shares')" class="btn sort-btn">Sort</button>
+                        </th>
+                        <th>
+                            Saves
+                            <button onclick="sortTable('saves')" class="btn sort-btn">Sort</button>
+                        </th>
                         <th>Post Link</th>
                     </tr>
                 </thead>
                 <tbody id="postList"></tbody>
             </table>
         </div>
-        
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
