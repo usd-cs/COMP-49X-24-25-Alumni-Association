@@ -19,6 +19,7 @@ class ListStoredPostsTests(TestCase):
             num_comments=20,
             num_shares=5,
             num_saves=10,
+            post_API_ID = 234567,
         )
 
         self.post2 = Post.objects.create(
@@ -28,6 +29,7 @@ class ListStoredPostsTests(TestCase):
             num_comments=10,
             num_shares=2,
             num_saves=5,
+            post_API_ID = 23456789,
         )
 
         self.post3 = Post.objects.create(
@@ -37,6 +39,7 @@ class ListStoredPostsTests(TestCase):
             num_comments=30,
             num_shares=15,
             num_saves=20,
+            post_API_ID = 23456798,
         )
 
     def test_get_all_posts(self):
