@@ -30,7 +30,7 @@ def get_instagram_posts(access_token, num_posts=100):
             "timestamp,permalink,like_count,comments_count"
         ),
         "access_token": access_token,
-        "limit": num_posts
+        "limit": num_posts,
     }
 
     try:
