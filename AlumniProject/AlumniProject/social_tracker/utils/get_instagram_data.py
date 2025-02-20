@@ -26,7 +26,7 @@ def get_instagram_posts(access_token, num_posts=100):
     """
     url = "https://graph.instagram.com/me/media"
     params = {
-        "fields":"id,media_url,timestamp,permalink",
+        "fields": "id,media_url,timestamp,permalink",
         "access_token": access_token,
     }
 
@@ -46,29 +46,34 @@ def get_instagram_posts(access_token, num_posts=100):
                 api_id = post.get("id", None)
 
                 # check if link already exists and add to database if not duplicate post and post exists
-                if not Post.objects.filter(post_link=permalink).exists() and api_id is not None:
-                    #make request for insights based on post ID
-                    url = "https://graph.instagram.com/v19.0/" + str(api_id) + "/insights"
+                if (
+                    not Post.objects.filter(post_link=permalink).exists()
+                    and api_id is not None
+                ):
+                    # make request for insights based on post ID
+                    url = (
+                        "https://graph.instagram.com/v19.0/" + str(api_id) + "/insights"
+                    )
                     params = {
                         "metric": "likes,comments,saved,shares",
                         "period": "lifetime",
                         "access_token": access_token,
-                        }
+                    }
                     response = requests.get(url, params=params)
                     resp_json = response.json()
                     data = resp_json.get("data")
-                    num_likes = data[0].get('values')[0].get('value')
-                    num_comments = data[1].get('values')[0].get('value')
-                    num_saved = data[2].get('values')[0].get('value')
-                    num_shares = data[3].get('values')[0].get('value')
+                    num_likes = data[0].get("values")[0].get("value")
+                    num_comments = data[1].get("values")[0].get("value")
+                    num_saved = data[2].get("values")[0].get("value")
+                    num_shares = data[3].get("values")[0].get("value")
                     Post.objects.create(
                         date_posted=date,
                         post_link=permalink,
                         num_likes=num_likes,
                         num_comments=num_comments,
-                        num_shares = num_shares,
-                        num_saves = num_saved,
-                        post_API_ID = api_id
+                        num_shares=num_shares,
+                        num_saves=num_saved,
+                        post_API_ID=api_id,
                     )
                 else:
                     print(f"Duplicate post or invalid post- not added: {permalink}")
