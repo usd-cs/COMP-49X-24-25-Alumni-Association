@@ -23,6 +23,7 @@ class DatabaseTest(TestCase):
             num_comments=8,
             num_shares=10,
             num_saves=1,
+            post_API_ID = 12345,
         )
         Post.objects.create(
             post_link="http://www.sandiego.edu/p2",
@@ -40,6 +41,7 @@ class DatabaseTest(TestCase):
         self.assertEqual(post.num_comments, 0)
         self.assertEqual(post.num_shares, 0)
         self.assertEqual(post.num_saves, 0)
+        self.assertEqual(post.post_API_ID, "")
 
     def test_date_posted(self):
         post = Post.objects.get(post_link="http://www.sandiego.edu/p1")

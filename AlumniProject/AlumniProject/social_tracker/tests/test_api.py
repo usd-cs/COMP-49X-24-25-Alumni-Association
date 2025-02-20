@@ -32,15 +32,19 @@ class GetInstagramPostsTest(unittest.TestCase):
                     "id": "1",
                     "timestamp": "2023-01-01T12:00:00+0000",
                     "permalink": "http://example.com/post1",
-                    "like_count": 10,
-                    "comments_count": 5,
+                    "likes": 10,
+                    "comments": 5,
+                    "shares": 1,
+                    "saved": 3,
                 },
                 {
                     "id": "2",
                     "timestamp": "2023-01-02T12:00:00+0000",
                     "permalink": "http://example.com/post2",
-                    "like_count": 20,
-                    "comments_count": 10,
+                    "likes": 20,
+                    "comments": 10,
+                    "shares": 4,
+                    "saved": 2,
                 },
             ]
         }

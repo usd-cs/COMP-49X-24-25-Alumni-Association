@@ -9,7 +9,7 @@ class Post(models.Model):
     num_comments = models.IntegerField(default=0)
     num_shares = models.IntegerField(default=0)
     num_saves = models.IntegerField(default=0)
-    post_API_ID = models.IntegerField(default=None)
+    post_API_ID = models.IntegerField(default="")
 
     class Meta:
         ordering = ["-date_posted"]
