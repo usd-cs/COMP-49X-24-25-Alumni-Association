@@ -3,7 +3,7 @@ from datetime import datetime
 from social_tracker.models import Post
 
 
-def get_instagram_posts(access_token, num_posts=5):
+def get_instagram_posts(access_token, num_posts=100):
     """
     Gets recent Instagram posts using the provided access token
     and adds them to the database. This function makes a GET request
@@ -12,7 +12,7 @@ def get_instagram_posts(access_token, num_posts=5):
 
     Parameters:
     - access_token (str): A valid access token for the Instagram API.
-    - num_posts (int): number of recent posts to process (default: 5).
+    - num_posts (int): number of recent posts to process (default: 100).
 
     Returns:
     - str: Message indicating the result of the operation:
@@ -30,6 +30,7 @@ def get_instagram_posts(access_token, num_posts=5):
             "timestamp,permalink,like_count,comments_count"
         ),
         "access_token": access_token,
+        "limit": num_posts
     }
 
     try:
