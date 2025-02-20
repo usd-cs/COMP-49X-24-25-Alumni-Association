@@ -46,7 +46,7 @@ def get_instagram_posts(access_token, num_posts=100):
                 api_id = post.get("id", None)
 
                 # check if link already exists and add to database if not duplicate post and post exists
-                if not Post.objects.filter(post_link=permalink).exists() and api_id != None:
+                if not Post.objects.filter(post_link=permalink).exists() and api_id is not None:
                     #make request for insights based on post ID
                     url = "https://graph.instagram.com/v19.0/" + str(api_id) + "/insights"
                     params = {
