@@ -68,6 +68,29 @@
           font-size: 16px;
         }
 
+        .input-group .btn {
+          width: auto;
+          margin-left: 10px;
+          padding: 10px;
+          font-size: 16px;
+        }
+        .post-table-head {
+            --bs-table-color: var(--alcala-white);
+            --bs-table-bg: var(--founders-blue);
+            --bs-table-border-color: #373b3e;
+            --bs-table-striped-color: var(--alcala-white);
+            --bs-table-active-bg: var(--founders-blue);
+            --bs-table-active-color: var(--alcala-white);
+            --bs-table-hover-bg: var(--founders-blue);
+            --bs-table-hover-color: var(--alcala-white);
+            color: var(--bs-table-color);
+            border-color: var(--bs-table-border-color);
+        }
+        .table-curved-border {
+            margin-top: 10px;
+            border-radius: 6px;
+        }
+      
         #postList {
             margin-top: 20px;
         }
@@ -262,11 +285,14 @@
             <button onclick="exportCSV()" class="btn">Export Posts to CSV</button>
         </div>
 
-        <!-- Table displaying Instagram post data with sortable columns -->
-        <div class="table-responsive mt-4">
-            <table class="table table-striped table-bordered text-center">
-                <thead class="table-dark">
+
+        <!-- This is the table headers, probably where we can add buttons for sorting. -->
+        <div class="table-responsive table-curved-border">
+
+          <table class="table table-striped table-bordered text-center">
+                <thead class="post-table-head">
                     <tr>
+
                         <th>
                             Date Posted
                             <button onclick="sortTable('date_posted')" class="btn sort-btn">Sort</button>
@@ -288,6 +314,7 @@
                             <button onclick="sortTable('saves')" class="btn sort-btn">Sort</button>
                         </th>
                         <th>Post Link</th>
+
                     </tr>
                 </thead>
                 <tbody id="postList"></tbody>
