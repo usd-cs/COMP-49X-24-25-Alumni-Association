@@ -211,6 +211,40 @@
             document.getElementById("postList").innerHTML = htmlString;
         }
 
+
+        /**
+         * Filters posts based on the selected date range.
+         * Calls the backend with date filters and updates the table appropriately. 
+         * Does not update the table with invalid values.
+         */
+        async function filterPostsByDate() {
+            const dateFrom = document.getElementById("dateFrom").value;
+            const dateTo = document.getElementById("dateTo").value;
+
+            let url = "{% url 'list-posts' %}";
+            let params = new URLSearchParams(); //a better way to form urls than manually concatenating strings
+            
+
+            if (dateFrom) params.append("date_from", dateFrom);
+            if (dateTo) params.append("date_to", dateTo);
+            if (params.toString()) {
+                url += "?" + params.toString();
+            }
+
+            try {
+                const response = await fetch(url);
+                if (response.ok) {
+                    const postData = await response.json();
+                    displayPostData(postData.data);
+                } else {
+                    alert("Unable to filter posts. Please try again.");
+                }
+            } catch (error) {
+                console.error("There was an rror filtering posts:", error);
+                alert("There was an error filtering posts.");
+            }
+        }
+
     </script>
 </head>
 <body>
@@ -228,6 +262,14 @@
         <div class="d-flex justify-content-center gap-3">
             <button onclick="getIGPosts()" class="btn">Get Instagram Posts</button>
             <button onclick="exportCSV()" class="btn">Export Posts to CSV</button>
+        </div>
+        <!-- Date Range Filter -->
+        <div class="d-flex justify-content-center align-items-center my-3">
+            <label for="dateFrom" class="me-2">Show Posts from</label>
+            <input type="date" id="dateFrom" class="form-control me-2" style="width: 150px;">
+            <label for="dateTo" class="me-2">to</label>
+            <input type="date" id="dateTo" class="form-control me-2" style="width: 150px;">
+            <button onclick="filterPostsByDate()" class="btn">Filter</button>
         </div>
 
         <!-- This is the table headers, probably where we can add buttons for sorting. -->
