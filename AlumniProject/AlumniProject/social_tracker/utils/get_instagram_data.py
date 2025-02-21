@@ -43,7 +43,7 @@ def get_instagram_posts(access_token, num_posts=100):
                     post["timestamp"], "%Y-%m-%dT%H:%M:%S%z"
                 ).replace(tzinfo=None)
                 permalink = post.get("permalink", "N/A")
-                api_id = post.get("id", None)
+                api_id = str(post.get("id", ""))
 
                 # check if link already exists and add to database if not duplicate post and post exists
                 if (
