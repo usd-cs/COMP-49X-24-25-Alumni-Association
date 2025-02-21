@@ -67,7 +67,6 @@ class GetInstagramPostsTest(unittest.TestCase):
         self.assertEqual(result, "Posts processed successfully.")
         self.assertEqual(Post.objects.count(), 2)
 
-
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_instagram_posts_no_posts(self, mock_get):
         """
@@ -82,7 +81,6 @@ class GetInstagramPostsTest(unittest.TestCase):
         self.assertEqual(result, "No posts found.")
         self.assertEqual(Post.objects.count(), 0)
 
-
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_instagram_posts_api_failure(self, mock_get):
         """
@@ -93,7 +91,6 @@ class GetInstagramPostsTest(unittest.TestCase):
         result = get_instagram_posts("fake_access_token", num_posts=2)
         self.assertIn("Error getting Instagram posts", result)
         self.assertEqual(Post.objects.count(), 0)
-
 
 
 if __name__ == "__main__":

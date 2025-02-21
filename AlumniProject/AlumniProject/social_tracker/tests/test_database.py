@@ -23,7 +23,7 @@ class DatabaseTest(TestCase):
             num_comments=8,
             num_shares=10,
             num_saves=1,
-            post_API_ID = "12345",
+            post_API_ID="12345",
         )
         Post.objects.create(
             post_link="http://www.sandiego.edu/p2",

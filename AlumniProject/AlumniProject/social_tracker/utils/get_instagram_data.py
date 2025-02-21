@@ -49,7 +49,8 @@ def get_instagram_posts(access_token, num_posts=100):
                 # check if link already exists and add to database if not duplicate post and post exists
                 if (
                     not Post.objects.filter(post_link=permalink).exists()
-                    and api_id != "" and api_id is not None
+                    and api_id != ""
+                    and api_id is not None
                 ):
                     # make request for insights based on post ID
                     url = (
@@ -63,7 +64,7 @@ def get_instagram_posts(access_token, num_posts=100):
                     response = requests.get(url, params=params)
                     resp_json = response.json()
                     data = resp_json.get("data")
-                    if data == [] or data is None: 
+                    if data == [] or data is None:
                         return "No post data found."
                     num_likes = data[0].get("values")[0].get("value")
                     num_comments = data[1].get("values")[0].get("value")
