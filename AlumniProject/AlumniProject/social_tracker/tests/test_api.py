@@ -25,27 +25,43 @@ class GetInstagramPostsTest(unittest.TestCase):
         """
         Test successful retrieval and processing of Instagram posts.
         """
-        mock_response = Mock()
-        mock_response.json.return_value = {
+        # Mock first API call fetching post IDs, links, and timestamps
+        mock_response_1 = Mock()
+        mock_response_1.json.return_value = {
             "data": [
                 {
                     "id": "1",
                     "timestamp": "2023-01-01T12:00:00+0000",
                     "permalink": "http://example.com/post1",
-                    "like_count": 10,
-                    "comments_count": 5,
                 },
                 {
                     "id": "2",
                     "timestamp": "2023-01-02T12:00:00+0000",
                     "permalink": "http://example.com/post2",
-                    "like_count": 20,
-                    "comments_count": 10,
                 },
             ]
         }
-        mock_response.status_code = 200
-        mock_get.return_value = mock_response
+        mock_response_1.status_code = 200
+
+        # Mock second API call that fetches post metrics
+        mock_response_2 = Mock()
+        mock_response_2.json.return_value = {
+            "data": [
+                {"name": "likes", "values": [{"value": 10}]},
+                {"name": "comments", "values": [{"value": 5}]},
+                {"name": "saved", "values": [{"value": 3}]},
+                {"name": "shares", "values": [{"value": 1}]},
+            ]
+        }
+        mock_response_2.status_code = 200
+
+        # Ensure requests.get() returns different responses for the two different URLs we use
+        def side_effect(url, params):
+            if "insights" in url:
+                return mock_response_2  # Second request for insights
+            return mock_response_1  # First request for posts
+
+        mock_get.side_effect = side_effect
 
         result = get_instagram_posts("fake_access_token", num_posts=2)
         self.assertEqual(result, "Posts processed successfully.")
