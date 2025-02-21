@@ -28,6 +28,7 @@ def get_instagram_posts(access_token, num_posts=100):
     params = {
         "fields": "id,media_url,timestamp,permalink",
         "access_token": access_token,
+        "limit": num_posts,
     }
 
     try:
