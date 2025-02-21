@@ -62,6 +62,8 @@ def get_instagram_posts(access_token, num_posts=100):
                     response = requests.get(url, params=params)
                     resp_json = response.json()
                     data = resp_json.get("data")
+                    if data == [] or data is None: 
+                        return "No post data found."
                     num_likes = data[0].get("values")[0].get("value")
                     num_comments = data[1].get("values")[0].get("value")
                     num_saved = data[2].get("values")[0].get("value")

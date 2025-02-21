@@ -25,35 +25,48 @@ class GetInstagramPostsTest(unittest.TestCase):
         """
         Test successful retrieval and processing of Instagram posts.
         """
-        mock_response = Mock()
-        mock_response.json.return_value = {
+        # Mock first API call fetching post IDs, links, and timestamps
+        mock_response_1 = Mock()
+        mock_response_1.json.return_value = {
             "data": [
                 {
                     "id": "1",
                     "timestamp": "2023-01-01T12:00:00+0000",
                     "permalink": "http://example.com/post1",
-                    "likes": 10,
-                    "comments": 5,
-                    "shares": 1,
-                    "saved": 3,
                 },
                 {
                     "id": "2",
                     "timestamp": "2023-01-02T12:00:00+0000",
                     "permalink": "http://example.com/post2",
-                    "likes": 20,
-                    "comments": 10,
-                    "shares": 4,
-                    "saved": 2,
                 },
             ]
         }
-        mock_response.status_code = 200
-        mock_get.return_value = mock_response
+        mock_response_1.status_code = 200
+
+        # Mock second API call that fetches post metrics
+        mock_response_2 = Mock()
+        mock_response_2.json.return_value = {
+            "data": [
+                {"name": "likes", "values": [{"value": 10}]},
+                {"name": "comments", "values": [{"value": 5}]},
+                {"name": "saved", "values": [{"value": 3}]},
+                {"name": "shares", "values": [{"value": 1}]},
+            ]
+        }
+        mock_response_2.status_code = 200
+
+        # Ensure requests.get() returns different responses for the two different URLs we use
+        def side_effect(url, params):
+            if "insights" in url:
+                return mock_response_2  # Second request for insights
+            return mock_response_1  # First request for posts
+
+        mock_get.side_effect = side_effect
 
         result = get_instagram_posts("fake_access_token", num_posts=2)
         self.assertEqual(result, "Posts processed successfully.")
         self.assertEqual(Post.objects.count(), 2)
+
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_instagram_posts_no_posts(self, mock_get):
@@ -69,6 +82,7 @@ class GetInstagramPostsTest(unittest.TestCase):
         self.assertEqual(result, "No posts found.")
         self.assertEqual(Post.objects.count(), 0)
 
+
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_instagram_posts_api_failure(self, mock_get):
         """
@@ -79,6 +93,7 @@ class GetInstagramPostsTest(unittest.TestCase):
         result = get_instagram_posts("fake_access_token", num_posts=2)
         self.assertIn("Error getting Instagram posts", result)
         self.assertEqual(Post.objects.count(), 0)
+
 
 
 if __name__ == "__main__":
