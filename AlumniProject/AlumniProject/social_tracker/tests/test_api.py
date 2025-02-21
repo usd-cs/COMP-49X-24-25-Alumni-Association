@@ -60,6 +60,7 @@ class GetInstagramPostsTest(unittest.TestCase):
             if "insights" in url:
                 return mock_response_2  # Second request for insights
             return mock_response_1  # First request for posts
+
         mock_get.side_effect = side_effect
 
         result = get_instagram_posts("fake_access_token", num_posts=2)
