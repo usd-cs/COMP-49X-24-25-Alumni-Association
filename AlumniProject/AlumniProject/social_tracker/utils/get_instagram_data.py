@@ -97,7 +97,7 @@ def get_instagram_posts(access_token, num_posts=100):
                     
             return "Posts processed successfully."
         else:
-            return "No post data found."
+            return "No posts found."
 
     except requests.exceptions.RequestException as e:
         return f"Error getting Instagram posts: {e}"
