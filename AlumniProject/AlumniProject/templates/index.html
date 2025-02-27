@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Get Instagram Posts</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root {
@@ -99,6 +100,23 @@
             font-size: 14px;
             padding: 5px 10px;
             margin-left: 5px;
+        }
+        .filter-popup {
+            position: absolute;
+            bottom: 50px;
+            right: 0;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            color: black;
+            z-index: 1000;
+            width: 250px;
+        }
+
+        .filter-content label {
+            display: block;
+            margin-bottom: 5px;
         }
     </style>
 
@@ -299,6 +317,126 @@
             // Re-append sorted rows to the table body
             rows.forEach(row => tableBody.appendChild(row));
         }
+
+
+        function toggleFilterPopup() {
+            /**
+             * Toggles the visibility of the filter popup by checking
+             * the current display state of the filter popup element.
+             * 
+             * @returns {void}
+             */
+            const popup = document.getElementById("filterPopup");
+            popup.style.display = popup.style.display === "none" ? "block" : "none";
+        }
+
+        async function applyFilters() {
+        /**
+         * Applies filters to get and display filtered posts based on user inputted filter values 
+         * by retrieving the filter values for min likes, comments, shares, and saves.
+         * Then, it makes a query string with the params and sends a get request to get
+         * the posts and then updates displayed post data if successful. 
+         * After applying filters, it closes the filter popup.
+         * 
+         * 
+         *
+         * @returns {void}
+         */
+            const minLikes = document.getElementById("minLikes").value;
+            const minComments = document.getElementById("minComments").value;
+            const minShares = document.getElementById("minShares").value;
+            const minSaves = document.getElementById("minSaves").value;
+
+            let url = "{% url 'list-posts' %}";
+            let params = new URLSearchParams();
+            if (minLikes) params.append("min_likes", minLikes);
+            if (minComments) params.append("min_comments", minComments);
+            if (minShares) params.append("min_shares", minShares);
+            if (minSaves) params.append("min_saves", minSaves);
+            if (params.toString()) {
+                url += "?" + params.toString();
+            }
+
+            try {
+                const response = await fetch(url);
+                if (response.ok) {
+                    const postData = await response.json();
+                    displayPostData(postData.data);
+                    toggleFilterPopup(); // Close popup after applying filters
+                } else {
+                    alert("Unable to apply filters. Please try again.");
+                }
+            } catch (error) {
+                console.error("Error applying filters:", error);
+                alert("Error applying filters.");
+            }
+        }
+
+        let currentPage = 1; //starting index for the current page
+        const postsPerPage = 10; //number of posts per page
+        let allPosts = []; //list of all posts
+
+        function displayPostData(postData) {
+            /**
+             * Displays the post data and then calls updatePagination to reset the pagination.
+             * 
+             * @param {Array<Object>} postData - An array of Post objects
+             * @return {void}
+            */
+            allPosts = postData;
+            currentPage = 1;
+            updatePagination();
+        }
+
+        function updatePagination() {
+            /**
+             * Updates the current page and displays the proper posts for each page 
+             * and updates the next and previous buttons if needed.
+             * Slices the allPosts array depending on the current page index and
+             * the number of pages per page and then updates the post table in html.
+             * 
+             * @return {void}
+            */
+            const startIndex = (currentPage - 1) * postsPerPage;
+            const endIndex = startIndex + postsPerPage;
+            const paginatedPosts = allPosts.slice(startIndex, endIndex);
+            document.getElementById("postList").innerHTML = paginatedPosts.map(info => `
+                <tr>
+                    <td>${info.date_posted}</td>
+                    <td>${info.likes}</td>
+                    <td>${info.comments}</td>
+                    <td>${info.shares}</td>
+                    <td>${info.saves}</td>
+                    <td><a href="${info.post_link}" target="_blank" class="btn btn-primary btn-sm">View Post</a></td>
+                </tr>
+            `).join('');
+            document.getElementById("prevPage").disabled = currentPage === 1;
+            document.getElementById("nextPage").disabled = endIndex >= allPosts.length;
+        }
+
+        function nextPage() {
+            /**
+             * Navigates to the next page of results if it is not 
+             * the last page.
+             * @return {void}
+            */
+            if ((currentPage * postsPerPage) < allPosts.length) {
+                currentPage++;
+                updatePagination();
+            }
+        }
+
+        function prevPage() {
+            /**
+             * Navigates to the previous page of results if it is not 
+             * the first page.
+             * @return {void}
+            */
+            if (currentPage > 1) {
+                currentPage--;
+                updatePagination();
+            }
+        }
     </script>
 </head>
 <body>
@@ -325,6 +463,37 @@
             <input type="date" id="dateTo" class="form-control me-2" style="width: 150px;">
             <button onclick="filterPostsByDate()" class="btn">Filter</button>
         </div>
+
+        <!-- Filters Section -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <!-- Date Filter -->
+            <div class="d-flex align-items-center">
+                <label for="dateFrom" class="me-2">Show Posts from</label>
+                <input type="date" id="dateFrom" class="form-control me-2" style="width: 150px;">
+                <label for="dateTo" class="me-2">to</label>
+                <input type="date" id="dateTo" class="form-control me-2" style="width: 150px;">
+                <button onclick="filterPostsByDate()" class="btn">Filter</button>
+            </div>
+
+            <!-- Filters Button with Icon -->
+            <div class="position-relative">
+                <button class="btn btn-light" onclick="toggleFilterPopup()">
+                    <i class="fas fa-filter"></i> Filters
+                </button>
+                <div id="filterPopup" class="filter-popup" style="display: none;">
+                    <div class="filter-content">
+                        <h5>Apply Filters</h5>
+                        <label>Min Likes: <input type="number" id="minLikes" class="form-control"></label>
+                        <label>Min Comments: <input type="number" id="minComments" class="form-control"></label>
+                        <label>Min Shares: <input type="number" id="minShares" class="form-control"></label>
+                        <label>Min Saves: <input type="number" id="minSaves" class="form-control"></label>
+                        <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+                        <button class="btn btn-secondary" onclick="toggleFilterPopup()">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 
 
         <!-- This is the table headers, probably where we can add buttons for sorting. -->
@@ -361,6 +530,12 @@
                 <tbody id="postList"></tbody>
             </table>
         </div>
+
+        <div class="d-flex justify-content-center mt-3">
+            <button id="prevPage" class="btn btn-secondary me-2" onclick="prevPage()" disabled>Previous</button>
+            <button id="nextPage" class="btn btn-secondary" onclick="nextPage()">Next</button>
+        </div>
+        
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

@@ -38,6 +38,7 @@ def get_instagram_posts(access_token, num_posts=100):
 
         if "data" in data and len(data["data"]) > 0:
             posts = data["data"][:num_posts]
+            print(len(posts))
             # get post data
             for post in posts:
                 date = datetime.strptime(
@@ -48,8 +49,7 @@ def get_instagram_posts(access_token, num_posts=100):
 
                 # check if link already exists and add to database if not duplicate post and post exists
                 if (
-                    not Post.objects.filter(post_link=permalink).exists()
-                    and api_id != ""
+                    api_id != ""
                     and api_id is not None
                 ):
                     # make request for insights based on post ID
@@ -63,27 +63,38 @@ def get_instagram_posts(access_token, num_posts=100):
                     }
                     response = requests.get(url, params=params)
                     resp_json = response.json()
+                    print("before getting data")
                     data = resp_json.get("data")
-                    if data == [] or data is None:
-                        return "No post data found."
-                    num_likes = data[0].get("values")[0].get("value")
-                    num_comments = data[1].get("values")[0].get("value")
-                    num_saved = data[2].get("values")[0].get("value")
-                    num_shares = data[3].get("values")[0].get("value")
-                    Post.objects.create(
-                        date_posted=date,
-                        post_link=permalink,
-                        num_likes=num_likes,
-                        num_comments=num_comments,
-                        num_shares=num_shares,
-                        num_saves=num_saved,
-                        post_API_ID=api_id,
-                    )
+                    if data != [] and data is not None:
+                        num_likes = data[0].get("values")[0].get("value")
+                        num_comments = data[1].get("values")[0].get("value")
+                        num_saved = data[2].get("values")[0].get("value")
+                        num_shares = data[3].get("values")[0].get("value")
+                        if not Post.objects.filter(post_link=permalink).exists():
+                            Post.objects.create(
+                                date_posted=date,
+                                post_link=permalink,
+                                num_likes=num_likes,
+                                num_comments=num_comments,
+                                num_shares=num_shares,
+                                num_saves=num_saved,
+                                post_API_ID=api_id,
+                            )
+                        else:
+                            existing_post = Post.objects.get(post_link=permalink)
+                            existing_post.num_likes = num_likes
+                            existing_post.num_comments=num_comments
+                            existing_post.num_shares=num_shares
+                            existing_post.num_saves=num_saved
+                            existing_post.post_API_ID=api_id
+                            existing_post.save()
+
                 else:
-                    print(f"Duplicate post or invalid post- not added: {permalink}")
+                    print(f"Invalid post- not added: {permalink}")
+                    
             return "Posts processed successfully."
         else:
-            return "No posts found."
+            return "No post data found."
 
     except requests.exceptions.RequestException as e:
         return f"Error getting Instagram posts: {e}"
