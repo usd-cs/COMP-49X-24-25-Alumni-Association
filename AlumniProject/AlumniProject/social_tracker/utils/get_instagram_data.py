@@ -63,14 +63,16 @@ def get_instagram_posts(access_token, num_posts=100):
                     }
                     response = requests.get(url, params=params)
                     resp_json = response.json()
-                    print("before getting data")
                     data = resp_json.get("data")
-                    if data != [] and data is not None:
+                    # data is only none if posts were from before the account became a business account.
+                    if data != [] and data is not None: 
+                        # get post attributes
                         num_likes = data[0].get("values")[0].get("value")
                         num_comments = data[1].get("values")[0].get("value")
                         num_saved = data[2].get("values")[0].get("value")
                         num_shares = data[3].get("values")[0].get("value")
                         if not Post.objects.filter(post_link=permalink).exists():
+                            # post does not exist in database, create new post
                             Post.objects.create(
                                 date_posted=date,
                                 post_link=permalink,
@@ -81,6 +83,7 @@ def get_instagram_posts(access_token, num_posts=100):
                                 post_API_ID=api_id,
                             )
                         else:
+                            # modifies existing post instead of creating a new post.
                             existing_post = Post.objects.get(post_link=permalink)
                             existing_post.num_likes = num_likes
                             existing_post.num_comments=num_comments
