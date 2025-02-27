@@ -48,10 +48,7 @@ def get_instagram_posts(access_token, num_posts=100):
                 api_id = str(post.get("id", ""))
 
                 # check if link already exists and add to database if not duplicate post and post exists
-                if (
-                    api_id != ""
-                    and api_id is not None
-                ):
+                if api_id != "" and api_id is not None:
                     # make request for insights based on post ID
                     url = (
                         "https://graph.instagram.com/v19.0/" + str(api_id) + "/insights"
@@ -65,7 +62,7 @@ def get_instagram_posts(access_token, num_posts=100):
                     resp_json = response.json()
                     data = resp_json.get("data")
                     # data is only none if posts were from before the account became a business account.
-                    if data != [] and data is not None: 
+                    if data != [] and data is not None:
                         # get post attributes
                         num_likes = data[0].get("values")[0].get("value")
                         num_comments = data[1].get("values")[0].get("value")
@@ -86,15 +83,15 @@ def get_instagram_posts(access_token, num_posts=100):
                             # modifies existing post instead of creating a new post.
                             existing_post = Post.objects.get(post_link=permalink)
                             existing_post.num_likes = num_likes
-                            existing_post.num_comments=num_comments
-                            existing_post.num_shares=num_shares
-                            existing_post.num_saves=num_saved
-                            existing_post.post_API_ID=api_id
+                            existing_post.num_comments = num_comments
+                            existing_post.num_shares = num_shares
+                            existing_post.num_saves = num_saved
+                            existing_post.post_API_ID = api_id
                             existing_post.save()
 
                 else:
                     print(f"Invalid post- not added: {permalink}")
-                    
+
             return "Posts processed successfully."
         else:
             return "No posts found."
