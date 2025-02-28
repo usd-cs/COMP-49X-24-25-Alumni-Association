@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from .utils.get_instagram_data import get_instagram_posts
+from .utils.get_instagram_data import get_instagram_posts, get_country_demographics
 from .utils.write_database_to_csv import export_posts_to_csv
 from django.views.decorators.csrf import csrf_exempt
 from .models import Post
@@ -123,6 +123,12 @@ def get_posts_view(request):
     """
     access_token = AccessToken.objects.get()
     result = get_instagram_posts(access_token.token)
+    return JsonResponse({"message": result})
+
+def get_demographics(request):
+    access_token = AccessToken.objects.get()
+    result = get_country_demographics(access_token.token)
+    print(result)
     return JsonResponse({"message": result})
 
 

@@ -1,6 +1,6 @@
 import requests
 from datetime import datetime
-from social_tracker.models import Post
+from social_tracker.models import Post, Country
 
 
 def get_instagram_posts(access_token, num_posts=100):
@@ -84,6 +84,38 @@ def get_instagram_posts(access_token, num_posts=100):
             return "Posts processed successfully."
         else:
             return "No posts found."
+
+    except requests.exceptions.RequestException as e:
+        return f"Error getting Instagram posts: {e}"
+
+def get_country_demographics(access_token, account_id):
+    url = "https://graph.instagram.com/v22.0/" + str(account_id) + "/insights"
+    params = {
+        "metric": "engaged_audience_demographics",
+        "metric_type": "total_value",
+        "access_token": access_token,
+        "period": "lifetime"
+    }
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()  # raise error if it is not a success code
+        data = response.json()
+        print(response)
+        print(data)
+        print(type(data))
+        print(data["data"])
+        
+
+        if "data" in data and len(data["data"]) > 0:
+            data = data["data"]
+            countries = data["total_value"]["breakdowns"]["results"]
+            if len(countries) > 0:
+                Country.objects.delete.all()
+            for country in countries:
+                Country.objects.create(
+                    name=country["dimension_values"][1],
+                    num_interactions=country["value"],
+                )
 
     except requests.exceptions.RequestException as e:
         return f"Error getting Instagram posts: {e}"

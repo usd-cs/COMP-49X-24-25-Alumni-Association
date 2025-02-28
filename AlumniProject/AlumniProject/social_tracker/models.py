@@ -18,12 +18,20 @@ class Post(models.Model):
 
 class AccessToken(models.Model):
     token = models.TextField()
+    account_id = models.TextField(default="None")
 
     def save(self, *args, **kwargs):
         # there can only be one access token at once
         if AccessToken.objects.exists() and not self.pk:
             AccessToken.objects.all().delete()
         super().save(*args, **kwargs)
+
+    class Meta:
+        app_label = "social_tracker"
+
+class Country(models.Model):
+    name = models.TextField()
+    num_interactions = models.IntegerField(default=0)
 
     class Meta:
         app_label = "social_tracker"
