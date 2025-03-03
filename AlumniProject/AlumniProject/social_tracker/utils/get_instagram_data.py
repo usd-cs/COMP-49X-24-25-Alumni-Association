@@ -89,7 +89,7 @@ def get_instagram_posts(access_token, num_posts=100):
         return f"Error getting Instagram posts: {e}"
 
 def get_country_demographics(access_token, account_id):
-    url = "https://graph.instagram.com/v22.0/" + str(account_id) + "/insights"
+    url = "https://graph.instagram.com/v19.0/" + str(account_id) + "/insights"
     params = {
         "metric": "engaged_audience_demographics",
         "metric_type": "total_value",
@@ -98,8 +98,10 @@ def get_country_demographics(access_token, account_id):
     }
     try:
         response = requests.get(url, params=params)
+        print(response)
         response.raise_for_status()  # raise error if it is not a success code
         data = response.json()
+        print("hello hello hello")
         print(response)
         print(data)
         print(type(data))
@@ -108,6 +110,7 @@ def get_country_demographics(access_token, account_id):
 
         if "data" in data and len(data["data"]) > 0:
             data = data["data"]
+            print(type(data))
             countries = data["total_value"]["breakdowns"]["results"]
             if len(countries) > 0:
                 Country.objects.delete.all()
@@ -117,5 +120,5 @@ def get_country_demographics(access_token, account_id):
                     num_interactions=country["value"],
                 )
 
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
         return f"Error getting Instagram posts: {e}"
