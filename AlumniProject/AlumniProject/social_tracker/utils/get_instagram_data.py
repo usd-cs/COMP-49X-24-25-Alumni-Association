@@ -89,12 +89,13 @@ def get_instagram_posts(access_token, num_posts=100):
         return f"Error getting Instagram posts: {e}"
 
 def get_country_demographics(access_token, account_id):
-    url = "https://graph.instagram.com/v19.0/" + str(account_id) + "/insights"
+    url = "https://graph.instagram.com/v21.0/" + str(account_id) + "/insights"
     params = {
         "metric": "engaged_audience_demographics",
         "metric_type": "total_value",
         "access_token": access_token,
-        "period": "lifetime"
+        "period": "lifetime",
+        "breakdown": "country" #When we add this line, we get the error. Without the line, we dont get an error but also dont get any data set back
     }
     try:
         response = requests.get(url, params=params)
