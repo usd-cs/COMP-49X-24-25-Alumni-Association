@@ -107,6 +107,11 @@ def save_access_token(request):
     except json.JSONDecodeError:
         return JsonResponse({"message": "Invalid token."}, status=400)
 
+    
+@login_required
+def get_demographics(request):
+    return render(request, "demographics.html")
+
 
 def get_posts_view(request):
     """
