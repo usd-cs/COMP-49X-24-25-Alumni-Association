@@ -452,18 +452,13 @@
         </div>
 
         <div class="d-flex justify-content-center gap-3">
-            <button onclick="getIGPosts()" class="btn">Get Instagram Posts</button>
+            <button onclick="getIGPosts()" class="btn">Get/Update Instagram Posts</button>
             <button onclick="exportCSV()" class="btn">Export Posts to CSV</button>
         </div>
-        <!-- Date Range Filter -->
-        <div class="d-flex justify-content-center align-items-center my-3">
-            <label for="dateFrom" class="me-2">Show Posts from</label>
-            <input type="date" id="dateFrom" class="form-control me-2" style="width: 150px;">
-            <label for="dateTo" class="me-2">to</label>
-            <input type="date" id="dateTo" class="form-control me-2" style="width: 150px;">
-            <button onclick="filterPostsByDate()" class="btn">Filter</button>
-        </div>
 
+        <!--Adding space between the buttons and filters section-->
+        <br>
+    
         <!-- Filters Section -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <!-- Date Filter -->
