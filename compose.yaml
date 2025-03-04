@@ -4,6 +4,10 @@ services:
       context: AlumniProject
       target: builder
     volumes:
-      - ./AlumniProject/db.sqlite3:/AlumniProject/db.sqlite3
+      - ./AlumniProject:/AlumniProject  # Mount the entire project for live updates
+      - ./AlumniProject/db.sqlite3:/AlumniProject/db.sqlite3  
     ports: 
-      - '8000:8000'
+      - "8000:8000"
+    environment:
+      - DEBUG=True  # make sure Django detects code changes
+    restart: unless-stopped
