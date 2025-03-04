@@ -1,6 +1,6 @@
 import requests
 from datetime import datetime
-from social_tracker.models import Post, Country
+from social_tracker.models import Post, Country, City
 
 
 def get_instagram_posts(access_token, num_posts=100):
@@ -89,37 +89,62 @@ def get_instagram_posts(access_token, num_posts=100):
         return f"Error getting Instagram posts: {e}"
 
 def get_country_demographics(access_token, account_id):
-    url = "https://graph.instagram.com/v21.0/" + str(account_id) + "/insights"
+    url = "https://graph.instagram.com/v22.0/" + str(account_id) + "/insights"
     params = {
         "metric": "engaged_audience_demographics",
         "metric_type": "total_value",
         "access_token": access_token,
         "period": "lifetime",
-        "breakdown": "country" #When we add this line, we get the error. Without the line, we dont get an error but also dont get any data set back
+        "timeframe": "this_month",
+        "breakdown": "country" 
     }
     try:
         response = requests.get(url, params=params)
-        print(response)
         response.raise_for_status()  # raise error if it is not a success code
         data = response.json()
-        print("hello hello hello")
-        print(response)
-        print(data)
-        print(type(data))
-        print(data["data"])
-        
-
-        if "data" in data and len(data["data"]) > 0:
-            data = data["data"]
-            print(type(data))
-            countries = data["total_value"]["breakdowns"]["results"]
+        if "total_value" in data["data"][0]:
+            countries = data["data"][0]["total_value"]["breakdowns"][0]["results"]
             if len(countries) > 0:
-                Country.objects.delete.all()
-            for country in countries:
+                Country.objects.all().delete()
+            for i in range(0, len(countries)):
                 Country.objects.create(
-                    name=country["dimension_values"][1],
-                    num_interactions=country["value"],
+                    name=countries[i]["dimension_values"][0],
+                    num_interactions=countries[i]["value"],
                 )
+    except Exception as e:
+        return f"Error getting Instagram posts: {e}"
 
+'''delete this function'''
+def tester():
+    from social_tracker.models import AccessToken
+    tk = AccessToken.objects.get()
+    get_city_demographics(tk.token, tk.account_id)
+    print("done tester")
+
+def get_city_demographics(access_token, account_id):
+    url = "https://graph.instagram.com/v22.0/" + str(account_id) + "/insights"
+    params = {
+        "metric": "engaged_audience_demographics",
+        "metric_type": "total_value",
+        "access_token": access_token,
+        "period": "lifetime",
+        "timeframe": "this_month",
+        "breakdown": "city"
+    }
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()  # raise error if it is not a success code
+        data = response.json()
+        print(data["data"][0])
+        if "total_value" in data["data"][0]:
+            cities = data["data"][0]["total_value"]["breakdowns"][0]["results"]
+            if len(cities) > 0:
+                City.objects.all().delete()
+            for i in range(0, len(cities)):
+                print(cities[i])
+                City.objects.create(
+                    name=cities[i]["dimension_values"][0],
+                    num_interactions=cities[i]["value"],
+                )
     except Exception as e:
         return f"Error getting Instagram posts: {e}"
