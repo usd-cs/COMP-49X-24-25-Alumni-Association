@@ -38,7 +38,7 @@ def get_instagram_posts(access_token, num_posts=100):
 
         if "data" in data and len(data["data"]) > 0:
             posts = data["data"][:num_posts]
-            
+
             # get post data
             for post in posts:
                 date = datetime.strptime(
