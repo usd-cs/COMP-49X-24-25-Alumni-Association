@@ -118,6 +118,7 @@ def get_country_demographics(access_token, account_id):
 def tester():
     from social_tracker.models import AccessToken
     tk = AccessToken.objects.get()
+    get_country_demographics(tk.token, tk.account_id)
     get_city_demographics(tk.token, tk.account_id)
     print("done tester")
 
