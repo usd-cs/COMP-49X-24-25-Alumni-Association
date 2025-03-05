@@ -1,6 +1,6 @@
 import requests
 from datetime import datetime
-from social_tracker.models import Post, Country, City
+from social_tracker.models import Post, Country, City, Age
 
 
 def get_instagram_posts(access_token, num_posts=100):
@@ -118,8 +118,8 @@ def get_country_demographics(access_token, account_id):
 def tester():
     from social_tracker.models import AccessToken
     tk = AccessToken.objects.get()
-    get_country_demographics(tk.token, tk.account_id)
-    get_city_demographics(tk.token, tk.account_id)
+    #get_country_demographics(tk.token, tk.account_id)
+    get_age_demographics(tk.token, tk.account_id)
     print("done tester")
 
 def get_city_demographics(access_token, account_id):
@@ -136,16 +136,40 @@ def get_city_demographics(access_token, account_id):
         response = requests.get(url, params=params)
         response.raise_for_status()  # raise error if it is not a success code
         data = response.json()
-        print(data["data"][0])
         if "total_value" in data["data"][0]:
             cities = data["data"][0]["total_value"]["breakdowns"][0]["results"]
             if len(cities) > 0:
                 City.objects.all().delete()
             for i in range(0, len(cities)):
-                print(cities[i])
                 City.objects.create(
                     name=cities[i]["dimension_values"][0],
                     num_interactions=cities[i]["value"],
+                )
+    except Exception as e:
+        return f"Error getting Instagram posts: {e}"
+
+def get_age_demographics(access_token, account_id):
+    url = "https://graph.instagram.com/v22.0/" + str(account_id) + "/insights"
+    params = {
+        "metric": "engaged_audience_demographics",
+        "metric_type": "total_value",
+        "access_token": access_token,
+        "period": "lifetime",
+        "timeframe": "this_month",
+        "breakdown": "age"
+    }
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()  # raise error if it is not a success code
+        data = response.json()
+        if "total_value" in data["data"][0]:
+            ages = data["data"][0]["total_value"]["breakdowns"][0]["results"]
+            if len(ages) > 0:
+                Age.objects.all().delete()
+            for i in range(0, len(ages)):
+                Age.objects.create(
+                    age_range=ages[i]["dimension_values"][0],
+                    num_interactions=ages[i]["value"],
                 )
     except Exception as e:
         return f"Error getting Instagram posts: {e}"
