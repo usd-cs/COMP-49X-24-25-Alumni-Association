@@ -129,6 +129,7 @@ def get_country_demographics(access_token, account_id):
     except Exception as e:
         return f"Error getting Instagram posts: {e}"
 
+
 def get_city_demographics(access_token, account_id):
     """
     Fetches and stores Instagram engagement demographics by city.
