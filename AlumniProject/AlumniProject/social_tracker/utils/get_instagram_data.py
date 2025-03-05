@@ -128,14 +128,6 @@ def get_country_demographics(access_token, account_id):
     except Exception as e:
         return f"Error getting Instagram posts: {e}"
 
-'''delete this function'''
-def tester():
-    from social_tracker.models import AccessToken
-    tk = AccessToken.objects.get()
-    #get_country_demographics(tk.token, tk.account_id)
-    get_age_demographics(tk.token, tk.account_id)
-    print("done tester")
-
 def get_city_demographics(access_token, account_id):
     """
     Fetches and stores Instagram engagement demographics by city.
