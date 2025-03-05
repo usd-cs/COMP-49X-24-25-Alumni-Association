@@ -89,6 +89,20 @@ def get_instagram_posts(access_token, num_posts=100):
         return f"Error getting Instagram posts: {e}"
 
 def get_country_demographics(access_token, account_id):
+    """
+    Fetches and stores Instagram engagement demographics by country.
+
+    This function queries the Instagram Graph API for engagement demographic 
+    data, specifically breaking down interactions by country. The retrieved 
+    data is then stored in the `Country` model.
+
+    Args:
+        access_token (str): The access token for authenticating API requests.
+        account_id (str): The Instagram account ID for which to retrieve data.
+
+    Returns:
+        str: An error message if the API request fails, otherwise None.
+    """
     url = "https://graph.instagram.com/v22.0/" + str(account_id) + "/insights"
     params = {
         "metric": "engaged_audience_demographics",
@@ -123,6 +137,20 @@ def tester():
     print("done tester")
 
 def get_city_demographics(access_token, account_id):
+    """
+    Fetches and stores Instagram engagement demographics by city.
+
+    This function queries the Instagram Graph API for engagement demographic 
+    data, specifically breaking down interactions by city. The retrieved 
+    data is then stored in the `City` model.
+
+    Args:
+        access_token (str): The access token for authenticating API requests.
+        account_id (str): The Instagram account ID for which to retrieve data.
+
+    Returns:
+        str: An error message if the API request fails, otherwise None.
+    """
     url = "https://graph.instagram.com/v22.0/" + str(account_id) + "/insights"
     params = {
         "metric": "engaged_audience_demographics",
@@ -149,6 +177,20 @@ def get_city_demographics(access_token, account_id):
         return f"Error getting Instagram posts: {e}"
 
 def get_age_demographics(access_token, account_id):
+    """
+    Fetches and stores Instagram engagement demographics by age group.
+
+    This function queries the Instagram Graph API for engagement demographic 
+    data, specifically breaking down interactions by age group. The retrieved 
+    data is then stored in the `Age` model.
+
+    Args:
+        access_token (str): The access token for authenticating API requests.
+        account_id (str): The Instagram account ID for which to retrieve data.
+
+    Returns:
+        str: An error message if the API request fails, otherwise None.
+    """
     url = "https://graph.instagram.com/v22.0/" + str(account_id) + "/insights"
     params = {
         "metric": "engaged_audience_demographics",
