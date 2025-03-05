@@ -94,12 +94,13 @@ def save_access_token(request):
     try:
         data = json.loads(request.body)
         access_token_value = data.get("access_token")
+        account_ID = data.get("account_ID")
 
         if not access_token_value:
             return JsonResponse({"message": "Access token required."}, status=400)
 
         # save new access token
-        access_token = AccessToken(token=access_token_value)
+        access_token = AccessToken(token=access_token_value, account_id=account_ID)
         # save function should delete old one automatically
         access_token.save()
 
