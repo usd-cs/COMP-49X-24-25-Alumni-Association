@@ -88,12 +88,13 @@ def get_instagram_posts(access_token, num_posts=100):
     except requests.exceptions.RequestException as e:
         return f"Error getting Instagram posts: {e}"
 
+
 def get_country_demographics(access_token, account_id):
     """
     Fetches and stores Instagram engagement demographics by country.
 
-    This function queries the Instagram Graph API for engagement demographic 
-    data, specifically breaking down interactions by country. The retrieved 
+    This function queries the Instagram Graph API for engagement demographic
+    data, specifically breaking down interactions by country. The retrieved
     data is then stored in the `Country` model.
 
     Args:
@@ -110,7 +111,7 @@ def get_country_demographics(access_token, account_id):
         "access_token": access_token,
         "period": "lifetime",
         "timeframe": "this_month",
-        "breakdown": "country" 
+        "breakdown": "country",
     }
     try:
         response = requests.get(url, params=params)
@@ -128,20 +129,25 @@ def get_country_demographics(access_token, account_id):
     except Exception as e:
         return f"Error getting Instagram posts: {e}"
 
-'''delete this function'''
+
+"""delete this function"""
+
+
 def tester():
     from social_tracker.models import AccessToken
+
     tk = AccessToken.objects.get()
-    #get_country_demographics(tk.token, tk.account_id)
+    # get_country_demographics(tk.token, tk.account_id)
     get_age_demographics(tk.token, tk.account_id)
     print("done tester")
+
 
 def get_city_demographics(access_token, account_id):
     """
     Fetches and stores Instagram engagement demographics by city.
 
-    This function queries the Instagram Graph API for engagement demographic 
-    data, specifically breaking down interactions by city. The retrieved 
+    This function queries the Instagram Graph API for engagement demographic
+    data, specifically breaking down interactions by city. The retrieved
     data is then stored in the `City` model.
 
     Args:
@@ -158,7 +164,7 @@ def get_city_demographics(access_token, account_id):
         "access_token": access_token,
         "period": "lifetime",
         "timeframe": "this_month",
-        "breakdown": "city"
+        "breakdown": "city",
     }
     try:
         response = requests.get(url, params=params)
@@ -176,12 +182,13 @@ def get_city_demographics(access_token, account_id):
     except Exception as e:
         return f"Error getting Instagram posts: {e}"
 
+
 def get_age_demographics(access_token, account_id):
     """
     Fetches and stores Instagram engagement demographics by age group.
 
-    This function queries the Instagram Graph API for engagement demographic 
-    data, specifically breaking down interactions by age group. The retrieved 
+    This function queries the Instagram Graph API for engagement demographic
+    data, specifically breaking down interactions by age group. The retrieved
     data is then stored in the `Age` model.
 
     Args:
@@ -198,7 +205,7 @@ def get_age_demographics(access_token, account_id):
         "access_token": access_token,
         "period": "lifetime",
         "timeframe": "this_month",
-        "breakdown": "age"
+        "breakdown": "age",
     }
     try:
         response = requests.get(url, params=params)

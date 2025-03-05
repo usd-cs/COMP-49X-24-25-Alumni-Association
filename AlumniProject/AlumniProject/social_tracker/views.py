@@ -126,6 +126,7 @@ def get_posts_view(request):
     result = get_instagram_posts(access_token.token)
     return JsonResponse({"message": result})
 
+
 def get_demographics(request):
     access_token = AccessToken.objects.get()
     result = get_country_demographics(access_token.token)

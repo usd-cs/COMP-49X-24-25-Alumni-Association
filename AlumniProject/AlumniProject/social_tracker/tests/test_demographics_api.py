@@ -9,7 +9,7 @@ from social_tracker.utils.get_instagram_data import (
 
 
 class DemographicsTestCase(TestCase):
-    
+
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_country_demographics(self, mock_get):
         """Test fetching and storing country demographics from Instagram API."""
@@ -36,8 +36,12 @@ class DemographicsTestCase(TestCase):
         get_country_demographics("fake_token", "fake_account")
 
         self.assertEqual(Country.objects.count(), 2)
-        self.assertTrue(Country.objects.filter(name="US", num_interactions=500).exists())
-        self.assertTrue(Country.objects.filter(name="AR", num_interactions=300).exists())
+        self.assertTrue(
+            Country.objects.filter(name="US", num_interactions=500).exists()
+        )
+        self.assertTrue(
+            Country.objects.filter(name="AR", num_interactions=300).exists()
+        )
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_city_demographics(self, mock_get):
@@ -51,8 +55,14 @@ class DemographicsTestCase(TestCase):
                         "breakdowns": [
                             {
                                 "results": [
-                                    {"dimension_values": ["San Diego, California"], "value": 400},
-                                    {"dimension_values": ["Madison, Wisconsin"], "value": 250},
+                                    {
+                                        "dimension_values": ["San Diego, California"],
+                                        "value": 400,
+                                    },
+                                    {
+                                        "dimension_values": ["Madison, Wisconsin"],
+                                        "value": 250,
+                                    },
                                 ]
                             }
                         ]
@@ -65,8 +75,16 @@ class DemographicsTestCase(TestCase):
         get_city_demographics("fake_token", "fake_account")
 
         self.assertEqual(City.objects.count(), 2)
-        self.assertTrue(City.objects.filter(name="San Diego, California", num_interactions=400).exists())
-        self.assertTrue(City.objects.filter(name="Madison, Wisconsin", num_interactions=250).exists())
+        self.assertTrue(
+            City.objects.filter(
+                name="San Diego, California", num_interactions=400
+            ).exists()
+        )
+        self.assertTrue(
+            City.objects.filter(
+                name="Madison, Wisconsin", num_interactions=250
+            ).exists()
+        )
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_age_demographics(self, mock_get):
@@ -94,16 +112,20 @@ class DemographicsTestCase(TestCase):
         get_age_demographics("fake_token", "fake_account")
 
         self.assertEqual(Age.objects.count(), 2)
-        self.assertTrue(Age.objects.filter(age_range="18-24", num_interactions=600).exists())
-        self.assertTrue(Age.objects.filter(age_range="25-34", num_interactions=450).exists())
+        self.assertTrue(
+            Age.objects.filter(age_range="18-24", num_interactions=600).exists()
+        )
+        self.assertTrue(
+            Age.objects.filter(age_range="25-34", num_interactions=450).exists()
+        )
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_country_demographics_api_error(self, mock_get):
         """Test API failure in country demographics function."""
         mock_get.side_effect = Exception("API Error")
-        
+
         result = get_country_demographics("fake_token", "fake_account")
-        
+
         self.assertEqual(result, "Error getting Instagram posts: API Error")
         self.assertEqual(Country.objects.count(), 0)
 
@@ -111,9 +133,9 @@ class DemographicsTestCase(TestCase):
     def test_get_city_demographics_api_error(self, mock_get):
         """Test API failure in city demographics function."""
         mock_get.side_effect = Exception("API Error")
-        
+
         result = get_city_demographics("fake_token", "fake_account")
-        
+
         self.assertEqual(result, "Error getting Instagram posts: API Error")
         self.assertEqual(City.objects.count(), 0)
 
@@ -121,8 +143,8 @@ class DemographicsTestCase(TestCase):
     def test_get_age_demographics_api_error(self, mock_get):
         """Test API failure in age demographics function."""
         mock_get.side_effect = Exception("API Error")
-        
+
         result = get_age_demographics("fake_token", "fake_account")
-        
+
         self.assertEqual(result, "Error getting Instagram posts: API Error")
         self.assertEqual(Age.objects.count(), 0)

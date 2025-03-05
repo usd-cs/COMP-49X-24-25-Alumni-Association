@@ -29,6 +29,7 @@ class AccessToken(models.Model):
     class Meta:
         app_label = "social_tracker"
 
+
 class Country(models.Model):
     name = models.TextField()
     num_interactions = models.IntegerField(default=0)
@@ -36,12 +37,14 @@ class Country(models.Model):
     class Meta:
         app_label = "social_tracker"
 
+
 class City(models.Model):
     name = models.TextField()
     num_interactions = models.IntegerField(default=0)
 
     class Meta:
         app_label = "social_tracker"
+
 
 class Age(models.Model):
     age_range = models.TextField()
