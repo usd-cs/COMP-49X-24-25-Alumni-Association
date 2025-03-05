@@ -15,6 +15,7 @@ class Post(models.Model):
         num_saves (IntegerField): The number of times the post has been saved.
         post_API_ID (CharField): A unique identifier for the post in an external API.
     """
+
     post_ID = models.AutoField(primary_key=True)
     date_posted = models.DateTimeField(null=True)
     post_link = models.CharField(max_length=100)
@@ -36,10 +37,11 @@ class AccessToken(models.Model):
     Attributes:
         token (TextField): The access token string.
         account_id (TextField): The account ID associated with the token.
-    
+
     Methods:
         save: Ensures there is only one active access token at a time.
     """
+
     token = models.TextField()
     account_id = models.TextField(default="None")
 
@@ -61,6 +63,7 @@ class Country(models.Model):
         name (TextField): The name of the country.
         num_interactions (IntegerField): The number of interactions from this country.
     """
+
     name = models.TextField()
     num_interactions = models.IntegerField(default=0)
 
@@ -76,6 +79,7 @@ class City(models.Model):
         name (TextField): The name of the city.
         num_interactions (IntegerField): The number of interactions from this city.
     """
+
     name = models.TextField()
     num_interactions = models.IntegerField(default=0)
 
@@ -91,6 +95,7 @@ class Age(models.Model):
         age_range (TextField): The age range
         num_interactions (IntegerField): The number of interactions from this age range.
     """
+
     age_range = models.TextField()
     num_interactions = models.IntegerField(default=0)
 
