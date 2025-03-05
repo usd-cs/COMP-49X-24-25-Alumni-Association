@@ -28,6 +28,19 @@
       padding: 0;
     }
 
+    /* Navigation Tabs */
+    .nav-tabs .nav-link {
+      color: var(--alcala-white);
+      background-color: transparent;
+      border: none;
+      font-size: 1.2rem; /* Increase the font size here to match index.html */
+    }
+    .nav-tabs .nav-link.active {
+      color: var(--torero-blue);
+      background-color: var(--alcala-white);
+      border-radius: 5px 5px 0 0;
+    }
+
     .container {
       background-color: var(--torero-blue);
       padding: 1rem;
@@ -35,12 +48,6 @@
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
       margin-top: 20px;
       max-width: 1200px;
-    }
-
-    h1 {
-      color: white;
-      text-align: center;
-      margin-bottom: 20px;
     }
 
     .btn {
@@ -100,8 +107,18 @@
   </style>
 </head>
 <body>
+  <!-- Navigation Tabs (same style as index.html) -->
+  <nav class="nav nav-tabs justify-content-center">
+    <!-- Link to home page (Post Info) via Django named URL or absolute path -->
+    <a class="nav-link" href="{% url 'home' %}">Post Info</a>
+    <!-- Account Info (still linking to an .html or your own Django URL) -->
+    <a class="nav-link" href="account.html">Account Info</a>
+    <!-- Active tab for Demographic Info -->
+    <a class="nav-link active" aria-current="page" href="{% url 'demographics' %}">Demographic Info</a>
+  </nav>
+
   <div class="container">
-    <h1>Instagram Demographics</h1>
+    <!-- (Optional) <h1>Instagram Demographics</h1> can be commented out if you prefer. -->
 
     <div class="text-center mb-3">
       <button class="btn" onclick="getDemographics()">Get Demographics</button>
@@ -163,6 +180,7 @@
           ]
         };
 
+        // Render everything
         renderAgeHistogram(data.ageRanges);
         renderCountryList(data.topCountries);
         renderCityList(data.topCities);
@@ -195,7 +213,7 @@
         },
         options: {
           responsive: true,
-          maintainAspectRatio: true, 
+          maintainAspectRatio: true,
           plugins: {
             legend: {
               display: false // Hide legend entirely
