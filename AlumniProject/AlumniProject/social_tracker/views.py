@@ -4,7 +4,12 @@ from django.contrib.auth.models import User
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from .utils.get_instagram_data import get_instagram_posts, get_country_demographics, get_city_demographics, get_age_demographics
+from .utils.get_instagram_data import (
+    get_instagram_posts,
+    get_country_demographics,
+    get_city_demographics,
+    get_age_demographics,
+)
 from .utils.write_database_to_csv import export_posts_to_csv
 from django.views.decorators.csrf import csrf_exempt
 from .models import Post
@@ -126,10 +131,11 @@ def get_posts_view(request):
     result = get_instagram_posts(access_token.token)
     return JsonResponse({"message": result})
 
+
 def update_demographics():
     """
     Calls all the helper functions that collect demographic info
-    from Instagram and puts them into the database. This can 
+    from Instagram and puts them into the database. This can
     be used by the frontend to call the functions
 
     Parameters:
@@ -142,7 +148,7 @@ def update_demographics():
     get_country_demographics(access_token.token, access_token.account_id)
     get_city_demographics(access_token.token, access_token.account_id)
     get_age_demographics(access_token.token, access_token.account_id)
-    return 
+    return
 
 
 def list_stored_posts(request):

@@ -149,12 +149,14 @@ class DemographicsTestCase(TestCase):
 
         self.assertEqual(result, "Error getting Instagram posts: API Error")
         self.assertEqual(Age.objects.count(), 0)
-    
+
     @patch("social_tracker.views.get_country_demographics")
     @patch("social_tracker.views.get_city_demographics")
     @patch("social_tracker.views.get_age_demographics")
     @patch("social_tracker.models.AccessToken.objects.get")
-    def test_update_demographics_called(self, mock_get_access_token, mock_get_age, mock_get_city, mock_get_country):
+    def test_update_demographics_called(
+        self, mock_get_access_token, mock_get_age, mock_get_city, mock_get_country
+    ):
         mock_access_token = Mock()
         mock_access_token.token = "fake_token"
         mock_access_token.account_id = "fake_account"
@@ -162,6 +164,12 @@ class DemographicsTestCase(TestCase):
 
         update_demographics()
 
-        mock_get_country.assert_called_once_with(mock_access_token.token, mock_access_token.account_id)
-        mock_get_city.assert_called_once_with(mock_access_token.token, mock_access_token.account_id)
-        mock_get_age.assert_called_once_with(mock_access_token.token, mock_access_token.account_id)
+        mock_get_country.assert_called_once_with(
+            mock_access_token.token, mock_access_token.account_id
+        )
+        mock_get_city.assert_called_once_with(
+            mock_access_token.token, mock_access_token.account_id
+        )
+        mock_get_age.assert_called_once_with(
+            mock_access_token.token, mock_access_token.account_id
+        )
