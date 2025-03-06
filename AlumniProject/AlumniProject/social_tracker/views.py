@@ -48,7 +48,6 @@ def user_login(request):
             user = None
         if user is not None:
             user = authenticate(request, username=user.username, password=password)
-            print("authenticated")
         if user is not None:
             login(request, user)
             request.session.save()
