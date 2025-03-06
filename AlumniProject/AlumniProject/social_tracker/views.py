@@ -50,8 +50,9 @@ def user_login(request):
             user = authenticate(request, username=user.username, password=password)
         if user is not None:
             login(request, user)
+            request.session.save()
             response = redirect("home")
-            response.status_code = 200
+            response.status_code = 302
             return response
         else:
             response = render(request, "login.html", {"error": "Invalid credentials."})
