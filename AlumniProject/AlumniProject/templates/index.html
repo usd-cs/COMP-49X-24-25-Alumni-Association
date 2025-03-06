@@ -118,6 +118,11 @@
                 alert("Please enter a valid access token.");
                 return;
             }
+            const accountID = document.getElementById("accountID").value;
+            if (!accountID) {
+                alert("Please enter a valid accountID.");
+                return;
+            }
 
             try {
                 const response = await fetch("{% url 'save-access-token' %}", {
@@ -126,7 +131,7 @@
                         "Content-Type": "application/json",
                         "X-CSRFToken": "{{ csrf_token }}"
                     },
-                    body: JSON.stringify({ access_token: accessToken })
+                    body: JSON.stringify({ access_token: accessToken , account_ID: accountID})
                 });
 
                 if (response.ok) {
@@ -308,8 +313,9 @@
         <div class="input-group justify-content-center">
             <label for="accessToken" class="visually-hidden">Access Token:</label>
             <div class="d-flex align-items-center">
-                <input type="text" id="accessToken" class="form-control" placeholder="Enter your access token here">
-                <button onclick="saveAccessToken()" class="btn">Save Access Token</button>
+                <input type="text" id="accessToken" class="form-control" placeholder="Enter Access Token">
+                <input type="text" id="accountID" class="form-control" placeholder="Enter Account ID">
+                <button onclick="saveAccessToken()" class="btn">Save</button>
             </div>
         </div>
 
