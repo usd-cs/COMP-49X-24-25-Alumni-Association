@@ -19,7 +19,7 @@ class LoginTests(TestCase):
         response = self.client.post(
             reverse("login"), {"email": "user@sd.edu", "password": "pw0"}
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
     def test_bad_pass(self):
         response = self.client.post(
