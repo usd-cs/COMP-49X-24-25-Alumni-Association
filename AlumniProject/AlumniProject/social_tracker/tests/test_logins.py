@@ -42,7 +42,7 @@ class LoginTests(TestCase):
     def test_home_logged_in(self):
         self.client.post(reverse("login"), {"email": "user@sd.edu", "password": "pw0"})
         response = self.client.get(reverse("home"))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
     def test_home_not_logged_in(self):
         response = self.client.get(reverse("home"))
