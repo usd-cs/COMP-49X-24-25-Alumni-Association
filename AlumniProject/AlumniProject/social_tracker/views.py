@@ -115,6 +115,11 @@ def save_access_token(request):
         return JsonResponse({"message": "Invalid token."}, status=400)
 
 
+@login_required
+def get_demographics(request):
+    return render(request, "demographics.html")
+
+
 def get_posts_view(request):
     """
     Fetches Instagram posts using the stored access token
