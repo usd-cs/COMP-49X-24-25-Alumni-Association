@@ -157,11 +157,12 @@ def update_demographics():
     get_age_demographics(access_token.token, access_token.account_id)
     return
 
+
 def demographics_view(request):
     """
     Retrieves demographic interaction data and returns it as a JSON response.
 
-    This view fetches data from the Age, Country, and City models, aggregating 
+    This view fetches data from the Age, Country, and City models, aggregating
     the number of interactions based on different demographic categories.
 
     Returns:
@@ -175,19 +176,35 @@ def demographics_view(request):
         request (HttpRequest): The HTTP request object.
     """
     update_demographics()
-    age_data = Age.objects.all().values('age_range', 'num_interactions')
-    country_data = Country.objects.all().order_by('-num_interactions')[:5].values('name', 'num_interactions')
-    city_data = City.objects.all().order_by('-num_interactions')[:5].values('name', 'num_interactions')
+    age_data = Age.objects.all().values("age_range", "num_interactions")
+    country_data = (
+        Country.objects.all()
+        .order_by("-num_interactions")[:5]
+        .values("name", "num_interactions")
+    )
+    city_data = (
+        City.objects.all()
+        .order_by("-num_interactions")[:5]
+        .values("name", "num_interactions")
+    )
     response_data = {
-        'ageRanges': {item['age_range']: item['num_interactions'] for item in age_data},
-        'topCountries': [{'country': item['name'], 'count': item['num_interactions']} for item in country_data],
-        'topCities': [{'city': item['name'], 'count': item['num_interactions']} for item in city_data],
+        "ageRanges": {item["age_range"]: item["num_interactions"] for item in age_data},
+        "topCountries": [
+            {"country": item["name"], "count": item["num_interactions"]}
+            for item in country_data
+        ],
+        "topCities": [
+            {"city": item["name"], "count": item["num_interactions"]}
+            for item in city_data
+        ],
     }
     print(response_data)
-    return JsonResponse({'success': True, 'data': response_data})
+    return JsonResponse({"success": True, "data": response_data})
+
 
 def demographics_page(request):
-    return render(request, 'demographics.html')
+    return render(request, "demographics.html")
+
 
 def list_stored_posts(request):
     """
