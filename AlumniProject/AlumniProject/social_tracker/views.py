@@ -10,10 +10,12 @@ from .utils.get_instagram_data import (
     get_city_demographics,
     get_age_demographics,
 )
+from .models import Country, City, Age
 from .utils.write_database_to_csv import export_posts_to_csv
 from django.views.decorators.csrf import csrf_exempt
 from .models import Post
 from .models import AccessToken
+from django.shortcuts import render
 import json
 
 """
@@ -156,6 +158,37 @@ def update_demographics():
     get_age_demographics(access_token.token, access_token.account_id)
     return
 
+def demographics_view(request):
+    """
+    Retrieves demographic interaction data and returns it as a JSON response.
+
+    This view fetches data from the Age, Country, and City models, aggregating 
+    the number of interactions based on different demographic categories.
+
+    Returns:
+        JsonResponse: A JSON response containing:
+            - 'ageRanges': A dictionary mapping age ranges to interaction counts.
+            - 'topCountries': A list of dictionaries with country names and interaction counts.
+            - 'topCities': A list of dictionaries with city names and interaction counts.
+            - 'success': A boolean indicating the request was successful.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+    """
+    update_demographics()
+    age_data = Age.objects.all().values('age_range', 'num_interactions')
+    country_data = Country.objects.all().order_by('-num_interactions')[:5].values('name', 'num_interactions')
+    city_data = City.objects.all().order_by('-num_interactions')[:5].values('name', 'num_interactions')
+    response_data = {
+        'ageRanges': {item['age_range']: item['num_interactions'] for item in age_data},
+        'topCountries': [{'country': item['name'], 'count': item['num_interactions']} for item in country_data],
+        'topCities': [{'city': item['name'], 'count': item['num_interactions']} for item in city_data],
+    }
+    print(response_data)
+    return JsonResponse({'success': True, 'data': response_data})
+
+def demographics_page(request):
+    return render(request, 'demographics.html')
 
 def list_stored_posts(request):
     """
