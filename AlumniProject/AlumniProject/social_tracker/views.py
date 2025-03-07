@@ -215,7 +215,8 @@ def demographics_page(request):
     Returns:
         HttpResponse: The rendered demographics HTML page.
     """
-    return render(request, 'demographics.html')
+    return render(request, "demographics.html")
+
 
 def list_stored_posts(request):
     """
