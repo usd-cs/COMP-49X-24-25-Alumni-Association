@@ -15,7 +15,6 @@ from .utils.write_database_to_csv import export_posts_to_csv
 from django.views.decorators.csrf import csrf_exempt
 from .models import Post
 from .models import AccessToken
-from django.shortcuts import render
 import json
 
 """
