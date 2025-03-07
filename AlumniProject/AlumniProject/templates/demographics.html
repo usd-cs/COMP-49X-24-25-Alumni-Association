@@ -150,11 +150,17 @@
     async function getDemographics() {
       try {
         const response = await fetch("/api/demographics/");
+        
+        // Parse the JSON response from the API
         const data = await response.json();
 
+        // Check if the API call was successful
         if (data.success) {
+          // Render the age, city and country histogram using the fetched data
           renderAgeHistogram(data.data.ageRanges);
+          
           renderCountryList(data.data.topCountries);
+          
           renderCityList(data.data.topCities);
         } else {
           console.error("Error fetching demographics:", data.message);

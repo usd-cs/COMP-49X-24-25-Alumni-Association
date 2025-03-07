@@ -187,6 +187,18 @@ def demographics_view(request):
     return JsonResponse({'success': True, 'data': response_data})
 
 def demographics_page(request):
+    """
+    Renders the demographics page.
+
+    This view returns the HTML page where demographic data is displayed.
+    It provides the interface for users to view age, country, and city demographics.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The rendered demographics HTML page.
+    """
     return render(request, 'demographics.html')
 
 def list_stored_posts(request):
