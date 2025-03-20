@@ -101,3 +101,25 @@ class Age(models.Model):
 
     class Meta:
         app_label = "social_tracker"
+
+
+class Comment(models.Model):
+    """
+    Model representing a comment on a post
+    """
+
+    id = models.TextField(primary_key=True)
+    num_likes = models.IntegerField(default=0)
+    username = models.TextField()
+    user_id = models.TextField()
+    replies =  models.JSONField(default=list)
+    post_id = models.TextField()
+    text = models.TextField()
+    timestamp = models.DateTimeField()
+    parent_id = models.TextField(default="")
+
+
+class User(models.Model):
+    username = models.TextField()
+    id = models.TextField(primary_key=True)
+    num_comments = models.IntegerField(default=0)
