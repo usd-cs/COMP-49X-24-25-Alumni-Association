@@ -120,6 +120,9 @@ def save_access_token(request):
 def get_demographics(request):
     return render(request, "demographics.html")
 
+@login_required
+def token_landing(request):
+    return render(request, "token.html")
 
 def get_posts_view(request):
     """
