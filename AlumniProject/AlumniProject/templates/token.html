@@ -1,12 +1,144 @@
-<!-- templates/token.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Token Landing Page</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Token</title>
+
+  <!-- Font Awesome (optional, if you want icons) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- Bootstrap -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+
+  <style>
+    :root {
+      --founders-blue: #003b70;
+      --immaculata-blue: #0074c8;
+      --torero-blue: #75bee9;
+      --alcala-white: #ffffff;
+    }
+
+    body {
+      background: linear-gradient(135deg, #003b70, #0074c8);
+      height: 100vh;
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    .nav-tabs .nav-link {
+      color: var(--alcala-white);
+      background-color: transparent;
+      border: none;
+      font-size: 1.2rem;
+    }
+    .nav-tabs .nav-link.active {
+      color: var(--torero-blue);
+      background-color: var(--alcala-white);
+      border-radius: 5px 5px 0 0;
+    }
+
+    .container {
+      background-color: var(--torero-blue);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      margin-top: 50px;
+      max-width: 600px;
+    }
+
+    .btn {
+      background-color: var(--founders-blue);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      margin: 5px;
+    }
+    .btn:hover {
+      background-color: var(--immaculata-blue);
+    }
+  </style>
+
+  <script>
+    async function saveAccessToken() {
+      const accessToken = document.getElementById("accessToken").value;
+      if (!accessToken) {
+        alert("Please enter a valid access token.");
+        return;
+      }
+      const accountID = document.getElementById("accountID").value;
+      if (!accountID) {
+        alert("Please enter a valid account ID.");
+        return;
+      }
+
+      try {
+        const response = await fetch("{% url 'save-access-token' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+          },
+          body: JSON.stringify({ access_token: accessToken, account_ID: accountID })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          alert(data.message);
+        } else {
+          alert("Unable to save access token. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error occurred while saving access token:", error);
+        alert("Error occurred while saving access token.");
+      }
+    }
+  </script>
 </head>
 <body>
-  <h1>Token Landing Page</h1>
-  <p>This is your new landing page after login.</p>
+  <!-- Navigation Tabs -->
+  <nav class="nav nav-tabs justify-content-center">
+    <!-- Active tab for Token -->
+    <a class="nav-link active" aria-current="page" href="token.html">Token</a>
+    <!-- Other pages: Post Info, Account Info, Demographics -->
+    <a class="nav-link" href="index.html">Post Info</a>
+    <a class="nav-link" href="account.html">Account Info</a>
+    <a class="nav-link" href="demographics.html">Demographic Info</a>
+  </nav>
+
+  <div class="container">
+    <h1>Manage Token</h1>
+    <div class="d-flex justify-content-center gap-3 mt-4">
+      <div>
+        <label for="accessToken" class="form-label">Access Token:</label>
+        <input
+          type="text"
+          id="accessToken"
+          class="form-control"
+          placeholder="Enter Access Token"
+        />
+      </div>
+      <div>
+        <label for="accountID" class="form-label">Account ID:</label>
+        <input
+          type="text"
+          id="accountID"
+          class="form-control"
+          placeholder="Enter Account ID"
+        />
+      </div>
+    </div>
+
+    <div class="text-center mt-4">
+      <button onclick="saveAccessToken()" class="btn">Save Token</button>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

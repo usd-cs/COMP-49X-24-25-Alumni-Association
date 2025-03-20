@@ -13,7 +13,6 @@
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
     rel="stylesheet"
   >
-
   <style>
     :root {
       --founders-blue: #003b70;
@@ -30,12 +29,12 @@
       padding: 0;
     }
 
-    /* Navigation Tabs (from second file) */
+    /* Navigation Tabs */
     .nav-tabs .nav-link {
       color: var(--alcala-white);
       background-color: transparent;
       border: none;
-      font-size: 1.2rem; /* Larger font */
+      font-size: 1.2rem;
     }
     .nav-tabs .nav-link.active {
       color: var(--torero-blue);
@@ -63,13 +62,6 @@
       background-color: var(--immaculata-blue);
     }
 
-    input[type="text"] {
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      margin-right: 10px;
-    }
-
     .table-curved-border {
       margin-top: 10px;
       border-radius: 6px;
@@ -92,7 +84,7 @@
       margin-left: 5px;
     }
 
-    /* Filter Popup (from first file) */
+    /* Filter Popup */
     .filter-popup {
       position: fixed;
       top: min(100px, 80%);
@@ -106,7 +98,7 @@
       width: 250px;
       max-height: 90vh;
       overflow-y: auto;
-      display: none; /* hidden by default */
+      display: none;
     }
     .filter-content label {
       display: block;
@@ -124,39 +116,7 @@
      ***************  API CALLS / POST LOGIC *******
      ***********************************************/
 
-    async function saveAccessToken() {
-      const accessToken = document.getElementById("accessToken").value;
-      if (!accessToken) {
-        alert("Please enter a valid access token.");
-        return;
-      }
-      const accountID = document.getElementById("accountID").value;
-      if (!accountID) {
-        alert("Please enter a valid account ID.");
-        return;
-      }
-
-      try {
-        const response = await fetch("{% url 'save-access-token' %}", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": "{{ csrf_token }}"
-          },
-          body: JSON.stringify({ access_token: accessToken, account_ID: accountID })
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          alert(data.message);
-        } else {
-          alert("Unable to save access token. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error occurred while saving access token:", error);
-        alert("Error occurred while saving access token.");
-      }
-    }
+    // Removed the saveAccessToken() and token UI.
 
     async function getIGPosts() {
       try {
@@ -183,7 +143,6 @@
         const response = await fetch("{% url 'list-posts' %}");
         if (response.ok) {
           const postData = await response.json();
-          // Use the advanced display logic (pagination) from the first file
           displayPostData(postData.data);
         } else {
           alert("Unable to pull post data from site database. Please try again.");
@@ -198,7 +157,6 @@
      **********  ADVANCED FILTER + PAGINATION  *****
      ***********************************************/
 
-    // For advanced filter popup
     function toggleFilterPopup() {
       const popup = document.getElementById("filterPopup");
       popup.style.display = (popup.style.display === "none" || !popup.style.display)
@@ -239,14 +197,13 @@
       }
     }
 
-    let currentPage = 1;     // Starting page
-    const postsPerPage = 10; // Number of posts per page
-    let allPosts = [];       // Array of all posts
+    let currentPage = 1;     
+    const postsPerPage = 10; 
+    let allPosts = [];       
 
-    // The display function that sets advanced pagination
     function displayPostData(postData) {
       allPosts = postData;
-      currentPage = 1;       // Reset to first page
+      currentPage = 1;
       updatePagination();
     }
 
@@ -255,7 +212,6 @@
       const endIndex = startIndex + postsPerPage;
       const paginatedPosts = allPosts.slice(startIndex, endIndex);
 
-      // Build the table rows
       const tableHTML = paginatedPosts.map(info => `
         <tr>
           <td>${info.date_posted}</td>
@@ -273,7 +229,6 @@
 
       document.getElementById("postList").innerHTML = tableHTML;
 
-      // Enable/Disable pagination buttons
       document.getElementById("prevPage").disabled = (currentPage === 1);
       document.getElementById("nextPage").disabled = (endIndex >= allPosts.length);
     }
@@ -318,8 +273,8 @@
           alert("Unable to filter posts. Please try again.");
         }
       } catch (error) {
-        console.error("There was an error filtering posts:", error);
-        alert("There was an error filtering posts.");
+        console.error("Error filtering posts:", error);
+        alert("Error filtering posts.");
       }
     }
 
@@ -332,66 +287,48 @@
     };
 
     function sortTable(column) {
-      // Instead of directly sorting DOM rows, sort the allPosts array
-      // so pagination works correctly with sorted data
       sortDirections[column] = !sortDirections[column];
 
       allPosts.sort((a, b) => {
         let valA = a[column];
         let valB = b[column];
 
-        // If column is date_posted, parse it as a date
         if (column === "date_posted") {
           return sortDirections[column]
             ? new Date(valA) - new Date(valB)
             : new Date(valB) - new Date(valA);
         } else {
-          // Convert strings to numbers for likes, comments, shares, saves
           valA = parseInt(valA, 10);
           valB = parseInt(valB, 10);
           return sortDirections[column] ? (valA - valB) : (valB - valA);
         }
       });
 
-      // Now refresh the displayed page
       updatePagination();
     }
   </script>
 </head>
 <body>
 
-  <!-- Navigation Tabs (from second file) -->
+  <!-- Navigation Tabs -->
   <nav class="nav nav-tabs justify-content-center">
+    <!-- Token tab now separate in token.html, so not active here -->
+    <a class="nav-link" href="token.html">Token</a>
+
     <!-- Active tab for Post Info -->
     <a class="nav-link active" aria-current="page" href="index.html">Post Info</a>
-    <!-- Not yet implemented page -->
+
+    <!-- Account Info (still not implemented) -->
     <a class="nav-link" href="account.html">Account Info</a>
-    <!-- Link to the newly created demographics page -->
-    <a class="nav-link" href="demographics/">Demographic Info</a>
+
+    <!-- Demographics page -->
+    <a class="nav-link" href="demographics.html">Demographic Info</a>
   </nav>
 
   <div class="container">
     <h1>Get Instagram Post Info</h1>
 
-    <!-- Access Token & Account ID -->
-    <div class="input-group justify-content-center">
-      <label for="accessToken" class="visually-hidden">Access Token:</label>
-      <div class="d-flex align-items-center">
-        <input
-          type="text"
-          id="accessToken"
-          class="form-control"
-          placeholder="Enter Access Token"
-        >
-        <input
-          type="text"
-          id="accountID"
-          class="form-control ms-2"
-          placeholder="Enter Account ID"
-        >
-        <button onclick="saveAccessToken()" class="btn">Save</button>
-      </div>
-    </div>
+    <!-- Removed the token input group section. -->
 
     <!-- Buttons (Pull Posts / Export CSV) -->
     <div class="d-flex justify-content-center gap-3">
