@@ -29,6 +29,27 @@ class Post(models.Model):
         ordering = ["-date_posted"]
         app_label = "social_tracker"
 
+class User(models.Model):
+    user_ID = models.IntegerField(primary_key=True)
+    username = models.CharField(max_length=100)
+    num_comments = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ["num_comments"]
+        app_label = "social_tracker"
+
+class Comment(models.Model):
+    comment_ID = models.IntegerField(primary_key=True)
+    date_posted = models.DateTimeField(null=True)
+    num_likes = models.IntegerField(default=0)
+    text = models.TextField(default="")
+    post_API_ID = models.ForeignKey(Post, to_field='post_API_ID', db_column='POST_API_ID', on_delete=models.CASCADE)
+    user_ID = models.ForeignKey(User, on_delete=models.CASCADE)
+    parent_ID = models.ForeignKey('self', null=True)
+
+    class Meta:
+        ordering = ["-date_posted"]
+        app_label = "social_tracker"
 
 class AccessToken(models.Model):
     """
