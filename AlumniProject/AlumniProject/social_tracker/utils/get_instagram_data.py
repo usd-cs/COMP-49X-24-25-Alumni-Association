@@ -314,10 +314,6 @@ def get_comments_helper(access_token, comment_id, post_id=None):
         tuple: A tuple containing the saved Comment object and a list of its reply IDs.
                Returns (None, []) if something goes wrong.
     """
-    import requests
-    from social_tracker.models import Comment, User
-    from django.utils.dateparse import parse_datetime
-
     try:
         url = f"https://graph.instagram.com/{comment_id}"
         params = {
