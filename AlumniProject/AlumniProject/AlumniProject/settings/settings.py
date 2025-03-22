@@ -69,7 +69,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "AlumniProject.wsgi.application"
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 USE_TZ = True  # enable timezone support
 
 

@@ -123,7 +123,7 @@ class Comment(models.Model):
     num_likes = models.IntegerField(default=0)
     username = models.TextField()
     user_id = models.TextField()
-    replies =  models.JSONField(default=list)
+    replies = models.JSONField(default=list)
     post_id = models.TextField()
     text = models.TextField()
     timestamp = models.DateTimeField(null=True)
@@ -142,6 +142,7 @@ class User(models.Model):
         id (TextField): The unique identifier for the user (primary key).
         num_comments (IntegerField): The total number of comments made by the user.
     """
+
     username = models.TextField()
     id = models.TextField(primary_key=True)
     num_comments = models.IntegerField(default=0)

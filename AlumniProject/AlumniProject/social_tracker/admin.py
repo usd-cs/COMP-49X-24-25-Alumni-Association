@@ -14,5 +14,6 @@ class PostAdmin(admin.ModelAdmin):
         "num_comments",
     )
 
+
 admin.site.register(Comment)
 admin.site.register(User)
