@@ -69,6 +69,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "AlumniProject.wsgi.application"
+TIME_ZONE = 'UTC'
 USE_TZ = True  # enable timezone support
 
 
@@ -110,8 +111,6 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "America/Los_Angeles"
 
 USE_I18N = True
-
-USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)

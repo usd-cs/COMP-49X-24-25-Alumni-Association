@@ -27,6 +27,7 @@ from social_tracker import views
 
 urlpatterns = [
     path("", home, name="home"),
+    path("index", home, name="home"),
     path("login", user_login, name="login"),
     path("admin/", admin.site.urls),
     path("get-posts/", views.get_posts_view, name="get-posts"),

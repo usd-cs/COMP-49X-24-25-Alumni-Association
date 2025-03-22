@@ -105,7 +105,18 @@ class Age(models.Model):
 
 class Comment(models.Model):
     """
-    Model representing a comment on a post
+    Model representing a comment on a post.
+
+    Attributes:
+        id (TextField): The unique identifier for the comment.
+        num_likes (IntegerField): The number of likes the comment received.
+        username (TextField): The username of the commenter.
+        user_id (TextField): The ID of the user who made the comment.
+        replies (JSONField): A list of reply comment IDs associated with this comment.
+        post_id (TextField): The ID of the Instagram post the comment is on.
+        text (TextField): The content of the comment.
+        timestamp (DateTimeField): The time the comment was posted.
+        parent_id (TextField): The ID of the parent comment if this is a reply, otherwise empty.
     """
 
     id = models.TextField(primary_key=True)
@@ -115,11 +126,25 @@ class Comment(models.Model):
     replies =  models.JSONField(default=list)
     post_id = models.TextField()
     text = models.TextField()
-    timestamp = models.DateTimeField()
-    parent_id = models.TextField(default="")
+    timestamp = models.DateTimeField(null=True)
+    parent_id = models.TextField(default="", null=True)
+
+    class Meta:
+        app_label = "social_tracker"
 
 
 class User(models.Model):
+    """
+    Model representing a user who made one or more comments.
+
+    Attributes:
+        username (TextField): The username of the user.
+        id (TextField): The unique identifier for the user (primary key).
+        num_comments (IntegerField): The total number of comments made by the user.
+    """
     username = models.TextField()
     id = models.TextField(primary_key=True)
     num_comments = models.IntegerField(default=0)
+
+    class Meta:
+        app_label = "social_tracker"
