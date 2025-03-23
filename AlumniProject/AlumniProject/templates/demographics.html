@@ -107,13 +107,18 @@
   </style>
 </head>
 <body>
-  <!-- Navigation Tabs (same style as index.html) -->
+  <!-- Navigation Tabs  -->
   <nav class="nav nav-tabs justify-content-center">
-    <!-- Link to home page (Post Info) via Django named URL or absolute path -->
+    <!-- Token -->
+    <a class="nav-link" href="{% url 'token_page' %}">Token</a>
+  
+    <!-- Post Info -->
     <a class="nav-link" href="{% url 'home' %}">Post Info</a>
-    <!-- Account Info (still linking to an .html or your own Django URL) -->
+  
+    <!-- Account Info -->
     <a class="nav-link" href="account.html">Account Info</a>
-    <!-- Active tab for Demographic Info -->
+  
+    <!-- Active tab for Demographics -->
     <a class="nav-link active" aria-current="page" href="{% url 'demographics' %}">Demographic Info</a>
   </nav>
 

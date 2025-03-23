@@ -103,15 +103,20 @@
   <!-- Navigation Tabs -->
   <nav class="nav nav-tabs justify-content-center">
     <!-- Active tab for Token -->
-    <a class="nav-link active" aria-current="page" href="token.html">Token</a>
-    <!-- Other pages: Post Info, Account Info, Demographics -->
-    <a class="nav-link" href="index.html">Post Info</a>
+    <a class="nav-link active" aria-current="page" href="{% url 'token_page' %}">Token</a>
+  
+    <!-- Post Info tab (home) -->
+    <a class="nav-link" href="{% url 'home' %}">Post Info</a>
+  
+    <!-- Account Info is still not implemented yet -->
     <a class="nav-link" href="account.html">Account Info</a>
-    <a class="nav-link" href="demographics.html">Demographic Info</a>
+  
+    <!-- Demographic Info tab -->
+    <a class="nav-link" href="{% url 'demographics' %}">Demographic Info</a>
   </nav>
 
   <div class="container">
-    <h1>Manage Token</h1>
+    <h1>Manage Account</h1>
     <div class="d-flex justify-content-center gap-3 mt-4">
       <div>
         <label for="accessToken" class="form-label">Access Token:</label>

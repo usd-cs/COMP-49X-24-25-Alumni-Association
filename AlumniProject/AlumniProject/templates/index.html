@@ -312,17 +312,17 @@
 
   <!-- Navigation Tabs -->
   <nav class="nav nav-tabs justify-content-center">
-    <!-- Token tab now separate in token.html, so not active here -->
-    <a class="nav-link" href="token.html">Token</a>
-
+    <!-- Token -->
+    <a class="nav-link" href="{% url 'token_page' %}">Token</a>
+  
     <!-- Active tab for Post Info -->
-    <a class="nav-link active" aria-current="page" href="index.html">Post Info</a>
-
-    <!-- Account Info (still not implemented) -->
+    <a class="nav-link active" aria-current="page" href="{% url 'home' %}">Post Info</a>
+  
+    <!-- Account Info (still a static page or not implemented) -->
     <a class="nav-link" href="account.html">Account Info</a>
-
-    <!-- Demographics page -->
-    <a class="nav-link" href="demographics.html">Demographic Info</a>
+  
+    <!-- Demographics -->
+    <a class="nav-link" href="{% url 'demographics' %}">Demographic Info</a>
   </nav>
 
   <div class="container">
