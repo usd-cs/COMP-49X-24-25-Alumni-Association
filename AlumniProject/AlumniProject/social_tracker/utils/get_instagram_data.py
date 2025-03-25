@@ -1,6 +1,6 @@
 import requests
 from datetime import datetime
-from social_tracker.models import Post, Country, City, Age, Comment, User
+from social_tracker.models import Post, Country, City, Age, Comment, InstagramUser
 from django.utils.dateparse import parse_datetime
 
 
@@ -69,8 +69,6 @@ def get_instagram_posts(access_token, num_posts=100):
                         num_comments = data[1].get("values")[0].get("value")
                         num_saved = data[2].get("values")[0].get("value")
                         num_shares = data[3].get("values")[0].get("value")
-                        if num_comments > 0:
-                            get_comment_data(access_token, api_id)
                         if not Post.objects.filter(post_link=permalink).exists():
                             # post does not exist in database, create new post
                             Post.objects.create(
@@ -91,6 +89,9 @@ def get_instagram_posts(access_token, num_posts=100):
                             existing_post.num_saves = num_saved
                             existing_post.post_API_ID = api_id
                             existing_post.save()
+                            
+                        if num_comments > 0:
+                            get_comment_data(access_token, api_id)
 
                 else:
                     print(f"Invalid post- not added: {permalink}")
@@ -347,7 +348,7 @@ def get_comments_helper(access_token, comment_id, post_id=None):
 
         # Save or update user
         try:
-            user_obj, _ = User.objects.get_or_create(id=user_id)
+            user_obj, _ = InstagramUser.objects.get_or_create(id=user_id)
             user_obj.username = username
         except Exception as e:
             print(f"User save error: {e}")
@@ -363,7 +364,7 @@ def get_comments_helper(access_token, comment_id, post_id=None):
             comment_obj.replies = reply_ids
             comment_obj.text = text
             comment_obj.username = username
-            comment_obj.user_ID = User.objects.get(id=user_id)
+            comment_obj.user_ID = InstagramUser.objects.get(id=user_id)
 
             if not comment_obj.parent_ID:
                 comment_obj.parent_ID = parent_id

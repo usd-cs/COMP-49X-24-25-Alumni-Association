@@ -29,7 +29,7 @@ class Post(models.Model):
         ordering = ["-date_posted"]
         app_label = "social_tracker"
 
-class User(models.Model):
+class InstagramUser(models.Model):
     """
     Model representing a user who makes comments.
 
@@ -66,7 +66,7 @@ class Comment(models.Model):
     num_likes = models.IntegerField(default=0)
     text = models.TextField(default="")
     post_API_ID = models.ForeignKey(Post, to_field='post_API_ID', db_column='POST_API_ID', on_delete=models.CASCADE, null=True)
-    user_ID = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    user_ID = models.ForeignKey(InstagramUser, on_delete=models.CASCADE, null=True)
     username = models.TextField(default="")
     parent_ID = models.TextField(default="", null=True)
     replies = models.JSONField(default=list)
