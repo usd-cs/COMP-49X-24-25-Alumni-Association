@@ -2,6 +2,7 @@
 venv/
 env/
 django_env/
+.venv/
 
 # Python cache and compiled files
 __pycache__/
