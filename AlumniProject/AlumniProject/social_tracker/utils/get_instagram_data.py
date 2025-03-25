@@ -1,6 +1,7 @@
 import requests
 from datetime import datetime
-from social_tracker.models import Post, Country, City, Age
+from social_tracker.models import Post, Country, City, Age, Comment, User
+from django.utils.dateparse import parse_datetime
 
 
 def get_instagram_posts(access_token, num_posts=100):
@@ -68,6 +69,8 @@ def get_instagram_posts(access_token, num_posts=100):
                         num_comments = data[1].get("values")[0].get("value")
                         num_saved = data[2].get("values")[0].get("value")
                         num_shares = data[3].get("values")[0].get("value")
+                        if num_comments > 0:
+                            get_comment_data(access_token, api_id)
                         if not Post.objects.filter(post_link=permalink).exists():
                             # post does not exist in database, create new post
                             Post.objects.create(
@@ -221,3 +224,163 @@ def get_age_demographics(access_token, account_id):
                 )
     except Exception as e:
         return f"Error getting Instagram posts: {e}"
+
+
+def get_comment_data(access_token, post_id):
+    """
+    Gets all comments and replies for a specific Instagram post and stores them in the database.
+
+    Uses the Instagram Graph API to retrieve all top-level and nested replies for
+    a given post. It saves each comment and updates or creates the associated
+    user. It also handles setting the correct parent_id for replies by linking them to their
+    corresponding parent comments after all data has been fetched.
+
+    Args:
+        access_token (str): The access token used to authenticate with the Instagram API.
+        post_id (str): The ID of the Instagram post to fetch comments for.
+
+    Returns:
+        None
+    """
+    try:
+        all_comment_ids = []
+        url = f"https://graph.instagram.com/{post_id}/comments"
+        params = {
+            "access_token": access_token,
+            "fields": "id",
+            "limit": 50,
+        }
+
+        # get all comment IDs using pagination during the api call
+        while True:
+            print("cycling")
+            response = requests.get(url, params=params)
+            resp_json = response.json()
+
+            if "error" in resp_json:
+                print(f"Error fetching comments: {resp_json['error'].get('message')}")
+                return
+
+            for comment in resp_json.get("data", []):
+                comment_id = comment.get("id")
+                if comment_id:
+                    all_comment_ids.append(comment_id)
+
+            paging = resp_json.get("paging", {})
+            next_url = paging.get("next")
+            if next_url:
+                url = next_url
+                params = {}
+            else:
+                break
+
+        # Get all attributes of and save each comment
+        comment_map = {}
+        for comment_id in all_comment_ids:
+            comment_obj, reply_ids = get_comments_helper(
+                access_token, comment_id, post_id
+            )
+            if comment_obj:
+                comment_map[comment_obj.id] = (comment_obj, reply_ids)
+
+        # Loop through each comment and assign parent_id to its replies
+        for comment_id, (comment, reply_ids) in comment_map.items():
+            for reply_id in reply_ids:
+                if reply_id in comment_map:
+                    reply, _ = comment_map[reply_id]
+                    if not reply.parent_id:
+                        reply.parent_id = comment_id
+                        reply.save()
+
+    except Exception as e:
+        print(f"Unexpected error in get_comment_data: {e}")
+
+
+def get_comments_helper(access_token, comment_id, post_id=None):
+    """
+    Gets attribute for an Instagram comment and stores it along with user and reply data.
+
+    Pulls information about a comment from the Instagram API. This includes the
+    user who posted it, the number of likes, the comment text, timestamp, and
+    any replies. It then checks for duplicates and creates or updates the corresponding
+    Comment and User records in the database.
+
+    If the comment is new, it increments the user’s total comment count. It also collects
+    any reply IDs so they can be processed later.
+
+    Args:
+        access_token (str): The access token used to authenticate with the Instagram API.
+        comment_id (str): The ID of the comment to fetch.
+        post_id (str, optional): The ID of the post the comment belongs to.
+
+    Returns:
+        tuple: A tuple containing the saved Comment object and a list of its reply IDs.
+               Returns (None, []) if something goes wrong.
+    """
+    try:
+        url = f"https://graph.instagram.com/{comment_id}"
+        params = {
+            "fields": "id,from,like_count,text,timestamp,replies,username,parent_id",
+            "access_token": access_token,
+        }
+
+        response = requests.get(url, params=params)
+        data = response.json()
+
+        if "error" in data:
+            print(
+                f"Skipping comment {comment_id} due to an error: {data['error'].get('message')}"
+            )
+            return None, []
+
+        # get user and comment attributes
+        user_data = data.get("from", {})
+        user_id = user_data.get("id")
+        username = user_data.get("username")
+        timestamp = data.get("timestamp")
+        text = data.get("text")
+        num_likes = data.get("like_count")
+        reply_ids = [
+            r.get("id") for r in data.get("replies", {}).get("data", []) if r.get("id")
+        ]
+        parent_id = data.get("parent_id") or ""
+
+        # Save or update user
+        try:
+            user_obj, _ = User.objects.get_or_create(id=user_id)
+            user_obj.username = username
+        except Exception as e:
+            print(f"User save error: {e}")
+            return None, []
+
+        # Save or update comment
+        try:
+            comment_obj, created = Comment.objects.get_or_create(id=comment_id)
+
+            comment_obj.timestamp = parse_datetime(timestamp)
+            comment_obj.post_id = post_id
+            comment_obj.num_likes = num_likes
+            comment_obj.replies = reply_ids
+            comment_obj.text = text
+            comment_obj.username = username
+            comment_obj.user_id = user_id
+
+            if not comment_obj.parent_id:
+                comment_obj.parent_id = parent_id
+
+            comment_obj.save()
+
+            # Only increment comment count if this is a new comment
+            if created:
+                user_obj.num_comments += 1
+                user_obj.save()
+
+            return comment_obj, reply_ids
+
+        except Exception as e:
+            print(f"Error saving comment {comment_id}: {e}")
+            return None, []
+
+    except Exception as e:
+        print(f"Error fetching comment {comment_id}: {e}")
+        return None, []
