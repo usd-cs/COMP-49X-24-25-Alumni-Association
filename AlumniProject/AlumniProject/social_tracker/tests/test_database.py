@@ -31,7 +31,7 @@ class DatabaseTest(TestCase):
         User.objects.create(email="user@sandiego.edu", username="John User")
         User.objects.create(email="user2@sandiego.edu", username="Frank User")
 
-         # Create test InstagramUsers
+        # Create test InstagramUsers
         InstagramUser.objects.create(id=1, username="john_doe", num_comments=5)
         InstagramUser.objects.create(id=2, username="jane_doe", num_comments=10)
 

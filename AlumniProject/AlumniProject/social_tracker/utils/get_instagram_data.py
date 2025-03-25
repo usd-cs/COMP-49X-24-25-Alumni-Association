@@ -89,7 +89,7 @@ def get_instagram_posts(access_token, num_posts=100):
                             existing_post.num_saves = num_saved
                             existing_post.post_API_ID = api_id
                             existing_post.save()
-                            
+
                         if num_comments > 0:
                             get_comment_data(access_token, api_id)
 

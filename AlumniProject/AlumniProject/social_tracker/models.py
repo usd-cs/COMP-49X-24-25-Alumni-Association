@@ -23,11 +23,12 @@ class Post(models.Model):
     num_comments = models.IntegerField(default=0)
     num_shares = models.IntegerField(default=0)
     num_saves = models.IntegerField(default=0)
-    post_API_ID = models.CharField(max_length=100, default='', unique=True)
+    post_API_ID = models.CharField(max_length=100, default="", unique=True)
 
     class Meta:
         ordering = ["-date_posted"]
         app_label = "social_tracker"
+
 
 class InstagramUser(models.Model):
     """
@@ -38,6 +39,7 @@ class InstagramUser(models.Model):
         username (CharField): The username of the user.
         num_comments (IntegerField): The total number of comments made by the user.
     """
+
     id = models.IntegerField(primary_key=True)
     username = models.TextField(default="")
     num_comments = models.IntegerField(default=0)
@@ -45,6 +47,7 @@ class InstagramUser(models.Model):
     class Meta:
         ordering = ["num_comments"]
         app_label = "social_tracker"
+
 
 class Comment(models.Model):
     """
@@ -61,11 +64,18 @@ class Comment(models.Model):
         parent_ID (TextField): The ID of the parent comment if this is a reply, otherwise empty.
         replies (JSONField): A list of replies associated with this comment.
     """
+
     id = models.IntegerField(primary_key=True)
     date_posted = models.DateTimeField(null=True)
     num_likes = models.IntegerField(default=0)
     text = models.TextField(default="")
-    post_API_ID = models.ForeignKey(Post, to_field='post_API_ID', db_column='POST_API_ID', on_delete=models.CASCADE, null=True)
+    post_API_ID = models.ForeignKey(
+        Post,
+        to_field="post_API_ID",
+        db_column="POST_API_ID",
+        on_delete=models.CASCADE,
+        null=True,
+    )
     user_ID = models.ForeignKey(InstagramUser, on_delete=models.CASCADE, null=True)
     username = models.TextField(default="")
     parent_ID = models.TextField(default="", null=True)
@@ -74,6 +84,7 @@ class Comment(models.Model):
     class Meta:
         ordering = ["-date_posted"]
         app_label = "social_tracker"
+
 
 class AccessToken(models.Model):
     """
