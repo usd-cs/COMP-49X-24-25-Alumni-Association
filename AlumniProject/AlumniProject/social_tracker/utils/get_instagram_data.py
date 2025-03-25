@@ -254,7 +254,6 @@ def get_comment_data(access_token, post_id):
 
         # get all comment IDs using pagination during the api call
         while True:
-
             response = requests.get(url, params=params)
             resp_json = response.json()
 
