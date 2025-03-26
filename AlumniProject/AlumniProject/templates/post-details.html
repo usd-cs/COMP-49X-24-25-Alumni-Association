@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Post Details</title>
+
+  <!-- Font Awesome (for icons if you need them) -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+  />
+
+  <!-- Bootstrap -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+
+  <style>
+    :root {
+      --founders-blue: #003b70;
+      --immaculata-blue: #0074c8;
+      --torero-blue: #75bee9;
+      --alcala-white: #ffffff;
+      --bs-table-border-color: #373b3e; /* same as in index.html */
+    }
+
+    body {
+      background: linear-gradient(135deg, #003b70, #0074c8);
+      height: 100vh;
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs .nav-link {
+      color: var(--alcala-white);
+      background-color: transparent;
+      border: none;
+      font-size: 1.2rem;
+    }
+    .nav-tabs .nav-link.active {
+      color: var(--torero-blue);
+      background-color: var(--alcala-white);
+      border-radius: 5px 5px 0 0;
+    }
+
+    .container {
+      background-color: var(--torero-blue);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      margin-top: 50px;
+    }
+
+    .btn {
+      background-color: var(--founders-blue);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      margin: 5px;
+    }
+    .btn:hover {
+      background-color: var(--immaculata-blue);
+    }
+
+    .table-curved-border {
+      margin-top: 10px;
+      border-radius: 6px;
+    }
+
+    /* Similar to .post-table-head in index.html */
+    .details-table-head {
+      --bs-table-color: var(--alcala-white);
+      --bs-table-bg: var(--founders-blue);
+      --bs-table-striped-color: var(--alcala-white);
+      --bs-table-active-bg: var(--founders-blue);
+      --bs-table-active-color: var(--alcala-white);
+      --bs-table-hover-bg: var(--founders-blue);
+      --bs-table-hover-color: var(--alcala-white);
+      color: var(--bs-table-color);
+      border-color: var(--bs-table-border-color);
+    }
+
+    /* Align headers to center and ensure consistent border/wrapping */
+    .table th {
+      text-align: center;
+      width: auto;
+      vertical-align: middle;
+      border: 1px solid var(--bs-table-border-color);
+      padding: 10px;
+    }
+    .table td {
+      border: 1px solid var(--bs-table-border-color);
+      padding: 10px;
+      vertical-align: middle;
+    }
+  </style>
+
+  <script>
+    // Example: On page load, you might fetch comment details
+    window.onload = function () {
+      loadPostDetails();
+    };
+
+    function loadPostDetails() {
+      // Example data. In a real scenario, you'd fetch from a server endpoint.
+      const exampleDetails = [
+        {
+          timestamp: "2023-09-20 12:15",
+          likes: 2,
+          replies: 1,
+          username: "alice",
+          text: "Great post!"
+        },
+        {
+          timestamp: "2023-09-20 13:00",
+          likes: 5,
+          replies: 0,
+          username: "bob",
+          text: "Very helpful, thanks!"
+        }
+      ];
+
+      // Populate the table
+      const tbody = document.getElementById("detailsList");
+      const rows = exampleDetails.map(item => `
+        <tr>
+          <td>${item.timestamp}</td>
+          <td>${item.likes}</td>
+          <td>${item.replies}</td>
+          <td>${item.username}</td>
+          <td>${item.text}</td>
+        </tr>
+      `).join("");
+
+      tbody.innerHTML = rows;
+    }
+
+    function goBackToPosts() {
+      // Option A: Absolute path to index page
+      // window.location.href = "/";
+
+      // Option B: Use named route if you have one for "home"
+      // window.location.href = "{% url 'home' %}";
+
+      // Or if it's physically 'index.html' in the same directory:
+      window.location.href = "index.html";
+    }
+  </script>
+</head>
+<body>
+
+  <!-- Navigation Tabs -->
+  <nav class="nav nav-tabs justify-content-center">
+    <!-- Example: If "Post Info" is still considered active here -->
+    <a class="nav-link" href="{% url 'token_page' %}">Token</a>
+    <a class="nav-link active" aria-current="page" href="{% url 'home' %}">Post Info</a>
+    <a class="nav-link" href="account.html">Account Info</a>
+    <a class="nav-link" href="{% url 'demographics' %}">Demographic Info</a>
+  </nav>
+
+  <div class="container">
+    <h1>Post Details</h1>
+
+    <!-- A simple top row with "Back to Post View" and maybe a direct link to the original IG post -->
+    <div class="d-flex justify-content-start align-items-center mb-4">
+      <!-- Back to posts page -->
+      <button onclick="window.location.href='/posts/'" class="btn">Back to Post View</button>
+
+      <!-- Link to original IG post (optional) -->
+      <a href="#" id="postLinkBtn" class="btn btn-info text-white" target="_blank">
+        View Original Post
+      </a>
+    </div>
+
+    <!-- Table of details (like comments) -->
+    <div class="table-responsive table-curved-border">
+      <table class="table table-striped table-bordered text-center">
+        <thead class="details-table-head">
+          <tr>
+            <th>Timestamp</th>
+            <th># of Likes</th>
+            <th># of Replies</th>
+            <th>Username</th>
+            <th>Comment Text</th>
+          </tr>
+        </thead>
+        <tbody id="detailsList">
+          <!-- Loaded via JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+  </script>
+</body>
+</html>

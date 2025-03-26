@@ -79,6 +79,9 @@ def user_login(request):
 def home(request):
     return render(request, "index.html")
 
+@login_required
+def post_details(request):
+    return render(request, "post-details.html")
 
 @csrf_exempt
 def save_access_token(request):
