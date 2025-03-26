@@ -22,12 +22,12 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from social_tracker.views import user_login, home
+from social_tracker.views import user_login
 from social_tracker import views
 
 urlpatterns = [
-    path("", home, name="home"),
-    path("index", home, name="home"),
+    path("", views.token_landing, name="token_landing"),
+    path("posts/", views.home, name="home"),
     path("login", user_login, name="login"),
     path("admin/", admin.site.urls),
     path("get-posts/", views.get_posts_view, name="get-posts"),
@@ -37,4 +37,5 @@ urlpatterns = [
     path("export-csv/", views.export_csv_view, name="export-csv"),
     path("save-access-token/", views.save_access_token, name="save-access-token"),
     path("demographics/", views.get_demographics, name="demographics"),
+    path("token/", views.token_landing, name="token_page"),
 ]
