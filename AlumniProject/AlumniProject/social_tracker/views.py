@@ -15,6 +15,8 @@ from .utils.write_database_to_csv import export_posts_to_csv
 from django.views.decorators.csrf import csrf_exempt
 from .models import Post
 from .models import AccessToken
+from .models import Comment
+
 import json
 
 """
@@ -79,10 +81,44 @@ def user_login(request):
 def home(request):
     return render(request, "index.html")
 
-@login_required
-def post_details(request):
-    return render(request, "post-details.html")
 
+@login_required
+def post_details(request, post_api_id):
+    try:
+        post_obj = Post.objects.get(post_API_ID=post_api_id)
+    except Post.DoesNotExist:
+        return render(request, "post-details.html", {"error": "Post not found."})
+
+    return render(request, "post-details.html", {"post": post_obj})
+
+def post_comments(request, post_id):
+    """
+    Return all comments for the post `post_id` in JSON.
+    Expecting an array of comment objects:
+      [{timestamp, num_likes, replies, username, text}, ...]
+    """
+    try:
+        # Query your DB for all comments where post_id matches
+        comment_qs = Comment.objects.filter(post_id=str(post_id))
+
+        # Build a JSON-serializable list
+        comment_list = []
+        for c in comment_qs:
+            comment_list.append({
+                "timestamp": c.timestamp.isoformat() if c.timestamp else None,
+                "num_likes": c.num_likes,
+                "replies": c.replies,      # or len(c.replies) if you prefer
+                "username": c.username,
+                "text": c.text,
+            })
+
+        # Return the list as JSON
+        return JsonResponse(comment_list, safe=False)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+    
 @csrf_exempt
 def save_access_token(request):
     """
@@ -311,7 +347,7 @@ def list_stored_posts(request):
         # Get posts data
         posts_data = [
             {
-                "id": post.post_ID,
+                "id": post.post_API_ID,
                 "date_posted": post.date_posted.strftime("%m/%d/%Y"),
                 "post_link": post.post_link,
                 "likes": post.num_likes,

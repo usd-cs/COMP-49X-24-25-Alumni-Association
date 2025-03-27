@@ -23,7 +23,7 @@
       --immaculata-blue: #0074c8;
       --torero-blue: #75bee9;
       --alcala-white: #ffffff;
-      --bs-table-border-color: #373b3e; /* same as in index.html */
+      --bs-table-border-color: #373b3e; /* match index.html */
     }
 
     body {
@@ -85,7 +85,7 @@
       border-color: var(--bs-table-border-color);
     }
 
-    /* Align headers to center and ensure consistent border/wrapping */
+    /* Table cell alignment/borders */
     .table th {
       text-align: center;
       width: auto;
@@ -99,64 +99,93 @@
       vertical-align: middle;
     }
   </style>
-
+  
   <script>
-    // Example: On page load, you might fetch comment details
-    window.onload = function () {
-      loadPostDetails();
+    // On page load, we fetch the correct post ID from the URL
+    window.onload = function() {
+      const postId = getPostIdFromUrl(); 
+      if (!postId) {
+        alert("No post ID found in URL.");
+        return;
+      }
+      loadCommentsForPost(postId);
     };
 
-    function loadPostDetails() {
-      // Example data. In a real scenario, you'd fetch from a server endpoint.
-      const exampleDetails = [
-        {
-          timestamp: "2023-09-20 12:15",
-          likes: 2,
-          replies: 1,
-          username: "alice",
-          text: "Great post!"
-        },
-        {
-          timestamp: "2023-09-20 13:00",
-          likes: 5,
-          replies: 0,
-          username: "bob",
-          text: "Very helpful, thanks!"
-        }
-      ];
+    /**
+     * Extracts the post ID from a URL like:
+     *   /post-details/123
+     * or
+     *   /post-details/123/
+     * 
+     * Returns the "123" part as a string.
+     */
+    function getPostIdFromUrl() {
+      const path = window.location.pathname; // e.g. "/post-details/123"
+      const segments = path.split("/");      // ["", "post-details", "123"]
+      // The last segment might be empty if there's a trailing slash,
+      // so we check for the second-last if needed
+      // e.g. [ "", "post-details", "123", ""]
+      let postId = segments[2]; // typical if no trailing slash
+      if (!postId && segments.length > 3) {
+        postId = segments[segments.length - 2]; // handle trailing slash
+      }
+      return postId;
+    }
 
-      // Populate the table
+    /**
+     * Fetches the comment data from an endpoint like "/api/post-comments/<postId>" 
+     * and populates the table. 
+     * Adjust the endpoint as needed to match your Django view that returns the comment data.
+     */
+    async function loadCommentsForPost(postId) {
+      try {
+        // Example endpoint. Replace with your real URL or use
+        // fetch(`/api/post-comments/${postId}`)
+        // or a query param approach if you prefer
+        const response = await fetch(`/api/post-comments/${postId}`);
+        if (!response.ok) {
+          alert("Unable to fetch comment data for post " + postId);
+          return;
+        }
+        const data = await response.json(); 
+        // Suppose 'data' is an array of comment objects: {timestamp, likes, replies, username, text}
+        displayComments(data);
+      } catch (err) {
+        console.error("Error loading comments for post:", err);
+        alert("Error loading comments for post.");
+      }
+    }
+
+    /**
+     * Takes an array of comment data and populates the #detailsList table body
+     */
+    function displayComments(commentData) {
       const tbody = document.getElementById("detailsList");
-      const rows = exampleDetails.map(item => `
+      const rows = commentData.map(item => `
         <tr>
           <td>${item.timestamp}</td>
-          <td>${item.likes}</td>
-          <td>${item.replies}</td>
+          <td>${item.num_likes}</td>
+          <td>${item.replies?.length || 0}</td>
           <td>${item.username}</td>
           <td>${item.text}</td>
         </tr>
       `).join("");
-
       tbody.innerHTML = rows;
     }
 
     function goBackToPosts() {
-      // Option A: Absolute path to index page
-      // window.location.href = "/";
-
-      // Option B: Use named route if you have one for "home"
+      // For a Django route:
       // window.location.href = "{% url 'home' %}";
 
-      // Or if it's physically 'index.html' in the same directory:
-      window.location.href = "index.html";
+      // Or an absolute URL if you have /posts/:
+      window.location.href = "/posts/";
     }
   </script>
 </head>
 <body>
-
   <!-- Navigation Tabs -->
   <nav class="nav nav-tabs justify-content-center">
-    <!-- Example: If "Post Info" is still considered active here -->
+    <!-- If "Post Info" is considered active, we do this: -->
     <a class="nav-link" href="{% url 'token_page' %}">Token</a>
     <a class="nav-link active" aria-current="page" href="{% url 'home' %}">Post Info</a>
     <a class="nav-link" href="account.html">Account Info</a>
@@ -166,12 +195,11 @@
   <div class="container">
     <h1>Post Details</h1>
 
-    <!-- A simple top row with "Back to Post View" and maybe a direct link to the original IG post -->
+    <!-- A row with "Back to Post View" + optional "Original Post" link  -->
     <div class="d-flex justify-content-start align-items-center mb-4">
-      <!-- Back to posts page -->
-      <button onclick="window.location.href='/posts/'" class="btn">Back to Post View</button>
-
-      <!-- Link to original IG post (optional) -->
+      <button class="btn me-3" onclick="goBackToPosts()">Back to Post View</button>
+      <!-- If you want a direct link to the IG post: 
+           you can dynamically set this from your data if needed -->
       <a href="#" id="postLinkBtn" class="btn btn-info text-white" target="_blank">
         View Original Post
       </a>
@@ -190,7 +218,7 @@
           </tr>
         </thead>
         <tbody id="detailsList">
-          <!-- Loaded via JS -->
+          <!-- Dynamically inserted by displayComments() -->
         </tbody>
       </table>
     </div>
