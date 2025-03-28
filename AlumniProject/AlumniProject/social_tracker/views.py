@@ -91,6 +91,7 @@ def post_details(request, post_api_id):
 
     return render(request, "post-details.html", {"post": post_obj})
 
+
 def post_comments(request, post_id):
     """
     Return all comments for the post `post_id` in JSON.
@@ -104,21 +105,23 @@ def post_comments(request, post_id):
         # Build a JSON-serializable list
         comment_list = []
         for c in comment_qs:
-            comment_list.append({
-                "timestamp": c.date_posted.isoformat() if c.date_posted else None,
-                "num_likes": c.num_likes,
-                "replies": c.replies,      # or len(c.replies) if you prefer
-                "username": c.username,
-                "text": c.text,
-            })
+            comment_list.append(
+                {
+                    "timestamp": c.date_posted.isoformat() if c.date_posted else None,
+                    "num_likes": c.num_likes,
+                    "replies": c.replies,  # or len(c.replies) if you prefer
+                    "username": c.username,
+                    "text": c.text,
+                }
+            )
 
         # Return the list as JSON
         return JsonResponse(comment_list, safe=False)
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-    
-    
+
+
 @csrf_exempt
 def save_access_token(request):
     """
