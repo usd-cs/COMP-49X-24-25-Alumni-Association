@@ -336,6 +336,9 @@ def get_comments_helper(access_token, comment_id, post_id=None):
         user_data = data.get("from", {})
         user_id = user_data.get("id")
         username = user_data.get("username")
+        if not user_id or not username:
+            print(f"Skipping comment {comment_id} due to missing user info")
+            return None, []
         timestamp = data.get("timestamp")
         text = data.get("text")
         num_likes = data.get("like_count")
