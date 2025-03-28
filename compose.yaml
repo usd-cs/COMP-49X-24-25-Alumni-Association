@@ -1,13 +1,25 @@
 services:
-  web: 
+  web:
     build:
       context: AlumniProject
       target: builder
     volumes:
-      - ./AlumniProject:/AlumniProject  # Mount the entire project for live updates
-      - ./AlumniProject/db.sqlite3:/AlumniProject/db.sqlite3  
-    ports: 
-      - "8000:8000"
+      - ./AlumniProject:/AlumniProject
+      - ./AlumniProject/db.sqlite3:/AlumniProject/db.sqlite3
     environment:
-      - DEBUG=True  # make sure Django detects code changes
+      - DEBUG=True
+    expose:
+      - "8000"  # only exposed inside the docker network
     restart: unless-stopped
+
+  proxy:
+    image: nginx:latest
+    ports:
+      - "8080:8080"  # HTTPS (secure)
+      - "8000:8000"  # HTTP (for redirect)
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - /etc/letsencrypt:/etc/letsencrypt
+    restart: always
+    depends_on:
+      - web
