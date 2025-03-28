@@ -38,4 +38,7 @@ urlpatterns = [
     path("save-access-token/", views.save_access_token, name="save-access-token"),
     path("demographics/", views.get_demographics, name="demographics"),
     path("token/", views.token_landing, name="token_page"),
+    # path("post-details/<int:post_id>/", views.post_details, name="post_details"),
+    path("api/post-comments/<str:post_id>/", views.post_comments, name="post_comments"),
+    path("post-details/<str:post_api_id>/", views.post_details, name="post_details"),
 ]
