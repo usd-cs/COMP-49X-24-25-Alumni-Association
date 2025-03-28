@@ -84,6 +84,18 @@ def home(request):
 
 @login_required
 def post_details(request, post_api_id):
+    """
+    Renders a detail page for a specific Instagram post, identified by its external post API ID.
+
+    This view looks up the Post object in the database via its 'post_API_ID'. If the post
+    does not exist, the view returns a template indicating that the post was not found.
+    Otherwise, it passes the retrieved Post object to the 'post-details.html' template.
+
+    :param request: The current HttpRequest object.
+    :param post_api_id: A string representing the external Instagram ID for the post.
+    :return: An HttpResponse rendering either the detail page (with the Post context)
+             or an error message if no matching post is found.
+    """
     try:
         post_obj = Post.objects.get(post_API_ID=post_api_id)
     except Post.DoesNotExist:
@@ -91,6 +103,7 @@ def post_details(request, post_api_id):
 
     return render(request, "post-details.html", {"post": post_obj})
 
+@login_required
 def post_comments(request, post_id):
     """
     Return all comments for the post `post_id` in JSON.
