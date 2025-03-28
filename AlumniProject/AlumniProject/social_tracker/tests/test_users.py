@@ -1,7 +1,7 @@
 from django.test import TestCase
 from unittest.mock import patch, Mock
 from django.utils import timezone
-from social_tracker.models import User, Comment, Post
+from social_tracker.models import InstagramUser, Comment, Post
 from social_tracker.utils.get_instagram_data import get_comments_helper
 
 
@@ -20,9 +20,9 @@ class UserModelTests(TestCase):
         """
         Testing successful user creation once a comment is found.
         """
-        comment_id = "c1"
-        user_id = "u1"
-        post_id = "p1"
+        comment_id = "333"
+        user_id = "111"
+        post_id = "222"
 
         Post.objects.create(
             post_link="https://example.com/post",
@@ -51,7 +51,7 @@ class UserModelTests(TestCase):
         comment_obj, reply_ids = get_comments_helper("fake_token", comment_id, post_id)
 
         self.assertIsNotNone(comment_obj)
-        self.assertTrue(User.objects.filter(id=user_id).exists())
+        self.assertTrue(InstagramUser.objects.filter(id=user_id).exists())
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_user_not_duplicated_on_second_comment(self, mock_get):
@@ -59,10 +59,10 @@ class UserModelTests(TestCase):
         Testing that a user is not duplicated once a second comment made by
         the same user is found.
         """
-        comment_id_1 = "c1"
-        comment_id_2 = "c2"
-        user_id = "u1"
-        post_id = "p1"
+        comment_id_1 = "333"
+        comment_id_2 = "444"
+        user_id = "111"
+        post_id = "222"
 
         Post.objects.create(
             post_link="https://example.com/post",
@@ -91,7 +91,7 @@ class UserModelTests(TestCase):
         get_comments_helper("fake_token", comment_id_1, post_id)
 
         # Save state after first comment
-        user = User.objects.get(id=user_id)
+        user = InstagramUser.objects.get(id=user_id)
         self.assertEqual(user.num_comments, 1)
 
         # Second comment by same user
@@ -113,7 +113,7 @@ class UserModelTests(TestCase):
         # Check that user still exists and comment count incremented once
         user.refresh_from_db()
         self.assertEqual(user.num_comments, 2)
-        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(InstagramUser.objects.count(), 1)
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_user_missing_data(self, mock_get):
@@ -121,8 +121,8 @@ class UserModelTests(TestCase):
         Testing that a user is not created if there is missing information
         in the API response that corresponds to user info.
         """
-        comment_id = "c1"
-        post_id = "p1"
+        comment_id = "333"
+        post_id = "222"
 
         Post.objects.create(
             post_link="https://example.com/post",
@@ -151,7 +151,7 @@ class UserModelTests(TestCase):
         comment_obj, reply_ids = get_comments_helper("fake_token", comment_id, post_id)
 
         self.assertIsNone(comment_obj)
-        self.assertEqual(User.objects.count(), 0)
+        self.assertEqual(InstagramUser.objects.count(), 0)
         self.assertEqual(Comment.objects.count(), 0)
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
@@ -160,8 +160,8 @@ class UserModelTests(TestCase):
         Testing that the API handles errors when getting comment response data
         and does not create any comments or users if encountering an error.
         """
-        comment_id = "c1"
-        post_id = "p1"
+        comment_id = "333"
+        post_id = "222"
 
         Post.objects.create(
             post_link="https://example.com/post",
@@ -180,5 +180,5 @@ class UserModelTests(TestCase):
         comment_obj, reply_ids = get_comments_helper("fake_token", comment_id, post_id)
 
         self.assertIsNone(comment_obj)
-        self.assertEqual(User.objects.count(), 0)
+        self.assertEqual(InstagramUser.objects.count(), 0)
         self.assertEqual(Comment.objects.count(), 0)
