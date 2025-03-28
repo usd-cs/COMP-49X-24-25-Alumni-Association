@@ -1,6 +1,6 @@
 import requests
 from datetime import datetime
-from social_tracker.models import Post, Country, City, Age, Comment, User
+from social_tracker.models import Post, Country, City, Age, Comment, InstagramUser
 from django.utils.dateparse import parse_datetime
 
 
@@ -69,8 +69,6 @@ def get_instagram_posts(access_token, num_posts=100):
                         num_comments = data[1].get("values")[0].get("value")
                         num_saved = data[2].get("values")[0].get("value")
                         num_shares = data[3].get("values")[0].get("value")
-                        if num_comments > 0:
-                            get_comment_data(access_token, api_id)
                         if not Post.objects.filter(post_link=permalink).exists():
                             # post does not exist in database, create new post
                             Post.objects.create(
@@ -91,6 +89,9 @@ def get_instagram_posts(access_token, num_posts=100):
                             existing_post.num_saves = num_saved
                             existing_post.post_API_ID = api_id
                             existing_post.save()
+
+                        if num_comments > 0:
+                            get_comment_data(access_token, api_id)
 
                 else:
                     print(f"Invalid post- not added: {permalink}")
@@ -287,8 +288,8 @@ def get_comment_data(access_token, post_id):
             for reply_id in reply_ids:
                 if reply_id in comment_map:
                     reply, _ = comment_map[reply_id]
-                    if not reply.parent_id:
-                        reply.parent_id = comment_id
+                    if not reply.parent_ID:
+                        reply.parent_ID = comment_id
                         reply.save()
 
     except Exception as e:
@@ -336,6 +337,9 @@ def get_comments_helper(access_token, comment_id, post_id=None):
         user_data = data.get("from", {})
         user_id = user_data.get("id")
         username = user_data.get("username")
+        if not user_id or not username:
+            print(f"Skipping comment {comment_id} due to missing user info")
+            return None, []
         timestamp = data.get("timestamp")
         text = data.get("text")
         num_likes = data.get("like_count")
@@ -346,7 +350,7 @@ def get_comments_helper(access_token, comment_id, post_id=None):
 
         # Save or update user
         try:
-            user_obj, _ = User.objects.get_or_create(id=user_id)
+            user_obj, _ = InstagramUser.objects.get_or_create(id=user_id)
             user_obj.username = username
         except Exception as e:
             print(f"User save error: {e}")
@@ -356,16 +360,16 @@ def get_comments_helper(access_token, comment_id, post_id=None):
         try:
             comment_obj, created = Comment.objects.get_or_create(id=comment_id)
 
-            comment_obj.timestamp = parse_datetime(timestamp)
-            comment_obj.post_id = post_id
+            comment_obj.date_posted = parse_datetime(timestamp)
+            comment_obj.post_API_ID = Post.objects.get(post_API_ID=post_id)
             comment_obj.num_likes = num_likes
             comment_obj.replies = reply_ids
             comment_obj.text = text
             comment_obj.username = username
-            comment_obj.user_id = user_id
+            comment_obj.user_ID = InstagramUser.objects.get(id=user_id)
 
-            if not comment_obj.parent_id:
-                comment_obj.parent_id = parent_id
+            if not comment_obj.parent_ID:
+                comment_obj.parent_ID = parent_id
 
             comment_obj.save()
 

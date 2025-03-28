@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from django.test import TestCase
-from social_tracker.models import Post
+from social_tracker.models import Post, Comment, InstagramUser
 from django.contrib.auth.models import User
 
 
@@ -30,6 +30,28 @@ class DatabaseTest(TestCase):
         )
         User.objects.create(email="user@sandiego.edu", username="John User")
         User.objects.create(email="user2@sandiego.edu", username="Frank User")
+
+        # Create test InstagramUsers
+        InstagramUser.objects.create(id=1, username="john_doe", num_comments=5)
+        InstagramUser.objects.create(id=2, username="jane_doe", num_comments=10)
+
+        # Create test comments
+        Comment.objects.create(
+            id=1,
+            text="Great post!",
+            date_posted=datetime.now(),
+            post_API_ID=Post.objects.get(post_API_ID="12345"),
+            user_ID=InstagramUser.objects.get(id=1),
+            username="john_doe",
+        )
+        Comment.objects.create(
+            id=2,
+            text="Nice content!",
+            date_posted=datetime.now(),
+            post_API_ID=Post.objects.get(post_API_ID="12345"),
+            user_ID=InstagramUser.objects.get(id=2),
+            username="jane_doe",
+        )
 
     def test_post_creation(self):
         post = Post.objects.get(post_link="http://www.sandiego.edu/p1")
@@ -70,3 +92,52 @@ class DatabaseTest(TestCase):
         post_num = User.objects.count()
         self.assertEqual(pre_num, 2)
         self.assertEqual(post_num, 1)
+
+    def test_instagram_user_creation(self):
+        user = InstagramUser.objects.get(id=1)
+        self.assertEqual(user.username, "john_doe")
+        self.assertEqual(user.num_comments, 5)
+
+    def test_instagram_user_deletion(self):
+        user = InstagramUser.objects.get(id=2)
+        pre_num = InstagramUser.objects.count()
+        user.delete()
+        post_num = InstagramUser.objects.count()
+        self.assertEqual(pre_num, 2)
+        self.assertEqual(post_num, 1)
+
+    def test_comment_creation(self):
+        comment = Comment.objects.get(id=1)
+        self.assertEqual(comment.text, "Great post!")
+        self.assertEqual(comment.user_ID.username, "john_doe")
+        self.assertEqual(comment.post_API_ID.post_link, "http://www.sandiego.edu/p1")
+
+    def test_comment_deletion(self):
+        comment = Comment.objects.get(id=2)
+        pre_num = Comment.objects.count()
+        comment.delete()
+        post_num = Comment.objects.count()
+        self.assertEqual(pre_num, 2)
+        self.assertEqual(post_num, 1)
+
+    def test_comment_no_post(self):
+        comment = Comment.objects.create(
+            id=3,
+            text="No post comment",
+            date_posted=datetime.now(),
+            post_API_ID=None,
+            user_ID=InstagramUser.objects.get(id=1),
+            username="john_doe",
+        )
+        self.assertIsNone(comment.post_API_ID)
+
+    def test_comment_no_user(self):
+        comment = Comment.objects.create(
+            id=4,
+            text="Anonymous comment",
+            date_posted=datetime.now(),
+            post_API_ID=Post.objects.get(post_API_ID="12345"),
+            user_ID=None,
+            username="anonymous",
+        )
+        self.assertIsNone(comment.user_ID)
