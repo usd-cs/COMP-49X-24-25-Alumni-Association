@@ -103,6 +103,7 @@ def post_details(request, post_api_id):
 
     return render(request, "post-details.html", {"post": post_obj})
 
+
 @login_required
 def post_comments(request, post_id):
     """
