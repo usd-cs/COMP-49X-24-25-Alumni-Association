@@ -99,13 +99,13 @@ def post_comments(request, post_id):
     """
     try:
         # Query your DB for all comments where post_id matches
-        comment_qs = Comment.objects.filter(post_id=str(post_id))
+        comment_qs = Comment.objects.filter(post_API_ID=post_id)
 
         # Build a JSON-serializable list
         comment_list = []
         for c in comment_qs:
             comment_list.append({
-                "timestamp": c.timestamp.isoformat() if c.timestamp else None,
+                "timestamp": c.date_posted.isoformat() if c.date_posted else None,
                 "num_likes": c.num_likes,
                 "replies": c.replies,      # or len(c.replies) if you prefer
                 "username": c.username,
