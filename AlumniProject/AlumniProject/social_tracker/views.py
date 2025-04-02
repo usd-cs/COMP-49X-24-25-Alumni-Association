@@ -105,6 +105,13 @@ def post_details(request, post_api_id):
 
 @login_required
 def instagram_link(request, post_id):
+    """
+    Return the Instagram link for the post with `post_id` in JSON.
+    Expected response format:
+      {"link": "<post_link>"}
+    If the post is not found or an error occurs, returns:
+      {"error": "<error_message>"}
+    """
     try:
         post_obj = Post.objects.get(post_API_ID=post_id)
         return JsonResponse({"link": post_obj.post_link}, status=200)
