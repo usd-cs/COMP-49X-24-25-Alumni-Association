@@ -40,5 +40,6 @@ urlpatterns = [
     path("token/", views.token_landing, name="token_page"),
     # path("post-details/<int:post_id>/", views.post_details, name="post_details"),
     path("api/post-comments/<str:post_id>/", views.post_comments, name="post_comments"),
+    path("api/instagram-link/<str:post_id>/", views.instagram_link, name="instagram_link"),
     path("post-details/<str:post_api_id>/", views.post_details, name="post_details"),
 ]
