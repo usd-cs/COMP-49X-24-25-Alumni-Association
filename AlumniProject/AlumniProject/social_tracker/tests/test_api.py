@@ -95,6 +95,7 @@ class GetInstagramPostsTest(unittest.TestCase):
         self.assertIn("Error getting Instagram posts", result)
         self.assertEqual(Post.objects.count(), 0)
 
+
 @override_settings(LOGIN_URL="/")  # Bypass login for tests
 class InstagramLinkTests(TestCase):
     """
@@ -105,19 +106,20 @@ class InstagramLinkTests(TestCase):
     def setUpTestData(cls):
         """Set up test data before tests run (only executed once)."""
         cls.post = Post.objects.create(
-            post_API_ID="999000999000", 
-            post_link="https://instagram.com/p/testpost"
+            post_API_ID="999000999000", post_link="https://instagram.com/p/testpost"
         )
 
     def test_instagram_link_valid_post(self):
         """Test that a valid post ID returns the correct link."""
         mock_request = Mock()
         mock_request.user = Mock()  # Fake an authenticated user
-        
+
         response = instagram_link(mock_request, "999000999000")
         self.assertEqual(response.status_code, 200)
 
-        response_data = json.loads(response.content)  # Convert JSONResponse content to a Python dict
+        response_data = json.loads(
+            response.content
+        )  # Convert JSONResponse content to a Python dict
         self.assertEqual(response_data, {"link": self.post.post_link})
 
     def test_instagram_link_invalid_post(self):
@@ -143,6 +145,7 @@ class InstagramLinkTests(TestCase):
 
         response_data = json.loads(response.content)
         self.assertIn("error", response_data)
+
 
 if __name__ == "__main__":
     unittest.main()

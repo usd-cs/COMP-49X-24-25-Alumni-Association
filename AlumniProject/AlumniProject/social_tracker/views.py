@@ -103,6 +103,7 @@ def post_details(request, post_api_id):
 
     return render(request, "post-details.html", {"post": post_obj})
 
+
 @login_required
 def instagram_link(request, post_id):
     """
@@ -117,6 +118,7 @@ def instagram_link(request, post_id):
         return JsonResponse({"link": post_obj.post_link}, status=200)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
 
 @login_required
 def post_comments(request, post_id):
@@ -134,7 +136,11 @@ def post_comments(request, post_id):
         for c in comment_qs:
             comment_list.append(
                 {
-                    "timestamp": c.date_posted.strftime("%H:%M %m/%d/%Y") if c.date_posted else None,
+                    "timestamp": (
+                        c.date_posted.strftime("%H:%M %m/%d/%Y")
+                        if c.date_posted
+                        else None
+                    ),
                     "num_likes": c.num_likes,
                     "replies": c.replies,  # or len(c.replies) if you prefer
                     "username": c.username,
