@@ -272,7 +272,10 @@ def demographics_view(request):
     response_data = {
         "ageRanges": {item["age_range"]: item["num_interactions"] for item in age_data},
         "topCountries": [
-            {"country": get_country_name(country_dict, item["name"]), "count": item["num_interactions"]}
+            {
+                "country": get_country_name(country_dict, item["name"]),
+                "count": item["num_interactions"],
+            }
             for item in country_data
         ],
         "topCities": [
