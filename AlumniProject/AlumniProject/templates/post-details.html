@@ -108,6 +108,7 @@
         alert("No post ID found in URL.");
         return;
       }
+      loadPostLink(postId);
       loadCommentsForPost(postId);
     };
 
@@ -156,6 +157,29 @@
       }
     }
 
+    async function loadPostLink(postId) {
+      try { 
+        const response = await fetch(`/api/instagram-link/${postId}`);
+        if (!response.ok) {
+          alert("Unable to fetch comment data for post " + postId);
+          return;
+        }
+        const data = await response.json();
+        console.log(data);
+        displayLink(data);
+      }
+      catch (err) {
+        console.error("Error loading Instagram link for post:", err);
+        alert("Error loading Instagram link for post.");
+      }
+    }
+
+    function displayLink(data) {
+      const linkItem = document.getElementById("postLinkBtn");
+      console.log(data.link)
+      linkItem.href=data.link;
+    }
+
     /**
      * Takes an array of comment data and populates the #detailsList table body
      */
@@ -201,7 +225,7 @@
       <!-- If you want a direct link to the IG post: 
            you can dynamically set this from your data if needed -->
       <a href="#" id="postLinkBtn" class="btn btn-info text-white" target="_blank">
-        View Original Post
+        View Post on Instagram
       </a>
     </div>
 
@@ -210,7 +234,7 @@
       <table class="table table-striped table-bordered text-center">
         <thead class="details-table-head">
           <tr>
-            <th>Timestamp</th>
+            <th>Time Posted</th>
             <th># of Likes</th>
             <th># of Replies</th>
             <th>Username</th>

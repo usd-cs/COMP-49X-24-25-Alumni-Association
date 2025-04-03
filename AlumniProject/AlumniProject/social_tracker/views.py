@@ -105,6 +105,22 @@ def post_details(request, post_api_id):
 
 
 @login_required
+def instagram_link(request, post_id):
+    """
+    Return the Instagram link for the post with `post_id` in JSON.
+    Expected response format:
+      {"link": "<post_link>"}
+    If the post is not found or an error occurs, returns:
+      {"error": "<error_message>"}
+    """
+    try:
+        post_obj = Post.objects.get(post_API_ID=post_id)
+        return JsonResponse({"link": post_obj.post_link}, status=200)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@login_required
 def post_comments(request, post_id):
     """
     Return all comments for the post `post_id` in JSON.
@@ -120,7 +136,11 @@ def post_comments(request, post_id):
         for c in comment_qs:
             comment_list.append(
                 {
-                    "timestamp": c.date_posted.isoformat() if c.date_posted else None,
+                    "timestamp": (
+                        c.date_posted.strftime("%H:%M %m/%d/%Y")
+                        if c.date_posted
+                        else None
+                    ),
                     "num_likes": c.num_likes,
                     "replies": c.replies,  # or len(c.replies) if you prefer
                     "username": c.username,

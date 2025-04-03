@@ -5,6 +5,9 @@ import os
 import requests
 from social_tracker.utils.get_instagram_data import get_instagram_posts
 from social_tracker.models import Post
+from social_tracker.views import instagram_link
+from django.test import override_settings, TestCase
+import json
 
 # Add the project root to the Python path
 sys.path.append(
@@ -91,6 +94,57 @@ class GetInstagramPostsTest(unittest.TestCase):
         result = get_instagram_posts("fake_access_token", num_posts=2)
         self.assertIn("Error getting Instagram posts", result)
         self.assertEqual(Post.objects.count(), 0)
+
+
+@override_settings(LOGIN_URL="/")  # Bypass login for tests
+class InstagramLinkTests(TestCase):
+    """
+    Unit tests for the instagram_link function.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        """Set up test data before tests run (only executed once)."""
+        cls.post = Post.objects.create(
+            post_API_ID="999000999000", post_link="https://instagram.com/p/testpost"
+        )
+
+    def test_instagram_link_valid_post(self):
+        """Test that a valid post ID returns the correct link."""
+        mock_request = Mock()
+        mock_request.user = Mock()  # Fake an authenticated user
+
+        response = instagram_link(mock_request, "999000999000")
+        self.assertEqual(response.status_code, 200)
+
+        response_data = json.loads(
+            response.content
+        )  # Convert JSONResponse content to a Python dict
+        self.assertEqual(response_data, {"link": self.post.post_link})
+
+    def test_instagram_link_invalid_post(self):
+        """Test that an invalid post ID returns an error."""
+        mock_request = Mock()
+        mock_request.user = Mock()
+
+        response = instagram_link(mock_request, "99999")  # Non-existent post
+        self.assertEqual(response.status_code, 500)
+
+        response_data = json.loads(response.content)
+        self.assertIn("error", response_data)
+
+    @patch("social_tracker.models.Post.objects.get")
+    def test_instagram_link_database_error(self, mock_get):
+        """Test that a database error returns an error response."""
+        mock_request = Mock()
+        mock_request.user = Mock()
+        mock_get.side_effect = Exception("Database error")
+
+        response = instagram_link(mock_request, "999000999000")
+        self.assertEqual(response.status_code, 500)
+
+        response_data = json.loads(response.content)
+        self.assertIn("error", response_data)
 
 
 if __name__ == "__main__":
