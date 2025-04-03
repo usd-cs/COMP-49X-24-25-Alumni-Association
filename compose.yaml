@@ -15,8 +15,8 @@ services:
   proxy:
     image: nginx:latest
     ports:
-      - "8080:8080"  # HTTPS (secure)
-      - "8000:8000"  # HTTP (for redirect)
+      - "443:8080"  # HTTPS (secure)
+      - "80:8000"  # HTTP (for redirect)
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
       - /etc/letsencrypt:/etc/letsencrypt
