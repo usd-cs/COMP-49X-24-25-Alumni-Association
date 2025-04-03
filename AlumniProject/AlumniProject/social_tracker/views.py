@@ -10,6 +10,7 @@ from .utils.get_instagram_data import (
     get_city_demographics,
     get_age_demographics,
 )
+from .utils.country_code_resolver import load_country_dict, get_country_name
 from .models import Country, City, Age
 from .utils.write_database_to_csv import export_posts_to_csv
 from django.views.decorators.csrf import csrf_exempt
@@ -267,10 +268,11 @@ def demographics_view(request):
         .order_by("-num_interactions")[:5]
         .values("name", "num_interactions")
     )
+    country_dict = load_country_dict()
     response_data = {
         "ageRanges": {item["age_range"]: item["num_interactions"] for item in age_data},
         "topCountries": [
-            {"country": item["name"], "count": item["num_interactions"]}
+            {"country": get_country_name(country_dict, item["name"]), "count": item["num_interactions"]}
             for item in country_data
         ],
         "topCities": [
@@ -278,7 +280,6 @@ def demographics_view(request):
             for item in city_data
         ],
     }
-    print(response_data)
     return JsonResponse({"success": True, "data": response_data})
 
 
