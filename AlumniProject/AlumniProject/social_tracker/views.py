@@ -15,6 +15,8 @@ from .utils.write_database_to_csv import export_posts_to_csv
 from django.views.decorators.csrf import csrf_exempt
 from .models import Post
 from .models import AccessToken
+from .models import Comment
+
 import json
 
 """
@@ -78,6 +80,79 @@ def user_login(request):
 @login_required
 def home(request):
     return render(request, "index.html")
+
+
+@login_required
+def post_details(request, post_api_id):
+    """
+    Renders a detail page for a specific Instagram post, identified by its external post API ID.
+
+    This view looks up the Post object in the database via its 'post_API_ID'. If the post
+    does not exist, the view returns a template indicating that the post was not found.
+    Otherwise, it passes the retrieved Post object to the 'post-details.html' template.
+
+    :param request: The current HttpRequest object.
+    :param post_api_id: A string representing the external Instagram ID for the post.
+    :return: An HttpResponse rendering either the detail page (with the Post context)
+             or an error message if no matching post is found.
+    """
+    try:
+        post_obj = Post.objects.get(post_API_ID=post_api_id)
+    except Post.DoesNotExist:
+        return render(request, "post-details.html", {"error": "Post not found."})
+
+    return render(request, "post-details.html", {"post": post_obj})
+
+
+@login_required
+def instagram_link(request, post_id):
+    """
+    Return the Instagram link for the post with `post_id` in JSON.
+    Expected response format:
+      {"link": "<post_link>"}
+    If the post is not found or an error occurs, returns:
+      {"error": "<error_message>"}
+    """
+    try:
+        post_obj = Post.objects.get(post_API_ID=post_id)
+        return JsonResponse({"link": post_obj.post_link}, status=200)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@login_required
+def post_comments(request, post_id):
+    """
+    Return all comments for the post `post_id` in JSON.
+    Expecting an array of comment objects:
+      [{timestamp, num_likes, replies, username, text}, ...]
+    """
+    try:
+        # Query your DB for all comments where post_id matches
+        comment_qs = Comment.objects.filter(post_API_ID=post_id)
+
+        # Build a JSON-serializable list
+        comment_list = []
+        for c in comment_qs:
+            comment_list.append(
+                {
+                    "timestamp": (
+                        c.date_posted.strftime("%H:%M %m/%d/%Y")
+                        if c.date_posted
+                        else None
+                    ),
+                    "num_likes": c.num_likes,
+                    "replies": c.replies,  # or len(c.replies) if you prefer
+                    "username": c.username,
+                    "text": c.text,
+                }
+            )
+
+        # Return the list as JSON
+        return JsonResponse(comment_list, safe=False)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt
@@ -308,7 +383,7 @@ def list_stored_posts(request):
         # Get posts data
         posts_data = [
             {
-                "id": post.post_ID,
+                "id": post.post_API_ID,
                 "date_posted": post.date_posted.strftime("%m/%d/%Y"),
                 "post_link": post.post_link,
                 "likes": post.num_likes,

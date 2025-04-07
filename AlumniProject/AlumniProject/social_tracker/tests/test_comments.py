@@ -1,7 +1,7 @@
 from django.test import TestCase
 from unittest.mock import patch, Mock
 from django.utils import timezone
-from social_tracker.models import Comment, User, Post
+from social_tracker.models import Comment, InstagramUser, Post
 from social_tracker.utils.get_instagram_data import (
     get_comment_data,
     get_comments_helper,
@@ -26,7 +26,7 @@ class CommentDataTests(TestCase):
         user was created.
         """
         mock_comment_id = "12345"
-        mock_post_id = "abcde"
+        mock_post_id = "999"
 
         # First API call returns a single comment ID
         mock_get.side_effect = [
@@ -36,10 +36,10 @@ class CommentDataTests(TestCase):
                 status_code=200,
                 json=lambda: {
                     "id": mock_comment_id,
-                    "from": {"id": "user123", "username": "test_user"},
+                    "from": {"id": "111", "username": "test_user"},
                     "like_count": 2,
                     "text": "This is a comment!",
-                    "timestamp": "2023-01-01T12:00:00+0000",
+                    "date_posted": "2023-01-01T12:00:00+0000",
                     "replies": {"data": []},
                     "username": "test_user",
                     "parent_id": "",
@@ -61,7 +61,7 @@ class CommentDataTests(TestCase):
         get_comment_data("fake_token", mock_post_id)
 
         self.assertTrue(Comment.objects.filter(id=mock_comment_id).exists())
-        self.assertTrue(User.objects.filter(id="user123").exists())
+        self.assertTrue(InstagramUser.objects.filter(id="111").exists())
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_comments_helper_reply_ids(self, mock_get):
@@ -69,9 +69,9 @@ class CommentDataTests(TestCase):
         Test case for handling getting reply ids for a single comment. Tests
         that the id was successfully retrieved and saved under the comment object.
         """
-        comment_id = "c1"
-        user_id = "u1"
-        post_id = "p1"
+        comment_id = "333"
+        user_id = "111"
+        post_id = "222"
 
         Post.objects.create(
             post_link="https://example.com/post",
@@ -91,7 +91,7 @@ class CommentDataTests(TestCase):
                 "like_count": 1,
                 "text": "reply comment",
                 "timestamp": "2023-01-01T12:00:00+0000",
-                "replies": {"data": [{"id": "r1"}]},
+                "replies": {"data": [{"id": "666"}]},
                 "username": "reply_user",
                 "parent_id": "",
             },
@@ -103,7 +103,7 @@ class CommentDataTests(TestCase):
 
         self.assertIsNotNone(comment_obj)
         self.assertEqual(comment_obj.id, comment_id)
-        self.assertEqual(reply_ids, ["r1"])
+        self.assertEqual(reply_ids, ["666"])
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_instagram_posts_updates_existing_post(self, mock_get):
@@ -175,7 +175,7 @@ class CommentDataTests(TestCase):
         get_comment_data("fake_token", mock_post_id)
 
         self.assertEqual(Comment.objects.count(), 0)
-        self.assertEqual(User.objects.count(), 0)
+        self.assertEqual(InstagramUser.objects.count(), 0)
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_comment_data_api_error(self, mock_get):
@@ -202,4 +202,4 @@ class CommentDataTests(TestCase):
         get_comment_data("fake_token", mock_post_id)
 
         self.assertEqual(Comment.objects.count(), 0)
-        self.assertEqual(User.objects.count(), 0)
+        self.assertEqual(InstagramUser.objects.count(), 0)
