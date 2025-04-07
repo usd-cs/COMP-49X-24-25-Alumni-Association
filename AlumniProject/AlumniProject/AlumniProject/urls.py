@@ -39,4 +39,7 @@ urlpatterns = [
     path("demographics/", views.get_demographics, name="demographics"),
     path("token/", views.token_landing, name="token_page"),
     path("account-info/", views.account_info, name="account-info"),
+    path("api/post-comments/<str:post_id>/", views.post_comments, name="post_comments"),
+    path("api/instagram-link/<str:post_id>/", views.instagram_link, name="instagram_link"),
+    path("post-details/<str:post_api_id>/", views.post_details, name="post_details"),
 ]
