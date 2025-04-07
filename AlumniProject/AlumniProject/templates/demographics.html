@@ -235,7 +235,7 @@
         li.className = "list-group-item d-flex justify-content-between align-items-center";
         
         // Add ranking number and full country name
-        const countryName = getFullCountryName(item.country); // Function to get full country name
+        const countryName = item.country; // Function to get full country name
         li.textContent = `${index + 1}. ${countryName}`;
 
         const badge = document.createElement("span");
@@ -264,19 +264,6 @@
 
         cityList.appendChild(li);
       });
-    }
-
-    // Function to map country abbreviations to full names
-    function getFullCountryName(abbreviation) {
-      const countryNames = {
-        US: "United States",
-        MX: "Mexico",
-        MW: "Malawi",
-        SA: "Saudi Arabia",
-        DE: "Germany"
-        // Add more mappings as needed
-      };
-      return countryNames[abbreviation] || abbreviation;
     }
   </script>
 </body>
