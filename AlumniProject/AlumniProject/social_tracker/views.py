@@ -427,7 +427,7 @@ def export_csv_view(request):
 @login_required
 def account_info(request):
     """
-    Renders the account information page.
+    Renders the account information page
 
     Args:
         request (HttpRequest): The HTTP request object.
