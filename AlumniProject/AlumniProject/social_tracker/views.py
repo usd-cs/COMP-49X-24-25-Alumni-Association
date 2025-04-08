@@ -427,3 +427,26 @@ def export_csv_view(request):
     - HttpResponse: Response that contains downloadable csv file
     """
     return export_posts_to_csv()
+
+def get_days_of_week(request):
+    days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    days_dict = {day: [0,0,0,0,0] for day in days}
+    posts = Post.objects.all()
+    for post in posts:
+        try:
+            days_dict[post.date_posted.strftime("%A")][0] += 1
+            days_dict[post.date_posted.strftime("%A")][1] += post.num_likes
+            days_dict[post.date_posted.strftime("%A")][2] += post.num_comments
+            days_dict[post.date_posted.strftime("%A")][3] += post.num_shares
+            days_dict[post.date_posted.strftime("%A")][4] += post.num_saves
+        except Exception as e:
+            print(e)
+    for day in days_dict:
+        for item in range(1,4):
+            days_dict[day][item] = round(days_dict[day][item]/days_dict[day][0],2) if days_dict[day][0] > 0 else 0
+    return JsonResponse(
+            {
+                "success": True,
+                "data": days_dict,
+            }
+        )
