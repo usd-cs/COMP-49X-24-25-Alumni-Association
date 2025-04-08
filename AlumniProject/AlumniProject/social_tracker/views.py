@@ -425,4 +425,13 @@ def export_csv_view(request):
     return export_posts_to_csv()
 
 def account_info(request):
+    """
+    Renders the account information page.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The rendered account information HTML page.
+    """
     return render(request, "account_info.html")
