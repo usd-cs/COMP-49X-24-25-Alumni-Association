@@ -424,6 +424,5 @@ def export_csv_view(request):
     """
     return export_posts_to_csv()
 
-@login_required
 def account_info(request):
     return render(request, "account_info.html")
