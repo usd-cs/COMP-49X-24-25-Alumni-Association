@@ -425,6 +425,7 @@ def export_csv_view(request):
     """
     return export_posts_to_csv()
 
+
 @login_required
 def account_info(request):
     """
@@ -437,8 +438,6 @@ def account_info(request):
         HttpResponse: The rendered account information HTML page with user data.
     """
     # Fetch users, order by number of comments descending
-    users = InstagramUser.objects.order_by('-num_comments')
-    context = {
-        'users': users
-    }
+    users = InstagramUser.objects.order_by("-num_comments")
+    context = {"users": users}
     return render(request, "account_info.html", context)
