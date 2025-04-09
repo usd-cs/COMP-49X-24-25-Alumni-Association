@@ -10,6 +10,7 @@ from .utils.get_instagram_data import (
     get_city_demographics,
     get_age_demographics,
 )
+from .utils.country_code_resolver import load_country_dict, get_country_name
 from .models import Country, City, Age
 from .utils.write_database_to_csv import export_posts_to_csv
 from django.views.decorators.csrf import csrf_exempt
@@ -268,10 +269,14 @@ def demographics_view(request):
         .order_by("-num_interactions")[:5]
         .values("name", "num_interactions")
     )
+    country_dict = load_country_dict()
     response_data = {
         "ageRanges": {item["age_range"]: item["num_interactions"] for item in age_data},
         "topCountries": [
-            {"country": item["name"], "count": item["num_interactions"]}
+            {
+                "country": get_country_name(country_dict, item["name"]),
+                "count": item["num_interactions"],
+            }
             for item in country_data
         ],
         "topCities": [
@@ -279,7 +284,6 @@ def demographics_view(request):
             for item in city_data
         ],
     }
-    print(response_data)
     return JsonResponse({"success": True, "data": response_data})
 
 
@@ -426,6 +430,61 @@ def export_csv_view(request):
     return export_posts_to_csv()
 
 
+top_users
+def get_days_of_week(request):
+    """
+    Aggregates post engagement metrics by day of the week.
+
+    This view retrieves all posts from the database and groups them by the day of the week
+    they were posted. Returns an average of all metrics per day.
+
+    Returns:
+        JsonResponse: A JSON response with the following structure:
+            {
+                "success": True,
+                "data": {
+                    "Monday": [num_posts, avg_likes, avg_comments, avg_shares, avg_saves],
+                    "Tuesday": [...],
+                    ...
+                }
+            }
+    """
+    days = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+    ]
+    days_dict = {day: [0, 0, 0, 0, 0] for day in days}
+    posts = Post.objects.all()
+    for post in posts:
+        try:
+            days_dict[post.date_posted.strftime("%A")][0] += 1
+            days_dict[post.date_posted.strftime("%A")][1] += post.num_likes
+            days_dict[post.date_posted.strftime("%A")][2] += post.num_comments
+            days_dict[post.date_posted.strftime("%A")][3] += post.num_shares
+            days_dict[post.date_posted.strftime("%A")][4] += post.num_saves
+        except Exception as e:
+            print(e)
+    for day in days_dict:
+        for item in range(1, 5):
+            days_dict[day][item] = (
+                round(days_dict[day][item] / days_dict[day][0], 2)
+                if days_dict[day][0] > 0
+                else 0
+            )
+    return JsonResponse(
+        {
+            "success": True,
+            "data": days_dict,
+        }
+    )
+
+
+main
 @login_required
 def account_info(request):
     """
