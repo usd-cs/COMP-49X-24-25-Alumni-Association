@@ -71,6 +71,10 @@
       color: #000;
     }
 
+    .loading-message {
+      text-align: center
+    }
+
     .section-heading {
       color: #000;
       text-align: center;
@@ -123,7 +127,10 @@
   </nav>
 
   <div class="container">
-    <!-- (Optional) <h1>Instagram Demographics</h1> can be commented out if you prefer. -->
+    <div id="loadingMessage" class="text-center my-3" style="display:none;">
+      <div class="spinner-border" role="status" style="margin-right: 10px;"></div>
+      <span>Gathering Data from Instagram... Please Wait</span>
+    </div>
 
     <div class="text-center mb-3">
     </div>
@@ -155,11 +162,14 @@
     window.onload = getDemographics;
 
     async function getDemographics() {
+      document.getElementById("loadingMessage").style.display = "block";
+
       try {
         const response = await fetch("/api/demographics/");
         
         // Parse the JSON response from the API
         const data = await response.json();
+        document.getElementById("loadingMessage").style.display = "none";
 
         // Check if the API call was successful
         if (data.success) {
@@ -174,10 +184,12 @@
         } else {
           console.error("Error fetching demographics:", data.message);
           alert("Unable to fetch demographics data.");
+          document.getElementById("loadingMessage").style.display = "none";
         }
       } catch (error) {
         console.error("Error fetching demographics:", error);
         alert("Unable to fetch demographics data.");
+        document.getElementById("loadingMessage").style.display = "none";
       }
     }
 
