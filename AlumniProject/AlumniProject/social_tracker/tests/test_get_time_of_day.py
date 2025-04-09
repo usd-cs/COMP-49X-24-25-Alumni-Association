@@ -30,14 +30,18 @@ class TimeBlockTests(TestCase):
                 num_shares=1,
             ),
             Post.objects.create(
-                date_posted=datetime(2023, 1, 1, 13, 0, tzinfo=timezone.utc),  # 12pm–2pm
+                date_posted=datetime(
+                    2023, 1, 1, 13, 0, tzinfo=timezone.utc
+                ),  # 12pm–2pm
                 num_likes=30,
                 num_comments=6,
                 num_saves=2,
                 num_shares=3,
             ),
             Post.objects.create(
-                date_posted=datetime(2023, 1, 1, 13, 30, tzinfo=timezone.utc),  # 12pm–2pm
+                date_posted=datetime(
+                    2023, 1, 1, 13, 30, tzinfo=timezone.utc
+                ),  # 12pm–2pm
                 num_likes=50,
                 num_comments=8,
                 num_saves=4,

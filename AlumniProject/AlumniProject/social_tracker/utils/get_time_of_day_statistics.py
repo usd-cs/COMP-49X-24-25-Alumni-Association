@@ -16,9 +16,18 @@ def get_two_hour_block(post):
 
     hour = post.date_posted.hour
     blocks = [
-        "12am-2am", "2am-4am", "4am-6am", "6am-8am",
-        "8am-10am", "10am-12pm", "12pm-2pm", "2pm-4pm",
-        "4pm-6pm", "6pm-8pm", "8pm-10pm", "10pm-12am"
+        "12am-2am",
+        "2am-4am",
+        "4am-6am",
+        "6am-8am",
+        "8am-10am",
+        "10am-12pm",
+        "12pm-2pm",
+        "2pm-4pm",
+        "4pm-6pm",
+        "6pm-8pm",
+        "8pm-10pm",
+        "10pm-12am",
     ]
     return blocks[hour // 2]
 
@@ -34,9 +43,18 @@ def sort_by_block_order(item):
         int: The index of the block in the expected order.
     """
     block_order = [
-        "12am-2am", "2am-4am", "4am-6am", "6am-8am",
-        "8am-10am", "10am-12pm", "12pm-2pm", "2pm-4pm",
-        "4pm-6pm", "6pm-8pm", "8pm-10pm", "10pm-12am"
+        "12am-2am",
+        "2am-4am",
+        "4am-6am",
+        "6am-8am",
+        "8am-10am",
+        "10am-12pm",
+        "12pm-2pm",
+        "2pm-4pm",
+        "4pm-6pm",
+        "6pm-8pm",
+        "8pm-10pm",
+        "10pm-12am",
     ]
     block_index = {block: index for index, block in enumerate(block_order)}
     return block_index.get(item["block"], -1)
@@ -70,10 +88,12 @@ def get_avg_likes_by_time_block():
     results = []
     for block in like_totals:
         avg = like_totals[block] / post_counts[block]
-        results.append({
-            "block": block,
-            "avg_likes": round(avg, 2),
-        })
+        results.append(
+            {
+                "block": block,
+                "avg_likes": round(avg, 2),
+            }
+        )
 
     results.sort(key=sort_by_block_order)
     return total_posts, results
@@ -107,10 +127,12 @@ def get_avg_comments_by_time_block():
     results = []
     for block in comment_totals:
         avg = comment_totals[block] / post_counts[block]
-        results.append({
-            "block": block,
-            "avg_comments": round(avg, 2),
-        })
+        results.append(
+            {
+                "block": block,
+                "avg_comments": round(avg, 2),
+            }
+        )
 
     results.sort(key=sort_by_block_order)
     return total_posts, results
@@ -144,10 +166,12 @@ def get_avg_saves_by_time_block():
     results = []
     for block in save_totals:
         avg = save_totals[block] / post_counts[block]
-        results.append({
-            "block": block,
-            "avg_saves": round(avg, 2),
-        })
+        results.append(
+            {
+                "block": block,
+                "avg_saves": round(avg, 2),
+            }
+        )
 
     results.sort(key=sort_by_block_order)
     return total_posts, results
@@ -181,10 +205,12 @@ def get_avg_shares_by_time_block():
     results = []
     for block in share_totals:
         avg = share_totals[block] / post_counts[block]
-        results.append({
-            "block": block,
-            "avg_shares": round(avg, 2),
-        })
+        results.append(
+            {
+                "block": block,
+                "avg_shares": round(avg, 2),
+            }
+        )
 
     results.sort(key=sort_by_block_order)
     return total_posts, results
