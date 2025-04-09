@@ -16,6 +16,7 @@ class TimeBlockTests(TestCase):
     """
     Unit tests for 2-hour block statistics on Instagram posts.
     """
+
     def setUp(self):
         """
         Set up test data with 3 posts across 2 different time blocks.
