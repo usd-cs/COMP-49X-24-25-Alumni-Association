@@ -37,7 +37,7 @@ def sort_by_block_order(item):
     Sorts result dictionaries by chronological 2-hour time block.
 
     Args:
-        item (dict): A dictionary that contains a 'block' key.
+        item (dict): A dictionary that contains a block key.
 
     Returns:
         int: The index of the block in the expected order.
@@ -65,7 +65,8 @@ def get_avg_likes_by_time_block():
     Calculates average likes per 2-hour time block.
 
     Returns:
-        tuple: Total post count and a list of dicts with 'block' and 'avg_likes'.
+        tuple: Total post count and a list of dicts with the block key and 
+        average likes value.
     """
     like_totals = {}
     post_counts = {}
@@ -104,7 +105,8 @@ def get_avg_comments_by_time_block():
     Calculates average comments per 2-hour time block.
 
     Returns:
-        tuple: Total post count and a list of dicts with 'block' and 'avg_comments'.
+        tuple: Total post count and a list of dicts with the block name and
+        average comments value.
     """
     comment_totals = {}
     post_counts = {}
@@ -143,7 +145,8 @@ def get_avg_saves_by_time_block():
     Calculates average saves per 2-hour time block.
 
     Returns:
-        tuple: Total post count and a list of dicts with 'block' and 'avg_saves'.
+        tuple: Total post count and a list of dicts with the block name key and
+        average saves value.
     """
     save_totals = {}
     post_counts = {}
@@ -182,7 +185,8 @@ def get_avg_shares_by_time_block():
     Calculates average shares per 2-hour time block.
 
     Returns:
-        tuple: Total post count and a list of dicts with 'block' and 'avg_shares'.
+        tuple: Total post count and a list of dicts with the block name as key and
+        average shares value.
     """
     share_totals = {}
     post_counts = {}
