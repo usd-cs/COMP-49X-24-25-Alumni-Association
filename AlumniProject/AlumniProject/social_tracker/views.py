@@ -430,7 +430,6 @@ def export_csv_view(request):
     return export_posts_to_csv()
 
 
-top_users
 def get_days_of_week(request):
     """
     Aggregates post engagement metrics by day of the week.
@@ -484,7 +483,6 @@ def get_days_of_week(request):
     )
 
 
-main
 @login_required
 def account_info(request):
     """
