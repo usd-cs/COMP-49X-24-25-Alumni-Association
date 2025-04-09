@@ -65,7 +65,7 @@ def get_avg_likes_by_time_block():
     Calculates average likes per 2-hour time block.
 
     Returns:
-        tuple: Total post count and a list of dicts with the block key and 
+        tuple: Total post count and a list of dicts with the block key and
         average likes value.
     """
     like_totals = {}
