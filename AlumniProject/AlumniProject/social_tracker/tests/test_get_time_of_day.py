@@ -19,10 +19,12 @@ class TimeBlockTests(TestCase):
 
     def setUp(self):
         """
-        Set up test data with 3 posts across 2 different time blocks.
+        Set up test posts with known timestamps and metrics
+        across a couple of time blocks.
         """
         self.posts = [
             Post.objects.create(
+                post_API_ID="test_post_1",
                 date_posted=datetime(2023, 1, 1, 1, 0, tzinfo=timezone.utc),  # 12am–2am
                 num_likes=10,
                 num_comments=2,
@@ -30,18 +32,16 @@ class TimeBlockTests(TestCase):
                 num_shares=1,
             ),
             Post.objects.create(
-                date_posted=datetime(
-                    2023, 1, 1, 13, 0, tzinfo=timezone.utc
-                ),  # 12pm–2pm
+                post_API_ID="test_post_2",
+                date_posted=datetime(2023, 1, 1, 13, 0, tzinfo=timezone.utc),  # 12pm–2pm
                 num_likes=30,
                 num_comments=6,
                 num_saves=2,
                 num_shares=3,
             ),
             Post.objects.create(
-                date_posted=datetime(
-                    2023, 1, 1, 13, 30, tzinfo=timezone.utc
-                ),  # 12pm–2pm
+                post_API_ID="test_post_3",
+                date_posted=datetime(2023, 1, 1, 13, 30, tzinfo=timezone.utc),  # 12pm–2pm
                 num_likes=50,
                 num_comments=8,
                 num_saves=4,
