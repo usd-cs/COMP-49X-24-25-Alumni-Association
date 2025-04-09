@@ -467,3 +467,16 @@ def get_days_of_week(request):
                 "data": days_dict,
             }
         )
+
+@login_required
+def account_info(request):
+    """
+    Renders the account information page
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The rendered account information HTML page.
+    """
+    return render(request, "account_info.html")
