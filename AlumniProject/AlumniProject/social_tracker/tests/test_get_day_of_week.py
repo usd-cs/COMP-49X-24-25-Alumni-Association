@@ -54,9 +54,18 @@ class GetDaysOfWeekTests(TestCase):
         data = json.loads(response.content)
 
         self.assertIn("data", data)
-        self.assertEqual(set(data["data"].keys()), {
-            "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
-        })
+        self.assertEqual(
+            set(data["data"].keys()),
+            {
+                "Sunday",
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+            },
+        )
 
         monday_data = data["data"]["Monday"]
         self.assertEqual(len(monday_data), 5)
@@ -101,4 +110,3 @@ class GetDaysOfWeekTests(TestCase):
         data = json.loads(response.content)
         self.assertTrue(data["success"])
         self.assertEqual(data["data"]["Monday"][0], 2)
-

@@ -428,6 +428,7 @@ def export_csv_view(request):
     """
     return export_posts_to_csv()
 
+
 def get_days_of_week(request):
     """
     Aggregates post engagement metrics by day of the week.
@@ -446,8 +447,16 @@ def get_days_of_week(request):
                 }
             }
     """
-    days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-    days_dict = {day: [0,0,0,0,0] for day in days}
+    days = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+    ]
+    days_dict = {day: [0, 0, 0, 0, 0] for day in days}
     posts = Post.objects.all()
     for post in posts:
         try:
@@ -459,14 +468,19 @@ def get_days_of_week(request):
         except Exception as e:
             print(e)
     for day in days_dict:
-        for item in range(1,5):
-            days_dict[day][item] = round(days_dict[day][item]/days_dict[day][0],2) if days_dict[day][0] > 0 else 0
+        for item in range(1, 5):
+            days_dict[day][item] = (
+                round(days_dict[day][item] / days_dict[day][0], 2)
+                if days_dict[day][0] > 0
+                else 0
+            )
     return JsonResponse(
-            {
-                "success": True,
-                "data": days_dict,
-            }
-        )
+        {
+            "success": True,
+            "data": days_dict,
+        }
+    )
+
 
 @login_required
 def account_info(request):
