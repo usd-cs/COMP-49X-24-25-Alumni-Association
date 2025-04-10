@@ -10,6 +10,10 @@
 
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     :root {
       --founders-blue: #003b70;
@@ -20,12 +24,14 @@
 
     body {
       background: linear-gradient(135deg, #003b70, #0074c8);
-      height: 100vh;
+      /* min-height to cover entire screen for v2 styling */
+      min-height: 100vh;
       color: white;
       margin: 0;
       padding: 0;
     }
 
+    /* Navigation Tabs */
     .nav-tabs .nav-link {
       color: var(--alcala-white);
       background-color: transparent;
@@ -38,13 +44,14 @@
       border-radius: 5px 5px 0 0;
     }
 
+    /* Container can be up to 800px for table, etc. */
     .container {
       background-color: var(--torero-blue);
       padding: 2rem;
       border-radius: 10px;
       box-shadow: 0 0 20px rgba(0,0,0,0.2);
       margin-top: 50px;
-      max-width: 600px;
+      max-width: 800px;
     }
 
     .btn {
@@ -58,9 +65,27 @@
     .btn:hover {
       background-color: var(--immaculata-blue);
     }
+
+    /* Table layout from v2 */
+    .table-fixed {
+      table-layout: fixed;
+      width: 100%;
+    }
+    .table-fixed th:first-child,
+    .table-fixed td:first-child {
+      width: 60%;
+    }
+    .table-fixed th:last-child,
+    .table-fixed td:last-child {
+      width: 40%;
+    }
+    .user-row.hidden {
+      display: none;
+    }
+    .table-container {
+      min-height: 450px; /* Approximation for up to 10 rows + header */
+    }
   </style>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -74,27 +99,69 @@
 
   <div class="container">
     <h1>Account Information</h1>
+
+    <!-- CHART SECTION (from v1) -->
     <h2 class="mt-4">Average Likes by Day of the Week</h2>
-    <canvas id="likesHistogram" style="background-color: #fff; border-radius: 10px; padding: 10px;"></canvas>
+    <canvas id="likesHistogram"
+            style="background-color: #fff; border-radius: 10px; padding: 10px;">
+    </canvas>
+
+    <!-- TABLE SECTION (from v2) -->
+    <div class="table-responsive mt-4 table-container">
+      <table class="table table-striped table-bordered text-center table-fixed"
+             style="background-color: var(--alcala-white); color: #000;">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Number of Comments</th>
+          </tr>
+        </thead>
+        <tbody id="userList">
+          {% if users %}
+            {% for user in users %}
+              <tr class="user-row">
+                <td>{{ user.username }}</td>
+                <td>{{ user.num_comments }}</td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="2">No user data available.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Controls for user table -->
+    <div class="d-flex justify-content-center mt-3">
+      <button id="prevBtn" class="btn btn-secondary me-2" onclick="changePage(-1)">Previous</button>
+      <span id="pageInfo" class="align-self-center mx-2 text-white">Page 1</span>
+      <button id="nextBtn" class="btn btn-secondary" onclick="changePage(1)">Next</button>
+    </div>
   </div>
 
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- CHART Script (v1 logic) -->
   <script>
     // On page load, fetch day-of-week data and build histogram
     window.onload = function() {
       loadDayOfWeekData();
+      initPagination(); // Make sure pagination also starts
     };
 
     async function loadDayOfWeekData() {
       try {
-        // Fetch data 
-        const response = await fetch('/api/days-of-week');
+        // Fetch data for day-of-week
+        const response = await fetch('/api/days-of-week/');
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         const data = await response.json();
         const daysDict = data.data; 
 
-        
         const daysOrder = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
         const labels = [];
@@ -102,12 +169,11 @@
 
         daysOrder.forEach(day => {
           labels.push(day);
-          
+          // The 2nd element in the array = average likes
           likesData.push(daysDict[day][1]);
         });
 
         const ctx = document.getElementById('likesHistogram').getContext('2d');
-
         new Chart(ctx, {
           type: 'bar',
           data: {
@@ -145,9 +211,52 @@
         alert('Unable to load day-of-week data.');
       }
     }
-  </script>
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    // Pagination Script (from v2) 
+    function initPagination() {
+      var rows = document.querySelectorAll('.user-row');
+      var pageSize = 10;
+      var currentPage = 1;
+      var totalPages = Math.ceil(rows.length / pageSize);
+
+      updatePageInfo();
+      updateButtonState();
+      showPage(currentPage);
+
+      function showPage(page) {
+        // Hide all rows
+        for (var i = 0; i < rows.length; i++) {
+          rows[i].classList.add('hidden');
+        }
+        // Show rows for this page
+        var start = (page - 1) * pageSize;
+        var end = start + pageSize;
+        for (var j = start; j < end && j < rows.length; j++) {
+          rows[j].classList.remove('hidden');
+        }
+      }
+
+      function updatePageInfo() {
+        document.getElementById('pageInfo').textContent = 'Page ' + currentPage + ' of ' + totalPages;
+      }
+
+      function updateButtonState() {
+        document.getElementById('prevBtn').disabled = (currentPage === 1);
+        document.getElementById('nextBtn').disabled = (currentPage === totalPages || totalPages === 0);
+      }
+
+      // Expose to global scope
+      window.changePage = function(direction) {
+        if (direction === 1 && currentPage < totalPages) {
+          currentPage++;
+        } else if (direction === -1 && currentPage > 1) {
+          currentPage--;
+        }
+        showPage(currentPage);
+        updatePageInfo();
+        updateButtonState();
+      };
+    }
+  </script>
 </body>
 </html>
