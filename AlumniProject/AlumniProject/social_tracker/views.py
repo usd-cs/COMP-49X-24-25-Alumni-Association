@@ -497,7 +497,6 @@ def account_info(request):
     Renders the account information page, including a bar chart showing 
     average engagement (likes, comments, saves, or shares) by time of day.
 
-    The metric shown is selected using the "metric" query parameter.
     Defaults to 'likes' if no metric is specified.
     """
     metric = request.GET.get("metric", "likes")
