@@ -17,6 +17,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Post
 from .models import AccessToken
 from .models import Comment
+from .models import InstagramUser
 
 import json
 
@@ -485,12 +486,15 @@ def get_days_of_week(request):
 @login_required
 def account_info(request):
     """
-    Renders the account information page
+    Renders the account information page, displaying users sorted by comment count.
 
     Args:
         request (HttpRequest): The HTTP request object.
 
     Returns:
-        HttpResponse: The rendered account information HTML page.
+        HttpResponse: The rendered account information HTML page with user data.
     """
-    return render(request, "account_info.html")
+    # Fetch users, order by number of comments descending
+    users = InstagramUser.objects.order_by("-num_comments")
+    context = {"users": users}
+    return render(request, "account_info.html", context)
