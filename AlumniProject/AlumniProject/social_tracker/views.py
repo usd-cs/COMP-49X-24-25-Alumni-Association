@@ -19,6 +19,15 @@ from .models import AccessToken
 from .models import Comment
 
 import json
+from social_tracker.utils.get_time_of_day_statistics import (
+    get_avg_likes_by_time_block,
+    get_avg_comments_by_time_block,
+    get_avg_saves_by_time_block,
+    get_avg_shares_by_time_block,
+)
+
+
+
 
 """
     Handles user login functionality.
@@ -485,12 +494,31 @@ def get_days_of_week(request):
 @login_required
 def account_info(request):
     """
-    Renders the account information page
+    Renders the account information page, including a bar chart showing 
+    average engagement (likes, comments, saves, or shares) by time of day.
 
-    Args:
-        request (HttpRequest): The HTTP request object.
-
-    Returns:
-        HttpResponse: The rendered account information HTML page.
+    The metric shown is selected using the "metric" query parameter.
+    Defaults to 'likes' if no metric is specified.
     """
-    return render(request, "account_info.html")
+    metric = request.GET.get("metric", "likes")
+
+    metric_map = {
+        "likes": ("Average Likes", get_avg_likes_by_time_block),
+        "comments": ("Average Comments", get_avg_comments_by_time_block),
+        "saves": ("Average Saves", get_avg_saves_by_time_block),
+        "shares": ("Average Shares", get_avg_shares_by_time_block),
+    }
+
+    label, func = metric_map.get(metric, metric_map["likes"])
+    _, data = func()
+
+    labels = [entry["block"] for entry in data]
+    values = [entry[f"avg_{metric}"] for entry in data]
+
+    context = {
+        "metric": metric,
+        "label": label,
+        "labels": labels,
+        "values": values,
+    }
+    return render(request, "account_info.html", context)
