@@ -49,7 +49,7 @@
       border-radius: 10px;
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
       margin-top: 50px;
-      max-width: 800px;
+      max-width: 1200px; /* was 800px */
     }
 
     .form-select {
@@ -88,9 +88,20 @@
       </select>
     </form>
 
-    <!-- Chart -->
-    <div class="chart-container">
-      <canvas id="barChart" width="800" height="400"></canvas>
+    <!-- Charts -->
+    <!-- Chart Row -->
+    <div class="row">
+      <!-- First chart (left side) -->
+      <div class="col-md-6">
+        <div class="chart-container">
+          <canvas id="barChart" width="400" height="400"></canvas>
+        </div>
+      </div>
+
+      <!-- Placeholder for second chart (right side) -->
+      <div class="col-md-6">
+        <!-- Future chart goes here -->
+      </div>
     </div>
   </div>
 
