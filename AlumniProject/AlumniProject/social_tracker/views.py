@@ -27,8 +27,6 @@ from social_tracker.utils.get_time_of_day_statistics import (
 )
 
 
-
-
 """
     Handles user login functionality.
 
@@ -494,7 +492,7 @@ def get_days_of_week(request):
 @login_required
 def account_info(request):
     """
-    Renders the account information page, including a bar chart showing 
+    Renders the account information page, including a bar chart showing
     average engagement (likes, comments, saves, or shares) by time of day.
 
     Defaults to 'likes' if no metric is specified.
