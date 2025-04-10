@@ -49,7 +49,7 @@
       border-radius: 10px;
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
       margin-top: 50px;
-      max-width: 1200px; /* was 800px */
+      max-width: 1200px;
     }
 
     .form-select {
@@ -75,32 +75,43 @@
   </nav>
 
   <div class="container">
-    <h1 class="mb-4">Average Time of Day Interactions</h1>
-
-    <!-- Metric Selection -->
-    <form method="get" id="metric-form" class="mb-4">
-      <label for="metric" class="form-label">Select Metric:</label>
-      <select name="metric" id="metric" class="form-select" onchange="document.getElementById('metric-form').submit()">
-        <option value="likes" {% if metric == "likes" %}selected{% endif %}>Likes</option>
-        <option value="comments" {% if metric == "comments" %}selected{% endif %}>Comments</option>
-        <option value="saves" {% if metric == "saves" %}selected{% endif %}>Saves</option>
-        <option value="shares" {% if metric == "shares" %}selected{% endif %}>Shares</option>
-      </select>
-    </form>
-
-    <!-- Charts -->
-    <!-- Chart Row -->
     <div class="row">
-      <!-- First chart (left side) -->
+      <!-- Time of Day chart (left side) -->
       <div class="col-md-6">
+        <h2 class="text-center mb-3">Average Time of Day Interactions</h2>
+        <div class="d-flex justify-content-end mb-3">
+          <form method="get" id="metric-form" class="d-flex align-items-center">
+            <label for="metric" class="me-2 mb-0">Select Metric:</label>
+            <select name="metric" id="metric" class="form-select" style="width: auto;" onchange="document.getElementById('metric-form').submit()">
+              <option value="likes" {% if metric == "likes" %}selected{% endif %}>Likes</option>
+              <option value="comments" {% if metric == "comments" %}selected{% endif %}>Comments</option>
+              <option value="saves" {% if metric == "saves" %}selected{% endif %}>Saves</option>
+              <option value="shares" {% if metric == "shares" %}selected{% endif %}>Shares</option>
+            </select>
+          </form>
+        </div>
         <div class="chart-container">
           <canvas id="barChart" width="400" height="400"></canvas>
         </div>
       </div>
 
-      <!-- Placeholder for second chart (right side) -->
+      <!-- Day of week chart (right side) -->
       <div class="col-md-6">
-        <!-- Future chart goes here -->
+        <h2 class="text-center mb-3">Average Day of Week Metrics</h2>
+        <div class="d-flex justify-content-end mb-3">
+          <form method="get" id="day-metric-form" class="d-flex align-items-center">
+            <label for="day_metric" class="me-2 mb-0">Select Metric:</label>
+            <select name="day_metric" id="day_metric" class="form-select" style="width: auto;" onchange="document.getElementById('day-metric-form').submit()">
+              <option value="likes" {% if day_metric == "likes" %}selected{% endif %}>Likes</option>
+              <option value="comments" {% if day_metric == "comments" %}selected{% endif %}>Comments</option>
+              <option value="saves" {% if day_metric == "saves" %}selected{% endif %}>Saves</option>
+              <option value="shares" {% if day_metric == "shares" %}selected{% endif %}>Shares</option>
+            </select>
+          </form>
+        </div>
+        <div class="chart-container">
+          <canvas id="dayChart" width="400" height="400"></canvas>
+        </div>
       </div>
     </div>
   </div>
@@ -108,8 +119,10 @@
   <!-- JSON Data -->
   {{ labels|json_script:"labels-data" }}
   {{ values|json_script:"values-data" }}
+  {{ labels_day|json_script:"labels-day-data" }}
+  {{ values_day|json_script:"values-day-data" }}
 
-  <!-- Chart.js Script -->
+  <!-- Time of day chart Script -->
   <script>
     const labels = JSON.parse(document.getElementById("labels-data").textContent);
     const values = JSON.parse(document.getElementById("values-data").textContent);
@@ -123,6 +136,33 @@
           label: "{{ label }}",
           data: values,
           backgroundColor: "rgba(54, 162, 235, 0.6)",
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  </script>
+
+  <!-- Day of week chart Script -->
+  <script>
+    const labelsDay = JSON.parse(document.getElementById("labels-day-data").textContent);
+    const valuesDay = JSON.parse(document.getElementById("values-day-data").textContent);
+
+    const ctxDay = document.getElementById("dayChart").getContext("2d");
+    const dayChart = new Chart(ctxDay, {
+      type: "bar",
+      data: {
+        labels: labelsDay,
+        datasets: [{
+          label: "{{ day_label }}",
+          data: valuesDay,
+          backgroundColor: "rgba(255, 99, 132, 0.6)"
         }]
       },
       options: {

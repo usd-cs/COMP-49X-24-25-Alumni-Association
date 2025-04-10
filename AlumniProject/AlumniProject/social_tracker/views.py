@@ -488,34 +488,60 @@ def get_days_of_week(request):
         }
     )
 
+def get_days_of_week_data_helper(request):
+    """
+    Calls the existing get_days_of_week view and gets the data dictionary.
+    """
+    response = get_days_of_week(request)
+    data = json.loads(response.content)
+    return data.get("data", {})
+
 
 @login_required
 def account_info(request):
     """
-    Renders the account information page, including a bar chart showing
-    average engagement (likes, comments, saves, or shares) by time of day.
+    Handles the Account Info page and displays two charts with post engagement trends.
 
-    Defaults to 'likes' if no metric is specified.
+    Based on the selected metrics from the dropdowns, this view pulls average engagement data 
+    by 2-hour time blocks and by day of the week. It prepares the labels and values for each chart 
+    and passes everything to the template so the charts can render using Chart.js.
+
+    The page responds to optional GET parameters of 'metric' for the time block chart and 
+    'day_metric' for the day of week chart.
     """
     metric = request.GET.get("metric", "likes")
+    day_metric = request.GET.get("day_metric", "likes")
 
-    metric_map = {
-        "likes": ("Average Likes", get_avg_likes_by_time_block),
-        "comments": ("Average Comments", get_avg_comments_by_time_block),
-        "saves": ("Average Saves", get_avg_saves_by_time_block),
-        "shares": ("Average Shares", get_avg_shares_by_time_block),
-    }
+    # Time block data
+    if metric == "likes":
+        _, block_data = get_avg_likes_by_time_block()
+    elif metric == "comments":
+        _, block_data = get_avg_comments_by_time_block()
+    elif metric == "saves":
+        _, block_data = get_avg_saves_by_time_block()
+    elif metric == "shares":
+        _, block_data = get_avg_shares_by_time_block()
+    else:
+        _, block_data = get_avg_likes_by_time_block()  #default
 
-    label, func = metric_map.get(metric, metric_map["likes"])
-    _, data = func()
+    time_labels = [row["block"] for row in block_data]
+    time_values = [row[f"avg_{metric}"] for row in block_data]
 
-    labels = [entry["block"] for entry in data]
-    values = [entry[f"avg_{metric}"] for entry in data]
+    # Day of week data (from existing view)
+    day_data = get_days_of_week_data_helper(request)
+    day_labels = list(day_data.keys())
+    day_index = ["likes", "comments", "shares", "saves"].index(day_metric) + 1
+    day_values = [day_data[day][day_index] for day in day_labels]
 
     context = {
         "metric": metric,
-        "label": label,
-        "labels": labels,
-        "values": values,
+        "labels": time_labels,
+        "values": time_values,
+        "label": f"Average {metric.capitalize()} per Time Block",
+
+        "day_metric": day_metric,
+        "labels_day": day_labels,
+        "values_day": day_values,
+        "day_label": f"Average {day_metric.capitalize()} per Day",
     }
     return render(request, "account_info.html", context)
