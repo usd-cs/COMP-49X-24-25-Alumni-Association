@@ -20,6 +20,13 @@ from .models import Comment
 from .models import InstagramUser
 
 import json
+from social_tracker.utils.get_time_of_day_statistics import (
+    get_avg_likes_by_time_block,
+    get_avg_comments_by_time_block,
+    get_avg_saves_by_time_block,
+    get_avg_shares_by_time_block,
+)
+
 
 """
     Handles user login functionality.
@@ -483,18 +490,62 @@ def get_days_of_week(request):
     )
 
 
+def get_days_of_week_data_helper(request):
+    """
+    Calls the existing get_days_of_week view and gets the data dictionary.
+    """
+    response = get_days_of_week(request)
+    data = json.loads(response.content)
+    return data.get("data", {})
+
+
 @login_required
 def account_info(request):
     """
-    Renders the account information page, displaying users sorted by comment count.
+    Handles the Account Info page and displays two charts with post engagement trends.
+    Also renders the account information page, displaying users sorted by comment count.
 
-    Args:
-        request (HttpRequest): The HTTP request object.
-
-    Returns:
-        HttpResponse: The rendered account information HTML page with user data.
+    Based on the selected metrics from the dropdowns, this view pulls average engagement data
+    by 2-hour time blocks and by day of the week. It prepares the labels and values for each chart
+    and passes everything to the template so the charts can render using Chart.js.
+    The page responds to optional GET parameters of 'metric' for the time block chart and
+    'day_metric' for the day of week chart.
     """
-    # Fetch users, order by number of comments descending
+    metric = request.GET.get("metric", "likes")
+    day_metric = request.GET.get("day_metric", "likes")
+
+    # Time block data
+    if metric == "likes":
+        _, block_data = get_avg_likes_by_time_block()
+    elif metric == "comments":
+        _, block_data = get_avg_comments_by_time_block()
+    elif metric == "saves":
+        _, block_data = get_avg_saves_by_time_block()
+    elif metric == "shares":
+        _, block_data = get_avg_shares_by_time_block()
+    else:
+        _, block_data = get_avg_likes_by_time_block()  # default
+
+    time_labels = [row["block"] for row in block_data]
+    time_values = [row[f"avg_{metric}"] for row in block_data]
+
+    # Day of week data (from existing view)
+    day_data = get_days_of_week_data_helper(request)
+    day_labels = list(day_data.keys())
+    day_index = ["likes", "comments", "shares", "saves"].index(day_metric) + 1
+    day_values = [day_data[day][day_index] for day in day_labels]
+
     users = InstagramUser.objects.order_by("-num_comments")
-    context = {"users": users}
+
+    context = {
+        "metric": metric,
+        "labels": time_labels,
+        "values": time_values,
+        "label": f"Average {metric.capitalize()} per Time Block",
+        "day_metric": day_metric,
+        "labels_day": day_labels,
+        "values_day": day_values,
+        "day_label": f"Average {day_metric.capitalize()} per Day",
+        "users": users,
+    }
     return render(request, "account_info.html", context)
