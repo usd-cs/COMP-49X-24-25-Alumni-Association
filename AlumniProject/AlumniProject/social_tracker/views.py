@@ -546,6 +546,6 @@ def account_info(request):
         "labels_day": day_labels,
         "values_day": day_values,
         "day_label": f"Average {day_metric.capitalize()} per Day",
-        "users": users
+        "users": users,
     }
     return render(request, "account_info.html", context)
