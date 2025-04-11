@@ -17,6 +17,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Post
 from .models import AccessToken
 from .models import Comment
+from .models import InstagramUser
 
 import json
 from social_tracker.utils.get_time_of_day_statistics import (
@@ -502,11 +503,11 @@ def get_days_of_week_data_helper(request):
 def account_info(request):
     """
     Handles the Account Info page and displays two charts with post engagement trends.
+    Also renders the account information page, displaying users sorted by comment count.
 
     Based on the selected metrics from the dropdowns, this view pulls average engagement data
     by 2-hour time blocks and by day of the week. It prepares the labels and values for each chart
     and passes everything to the template so the charts can render using Chart.js.
-
     The page responds to optional GET parameters of 'metric' for the time block chart and
     'day_metric' for the day of week chart.
     """
