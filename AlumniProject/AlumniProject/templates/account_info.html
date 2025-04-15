@@ -13,6 +13,7 @@
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 
   <style>
     :root {
@@ -260,9 +261,11 @@
   <!-- Likes Over Time chart Script -->
   <script>
     function convertToISO(dateStr) {
-      let parts = dateStr.split('/');
-      if (parts.length === 3) {
-         return parts[2] + "-" + parts[0].padStart(2, '0') + "-" + parts[1].padStart(2, '0');
+      if (dateStr.includes('/')) {
+        let parts = dateStr.split('/');
+        if (parts.length === 3) {
+          return parts[2] + "-" + parts[0].padStart(2, '0') + "-" + parts[1].padStart(2, '0');
+        }
       }
       return dateStr;
     }
@@ -337,12 +340,27 @@
                     x: {
                       type: "time",
                       time: {
-                        unit: "day",
-                        tooltipFormat: "MMM DD, YYYY"
+                        unit: "month",
+                        tooltipFormat: "MMM, DD, YYYY",
+                        displayFormats: {
+                          month: "MMM ''yy"
+                        }
                       }
                     },
                     y: {
                       beginAtZero: true
+                    }
+                  },
+                  plugins: {
+                    tooltip: {
+                      callbacks: {
+                        title: function(tooltipItems) {
+                          return 'Date Posted: ' + tooltipItems[0].label;
+                        },
+                        label: function(tooltipItem) {
+                          return 'Likes: ' + tooltipItem.parsed.y;
+                        }
+                      }
                     }
                   }
                 }
