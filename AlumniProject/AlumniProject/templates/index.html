@@ -354,13 +354,13 @@
     <a class="nav-link" href="{% url 'token_page' %}">Token</a>
   
     <!-- Active tab for Post Info -->
-    <a class="nav-link active" aria-current="page" href="{% url 'home' %}">Post Info</a>
+    <a class="nav-link active" aria-current="page" href="{% url 'home' %}">Post List</a>
   
     <!-- Account Info -->
-    <a class="nav-link" href="{% url 'account-info' %}">Account Info</a>
+    <a class="nav-link" href="{% url 'account-info' %}">Account Stats</a>
   
     <!-- Demographics -->
-    <a class="nav-link" href="{% url 'demographics' %}">Demographic Info</a>
+    <a class="nav-link" href="{% url 'demographics' %}">Followers Stats</a>
   </nav>
 
   <div class="container">
@@ -434,7 +434,7 @@
               Saves
               <button onclick="sortTable('saves')" class="btn sort-btn">Sort</button>
             </th>
-            <th>Post Details</th>
+            <th>Comments</th>
           </tr>
         </thead>
         <tbody id="postList"></tbody>

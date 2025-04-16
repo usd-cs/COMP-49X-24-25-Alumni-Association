@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Post Details</title>
+  <title>Comments</title>
 
   <!-- Font Awesome (for icons if you need them) -->
   <link
@@ -211,13 +211,13 @@
   <nav class="nav nav-tabs justify-content-center">
     <!-- If "Post Info" is considered active, we do this: -->
     <a class="nav-link" href="{% url 'token_page' %}">Token</a>
-    <a class="nav-link active" aria-current="page" href="{% url 'home' %}">Post Info</a>
-    <a class="nav-link" href="account.html">Account Info</a>
-    <a class="nav-link" href="{% url 'demographics' %}">Demographic Info</a>
+    <a class="nav-link active" aria-current="page" href="{% url 'home' %}">Post List</a>
+    <a class="nav-link" href="account.html">Account Stats</a>
+    <a class="nav-link" href="{% url 'demographics' %}">Followers Stats</a>
   </nav>
 
   <div class="container">
-    <h1>Post Details</h1>
+    <h1>Comments</h1>
 
     <!-- A row with "Back to Post View" + optional "Original Post" link  -->
     <div class="d-flex justify-content-start align-items-center mb-4">
