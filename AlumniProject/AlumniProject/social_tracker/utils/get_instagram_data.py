@@ -70,6 +70,7 @@ def get_instagram_posts(access_token, num_posts=100):
                         "fields": "caption"
                     }
                     caption_data = requests.get(url, params=params).json().get("caption")
+                    print(caption_data)
                     # data is only none if posts were from before the account became a business account.
                     if data != [] and data is not None:
                         # get post attributes
@@ -87,6 +88,7 @@ def get_instagram_posts(access_token, num_posts=100):
                                 num_shares=num_shares,
                                 num_saves=num_saved,
                                 post_API_ID=api_id,
+                                caption=caption_data,
                             )
                         else:
                             # modifies existing post instead of creating a new post.
@@ -96,6 +98,7 @@ def get_instagram_posts(access_token, num_posts=100):
                             existing_post.num_shares = num_shares
                             existing_post.num_saves = num_saved
                             existing_post.post_API_ID = api_id
+                            existing_post.caption = caption_data
                             existing_post.save()
 
                         if num_comments > 0:
