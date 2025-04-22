@@ -24,7 +24,7 @@ class Post(models.Model):
     num_shares = models.IntegerField(default=0)
     num_saves = models.IntegerField(default=0)
     post_API_ID = models.CharField(max_length=100, default="", unique=True)
-    caption = models.TextField(default="")
+    caption = models.TextField(null=True)
 
     class Meta:
         ordering = ["-date_posted"]
