@@ -307,7 +307,11 @@ def demographics_page(request):
     Returns:
         HttpResponse: The rendered demographics HTML page.
     """
-    return render(request, "demographics.html")
+    users = InstagramUser.objects.order_by("-num_comments")
+    context = {
+        "users": users,
+    }
+    return render(request, "demographics.html", context)
 
 
 def list_stored_posts(request):
@@ -537,8 +541,6 @@ def account_info(request):
     day_index = ["likes", "comments", "shares", "saves"].index(day_metric) + 1
     day_values = [day_data[day][day_index] for day in day_labels]
 
-    users = InstagramUser.objects.order_by("-num_comments")
-
     context = {
         "metric": metric,
         "labels": time_labels,
@@ -548,6 +550,5 @@ def account_info(request):
         "labels_day": day_labels,
         "values_day": day_values,
         "day_label": f"Average {day_metric.capitalize()} per Day",
-        "users": users,
     }
     return render(request, "account_info.html", context)
