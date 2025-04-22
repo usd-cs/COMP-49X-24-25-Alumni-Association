@@ -391,8 +391,9 @@ def list_stored_posts(request):
                 return JsonResponse(
                     {"success": False, "message": "Invalid min_saves value"}, status=400
                 )
-
         # Get posts data
+        for post in posts:
+            post.caption = "---" if not post.caption else post.caption
         posts_data = [
             {
                 "id": post.post_API_ID,
@@ -402,6 +403,7 @@ def list_stored_posts(request):
                 "comments": post.num_comments,
                 "shares": post.num_shares,
                 "saves": post.num_saves,
+                "caption": post.caption[:50],
             }
             for post in posts
         ]
