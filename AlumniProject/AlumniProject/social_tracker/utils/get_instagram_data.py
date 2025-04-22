@@ -69,8 +69,10 @@ def get_instagram_posts(access_token, num_posts=100):
                         "access_token": access_token,
                         "fields": "caption"
                     }
-                    caption_data = requests.get(url, params=params).json().get("caption")
-                    print(caption_data)
+                    try:
+                        caption_data = requests.get(url, params=params).json().get("caption")
+                    except Exception as e:
+                        caption_data = ""
                     # data is only none if posts were from before the account became a business account.
                     if data != [] and data is not None:
                         # get post attributes
