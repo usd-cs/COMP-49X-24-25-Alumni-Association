@@ -7,7 +7,6 @@ from social_tracker.models import (
     Age,
     Comment,
     InstagramUser,
-    InstagramStory,
 )
 from django.utils.dateparse import parse_datetime
 import json

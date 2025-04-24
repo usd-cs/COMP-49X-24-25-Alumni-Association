@@ -1,6 +1,6 @@
 import json
 from unittest.mock import patch, MagicMock, call
-from datetime import datetime, timezone
+from datetime import datetime
 
 from django.test import TestCase
 
