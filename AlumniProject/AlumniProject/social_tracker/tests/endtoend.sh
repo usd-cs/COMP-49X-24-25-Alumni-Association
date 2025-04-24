@@ -27,7 +27,7 @@ cat cookies.txt
 echo "\nAttempting to access /account-info/"
 curl -b cookies.txt -s https://alumni-association.dedyn.io/account-info/ > account_page.html
 
-if grep -q "<h1>Account Information</h1>" account_page.html; then
+if grep -q "<title>Account Stats</title>" account_page.html; then
   echo "Test passed! Logged in and accessed account-info page"
   SPRINT5=true
 else
