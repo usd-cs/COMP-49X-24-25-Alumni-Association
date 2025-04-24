@@ -419,7 +419,7 @@ def get_instagram_stories(access_token):
             print(f"Stories API Response Data: {data}")
         except ValueError as e:
             print(f"Error parsing JSON response: {str(e)}")
-            return f"Error parsing API response: {str(e)}"
+            return "Error parsing API response: " + str(e)
 
         if "error" in data:
             error_msg = data["error"].get("message", "Unknown error")
@@ -523,7 +523,7 @@ def get_instagram_stories(access_token):
 
     except requests.exceptions.RequestException as e:
         print(f"Request error: {str(e)}")
-        return f"Error getting Instagram stories: {str(e)}"
+        return "Error getting Instagram stories: " + str(e)
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
-        return f"Error processing stories: {str(e)}"
+        return "Error processing stories: " + str(e)
