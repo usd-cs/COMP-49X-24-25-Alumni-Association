@@ -21,6 +21,7 @@ from .models import Comment
 from .models import InstagramUser
 from .models import InstagramStory
 from django.db import models
+from django.core.serializers.json import DjangoJSONEncoder
 
 import json
 from social_tracker.utils.get_time_of_day_statistics import (
@@ -571,41 +572,50 @@ def stories_info(request):
     # Fetch stories, order by date posted descending
     stories = InstagramStory.objects.order_by("-date_posted")
 
-    # Calculate summary metrics
     total_views = stories.aggregate(total=models.Sum("num_views"))["total"] or 0
     total_profile_clicks = (
         stories.aggregate(total=models.Sum("num_profile_clicks"))["total"] or 0
     )
     total_swipes = stories.aggregate(total=models.Sum("num_swipes_up"))["total"] or 0
 
+    top_view_story = stories.order_by("-num_views").first()
+    top_interaction_story = stories.order_by("-num_swipes_up").first()
+
+    # Prepare scatterplot data: time of day vs views (flipped)
+    scatter_data = []
+    for story in stories:
+        if story.date_posted and story.num_views is not None:
+            time_of_day = story.date_posted.hour + story.date_posted.minute / 60
+            scatter_data.append({"x": round(time_of_day, 2), "y": story.num_views})
+
     context = {
         "stories": stories,
         "total_views": total_views,
         "total_profile_clicks": total_profile_clicks,
         "total_swipes": total_swipes,
+        "top_view_story": top_view_story,
+        "top_interaction_story": top_interaction_story,
+        "scatter_data": scatter_data,
     }
+
     return render(request, "stories_info.html", context)
 
 
 @login_required
 def get_stories_view(request):
     """
-    Fetches Instagram stories using the stored access token
-    and returns the data as a JSON response.
+    Handles a GET request to fetch live Instagram stories and return them as JSON.
 
-    This view calls the `get_instagram_stories` utility function.
-
-    Args:
-        request (HttpRequest): The HTTP request object.
+    Fetches stories using the stored access token, converts timestamps, and returns the data or an error message.
 
     Returns:
-        JsonResponse: Contains either:
-            - {"success": True, "stories": [list_of_story_dicts]}
-            - {"success": False, "message": "Error message"}
+        JsonResponse:
+            - On success: {"success": True, "stories": [ ... ]}
+            - On error: {"success": False, "message": "<error details>"}
     """
     if request.method != "GET":
         return JsonResponse(
-            {"success": False, "message": "Only GET requests are allowed"}
+            {"success": False, "message": "Only GET requests are allowed"}, status=405
         )
 
     try:
@@ -613,47 +623,38 @@ def get_stories_view(request):
 
         result = get_instagram_stories(access_token.token)
 
-        # Check if the result is a list (success) or a string (error)
         if isinstance(result, list):
             # Convert datetime objects to strings for JSON serialization
             for story in result:
-                if isinstance(story.get("date_posted"), datetime):
-                    # Format date to ISO 8601 format for consistency
-                    story["date_posted"] = story["date_posted"].isoformat() + "Z"
-                elif story.get("date_posted") is None:
-                    story["date_posted"] = None  # Explicitly set None if missing
+                if "date_posted" in story and isinstance(
+                    story["date_posted"], datetime
+                ):
+                    story["date_posted"] = story["date_posted"].isoformat()
 
             return JsonResponse(
-                {
-                    "success": True,  # <<< FIX: Should be True on success
-                    "stories": result,
-                }
+                {"success": True, "stories": result}, encoder=DjangoJSONEncoder
             )
+
         elif isinstance(result, str):
-            # Result is an error string from get_instagram_stories
-            print(f"API Error/Message from util: {result}")
-            return JsonResponse(
-                {"success": False, "message": result}, status=400
-            )  # Use 400 Bad Request or other appropriate error status
+            return JsonResponse({"success": False, "message": result}, status=400)
+
         else:
-            # Handle unexpected return type from utility function
-            print(f"Unexpected result type from get_instagram_stories: {type(result)}")
             return JsonResponse(
-                {
-                    "success": False,
-                    "message": "Received unexpected data type from story fetching logic.",
-                },
+                {"success": False, "message": "Unexpected data format received."},
                 status=500,
             )
+
     except AccessToken.DoesNotExist:
         return JsonResponse(
             {
                 "success": False,
                 "message": "No access token found. Please add an access token first.",
-            }
+            },
+            status=404,
         )
+
     except Exception as e:
-        print(f"Error in get_stories_view: {str(e)}")
         return JsonResponse(
-            {"success": False, "message": f"Error fetching stories: {str(e)}"}
+            {"success": False, "message": f"Error fetching stories: {str(e)}"},
+            status=500,
         )
