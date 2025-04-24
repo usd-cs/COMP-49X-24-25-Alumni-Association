@@ -21,6 +21,7 @@ from .models import Comment
 from .models import InstagramUser
 from .models import InstagramStory
 from django.db import models
+from django.core.serializers.json import DjangoJSONEncoder
 
 import json
 from social_tracker.utils.get_time_of_day_statistics import (
@@ -557,10 +558,20 @@ def account_info(request):
 
 
 from django.db.models import Sum
-from .models import InstagramStory
 
 @login_required
 def stories_info(request):
+    """
+    Renders the stories information page.
+    The story data will be loaded asynchronously via JavaScript.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The rendered stories information HTML page.
+    """
+    # Fetch stories, order by date posted descending
     stories = InstagramStory.objects.order_by("-date_posted")
 
     total_views = stories.aggregate(total=models.Sum("num_views"))["total"] or 0
@@ -595,42 +606,51 @@ def stories_info(request):
 
 
 
+from django.core.serializers.json import DjangoJSONEncoder
+
 @login_required
 def get_stories_view(request):
-    """
-    Fetches Instagram stories using the stored access token
-    and uses it to call the Instagram API. The results of
-    the API call are returned as a JSON response.
-
-    Parameters:
-    - request: HttpRequest object.
-
-    Returns:
-    - JsonResponse: A JSON response with the result of the API call.
-    """
     if request.method != "GET":
         return JsonResponse(
-            {"success": False, "message": "Only GET requests are allowed"}
+            {"success": False, "message": "Only GET requests are allowed"},
+            status=405
         )
 
     try:
         access_token = AccessToken.objects.get()
-        print(f"Using access token: {access_token.token[:10]}... (truncated)")
-
         result = get_instagram_stories(access_token.token)
-        print(f"API Response: {result}")
 
-        success = result == "Stories processed successfully."
-        return JsonResponse({"success": success, "message": result})
+        if isinstance(result, list):
+            # Convert datetime to ISO strings
+            for story in result:
+                if "date_posted" in story and isinstance(story["date_posted"], datetime):
+                    story["date_posted"] = story["date_posted"].isoformat()
+
+            return JsonResponse(
+                {"success": True, "stories": result},
+                encoder=DjangoJSONEncoder
+            )
+
+        elif isinstance(result, str):
+            return JsonResponse({"success": False, "message": result}, status=400)
+
+        else:
+            return JsonResponse(
+                {"success": False, "message": "Unexpected data format received."},
+                status=500
+            )
+
     except AccessToken.DoesNotExist:
         return JsonResponse(
             {
                 "success": False,
                 "message": "No access token found. Please add an access token first.",
-            }
+            },
+            status=404
         )
+
     except Exception as e:
-        print(f"Error in get_stories_view: {str(e)}")
         return JsonResponse(
-            {"success": False, "message": f"Error fetching stories: {str(e)}"}
+            {"success": False, "message": f"Error fetching stories: {str(e)}"},
+            status=500
         )

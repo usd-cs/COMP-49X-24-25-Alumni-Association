@@ -67,15 +67,22 @@
 
     .table-fixed th,
     .table-fixed td {
-      width: 16.66%;
-    }
-
-    .story-row.hidden {
-      display: none;
+      width: 20%;
     }
 
     .table-container {
       min-height: 450px;
+      position: relative;
+    }
+
+    .pagination-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
     }
 
     .metric-card {
@@ -107,7 +114,6 @@
 </head>
 <body>
 
-  <!-- Navigation Tabs -->
   <nav class="nav nav-tabs justify-content-center">
     <a class="nav-link" href="{% url 'token_page' %}">Token</a>
     <a class="nav-link" href="{% url 'home' %}">Post Info</a>
@@ -124,66 +130,50 @@
       </button>
     </div>
 
-    <!-- Scatterplot Chart -->
     <div class="mb-5">
       <h4 class="text-center mb-3">Views vs Time of Day</h4>
       <canvas id="storyScatterChart" height="200"></canvas>
     </div>
 
-    <!-- Highlight Top Stories -->
     <div class="mb-4">
       <div class="row">
         <div class="col-md-6">
           <div class="metric-card">
             <div class="metric-label">Top Story (Most Views)</div>
-            {% if top_view_story %}
-              <div class="metric-value">{{ top_view_story.num_views }} views</div>
-              <a href="{{ top_view_story.story_link }}" target="_blank" class="btn btn-sm mt-2">View</a>
-            {% else %}
-              <div class="metric-value">No data available</div>
-            {% endif %}
+            <div class="metric-value" id="topViews">No data</div>
           </div>
         </div>
         <div class="col-md-6">
           <div class="metric-card">
             <div class="metric-label">Top Story (Most Interactions)</div>
-            {% if top_interaction_story %}
-              <div class="metric-value">{{ top_interaction_story.num_swipes_up }} interactions</div>
-              <a href="{{ top_interaction_story.story_link }}" target="_blank" class="btn btn-sm mt-2">View</a>
-            {% else %}
-              <div class="metric-value">No data available</div>
-            {% endif %}
+            <div class="metric-value" id="topInteractions">No data</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Summary Cards -->
     <div class="row mb-4">
       <div class="col-md-4">
         <div class="metric-card">
-          <div class="metric-value">{{ total_views }}</div>
+          <div class="metric-value" id="totalViews">0</div>
           <div class="metric-label">Story Views</div>
         </div>
       </div>
       <div class="col-md-4">
         <div class="metric-card">
-          <div class="metric-value">{{ total_profile_clicks }}</div>
+          <div class="metric-value" id="totalClicks">0</div>
           <div class="metric-label">Profile Visits</div>
         </div>
       </div>
       <div class="col-md-4">
         <div class="metric-card">
-          <div class="metric-value">{{ total_swipes }}</div>
+          <div class="metric-value" id="totalSwipes">0</div>
           <div class="metric-label">Story Interactions</div>
-          <div style="font-size: 12px; color: var(--immaculata-blue); margin-top: 5px;">
-            (Taps & Swipes)
-          </div>
+          <div style="font-size: 12px; color: var(--immaculata-blue); margin-top: 5px;">(Taps & Swipes)</div>
         </div>
       </div>
     </div>
 
-    <!-- Story Table -->
     <div class="table-responsive mt-4 table-container">
       <table class="table table-striped table-bordered text-center table-fixed" style="background-color: var(--alcala-white); color: #000;">
         <thead>
@@ -195,26 +185,9 @@
             <th>Link</th>
           </tr>
         </thead>
-        <tbody id="storyList">
-          {% if stories %}
-            {% for story in stories %}
-              <tr class="story-row">
-                <td>{{ story.date_posted|date:"m/d/Y H:i" }}</td>
-                <td>{{ story.num_views }}</td>
-                <td>{{ story.num_profile_clicks }}</td>
-                <td>{{ story.num_swipes_up }}</td>
-                <td><a href="{{ story.story_link }}" target="_blank" class="btn btn-sm">View Story</a></td>
-              </tr>
-            {% endfor %}
-          {% else %}
-            <tr>
-              <td colspan="5">No story data available.</td>
-            </tr>
-          {% endif %}
-        </tbody>
+        <tbody id="storyList"></tbody>
       </table>
-      <!-- Pagination Controls below the table -->
-      <div class="d-flex justify-content-center mt-3">
+      <div class="pagination-controls">
         <button id="prevBtn" class="btn btn-secondary me-2" onclick="changePage(-1)">Previous</button>
         <span id="pageInfo" class="align-self-center mx-2 text-white">Page 1</span>
         <button id="nextBtn" class="btn btn-secondary" onclick="changePage(1)">Next</button>
@@ -223,105 +196,122 @@
   </div>
 
   <script>
-    document.getElementById('fetchStoriesBtn').addEventListener('click', function () {
-      this.disabled = true;
-      this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...';
+    let storyData = [];
+    let currentPage = 1;
+    const pageSize = 10;
+    let scatterChart = null;
 
+    function renderStoryTable(data) {
+      storyData = data;
+      currentPage = 1;
+      updateTable();
+      updateMetrics();
+    }
+
+    function updateTable() {
+      const tbody = document.getElementById('storyList');
+      tbody.innerHTML = '';
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+      const pageData = storyData.slice(start, end);
+      for (const story of pageData) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${new Date(story.date_posted).toLocaleString()}</td>
+          <td>${story.num_views}</td>
+          <td>${story.num_profile_clicks}</td>
+          <td>${story.num_swipes_up}</td>
+          <td><a href="${story.story_link}" class="btn btn-sm" target="_blank">View Story</a></td>
+        `;
+        tbody.appendChild(row);
+      }
+      document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${Math.ceil(storyData.length / pageSize)}`;
+      document.getElementById('prevBtn').disabled = currentPage === 1;
+      document.getElementById('nextBtn').disabled = currentPage === Math.ceil(storyData.length / pageSize);
+    }
+
+    window.changePage = function (direction) {
+      const newPage = currentPage + direction;
+      if (newPage > 0 && newPage <= Math.ceil(storyData.length / pageSize)) {
+        currentPage = newPage;
+        updateTable();
+      }
+    }
+
+    function updateMetrics() {
+      let topViews = 0, topInteractions = 0;
+      let topViewStory = null, topInteractionStory = null;
+      let totalViews = 0, totalClicks = 0, totalSwipes = 0;
+      const scatterPoints = [];
+
+      for (const s of storyData) {
+        totalViews += s.num_views;
+        totalClicks += s.num_profile_clicks;
+        totalSwipes += s.num_swipes_up;
+
+        if (s.num_views > topViews) {
+          topViews = s.num_views;
+          topViewStory = s;
+        }
+        if (s.num_swipes_up > topInteractions) {
+          topInteractions = s.num_swipes_up;
+          topInteractionStory = s;
+        }
+
+        const d = new Date(s.date_posted);
+        scatterPoints.push({ x: d.getHours() + d.getMinutes() / 60, y: s.num_views });
+      }
+
+      document.getElementById('totalViews').textContent = totalViews;
+      document.getElementById('totalClicks').textContent = totalClicks;
+      document.getElementById('totalSwipes').textContent = totalSwipes;
+
+      document.getElementById('topViews').innerHTML = topViewStory
+        ? `${topViewStory.num_views} views<br><a href="${topViewStory.story_link}" class="btn btn-sm mt-2" target="_blank">View</a>`
+        : 'No data';
+
+      document.getElementById('topInteractions').innerHTML = topInteractionStory
+        ? `${topInteractionStory.num_swipes_up} interactions<br><a href="${topInteractionStory.story_link}" class="btn btn-sm mt-2" target="_blank">View</a>`
+        : 'No data';
+
+      if (scatterChart) scatterChart.destroy();
+      scatterChart = new Chart(document.getElementById('storyScatterChart').getContext('2d'), {
+        type: 'scatter',
+        data: { datasets: [{ label: 'Views vs Time of Day', data: scatterPoints, backgroundColor: '#0074c8' }] },
+        options: {
+          scales: {
+            x: { title: { display: true, text: 'Time of Day (hours)' }, min: 0, max: 24, ticks: { stepSize: 2 } },
+            y: { title: { display: true, text: 'Views' }, beginAtZero: true }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    function fetchStories() {
       fetch('/get-stories/')
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
           if (data.success) {
-            location.reload();
+            renderStoryTable(data.stories);
           } else {
             alert('Error: ' + data.message);
           }
         })
-        .catch(error => {
-          alert('Error fetching stories: ' + error);
-        })
-        .finally(() => {
-          this.disabled = false;
-          this.innerHTML = '<i class="fas fa-sync-alt"></i> Fetch Latest Stories';
-        });
+        .catch(err => alert('Error fetching stories: ' + err));
+    }
+
+    document.getElementById('fetchStoriesBtn').addEventListener('click', function () {
+      this.disabled = true;
+      this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...';
+      fetchStories();
+      setTimeout(() => {
+        this.disabled = false;
+        this.innerHTML = '<i class="fas fa-sync-alt"></i> Fetch Latest Stories';
+      }, 1000);
     });
 
-    document.addEventListener('DOMContentLoaded', function () {
-      const ctx = document.getElementById('storyScatterChart').getContext('2d');
-      const scatterData = {
-        datasets: [{
-          label: 'Time of Day vs Views',
-          data: {{ scatter_data|safe }},
-          backgroundColor: '#0074c8'
-        }]
-      };
-
-      new Chart(ctx, {
-        type: 'scatter',
-        data: scatterData,
-        options: {
-          scales: {
-            x: {
-              title: {
-                display: true,
-                text: 'Time of Day (hours)'
-              },
-              min: 0,
-              max: 24,
-              ticks: {
-                stepSize: 2
-              }
-            },
-            y: {
-              title: {
-                display: true,
-                text: 'Views'
-              },
-              beginAtZero: true
-            }
-          },
-          plugins: {
-            legend: {
-              display: false
-            }
-          }
-        }
-      });
-
-      const rows = document.querySelectorAll('.story-row');
-      const pageSize = 10;
-      let currentPage = 1;
-      const totalPages = Math.ceil(rows.length / pageSize);
-
-      function showPage(page) {
-        rows.forEach((row, index) => {
-          row.classList.add('hidden');
-          if (index >= (page - 1) * pageSize && index < page * pageSize) {
-            row.classList.remove('hidden');
-          }
-        });
-      }
-
-      function updatePageInfo() {
-        document.getElementById('pageInfo').textContent = 'Page ' + currentPage + ' of ' + totalPages;
-      }
-
-      function updateButtonState() {
-        document.getElementById('prevBtn').disabled = (currentPage === 1);
-        document.getElementById('nextBtn').disabled = (currentPage === totalPages || totalPages === 0);
-      }
-
-      window.changePage = function (direction) {
-        if (direction === 1 && currentPage < totalPages) currentPage++;
-        else if (direction === -1 && currentPage > 1) currentPage--;
-        showPage(currentPage);
-        updatePageInfo();
-        updateButtonState();
-      };
-
-      updatePageInfo();
-      updateButtonState();
-      showPage(currentPage);
-    });
+    document.addEventListener('DOMContentLoaded', fetchStories);
   </script>
 </body>
 </html>
