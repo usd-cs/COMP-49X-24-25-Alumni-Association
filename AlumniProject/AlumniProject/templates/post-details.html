@@ -98,6 +98,18 @@
       padding: 10px;
       vertical-align: middle;
     }
+
+    /* Full‑caption box */
+    .caption-box {
+      background-color: var(--alcala-white);
+      color: var(--founders-blue);
+      padding: 10px 15px;
+      border-radius: 6px;
+      /* let it grow to fill remaining space */
+      flex: 1 1 auto;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
   </style>
   
   <script>
@@ -108,7 +120,6 @@
         alert("No post ID found in URL.");
         return;
       }
-      loadPostLink(postId);
       loadCommentsForPost(postId);
     };
 
@@ -157,29 +168,6 @@
       }
     }
 
-    async function loadPostLink(postId) {
-      try { 
-        const response = await fetch(`/api/instagram-link/${postId}`);
-        if (!response.ok) {
-          alert("Unable to fetch comment data for post " + postId);
-          return;
-        }
-        const data = await response.json();
-        console.log(data);
-        displayLink(data);
-      }
-      catch (err) {
-        console.error("Error loading Instagram link for post:", err);
-        alert("Error loading Instagram link for post.");
-      }
-    }
-
-    function displayLink(data) {
-      const linkItem = document.getElementById("postLinkBtn");
-      console.log(data.link)
-      linkItem.href=data.link;
-    }
-
     /**
      * Takes an array of comment data and populates the #detailsList table body
      */
@@ -220,14 +208,18 @@
   <div class="container">
     <h1>Comments</h1>
 
-    <!-- A row with "Back to Post View" + optional "Original Post" link  -->
-    <div class="d-flex justify-content-start align-items-center mb-4">
-      <button class="btn me-3" onclick="goBackToPosts()">Back to Post View</button>
-      <!-- If you want a direct link to the IG post: 
-           you can dynamically set this from your data if needed -->
-      <a href="#" id="postLinkBtn" class="btn btn-info text-white" target="_blank">
+    <div class="d-flex flex-wrap align-items-start mb-4 gap-3">
+      <button class="btn" onclick="goBackToPosts()">Back to Post View</button>
+
+      <!-- Instagram link -->
+      <a href="{{ post.post_link }}" class="btn btn-info text-white" target="_blank">
         View Post on Instagram
       </a>
+
+      <!-- Full caption -->
+      <div id="captionBox" class="caption-box flex-grow-1">
+        {{ post.caption|default:"(No caption)" }}
+      </div>
     </div>
 
     <!-- Table of details (like comments) -->
