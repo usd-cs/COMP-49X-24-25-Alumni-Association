@@ -262,13 +262,12 @@
         <tr>
           <td>${info.date_posted}</td>
           <td>${info.likes}</td>
-          <td>${info.comments}</td>
           <td>${info.shares}</td>
           <td>${info.saves}</td>
           <td class="caption-cell">${info.caption ? info.caption.slice(0, 50) + (info.caption.length > 50 ? '…' : '') : ''}</td>
           <td>
             <button onclick="window.location.href='/post-details/${info.id}/'" class="btn btn-primary btn-sm">
-              Details
+              View <strong>${info.comments}</strong>
             </button>
           </td>
         </tr>
@@ -432,10 +431,6 @@
               <button onclick="sortTable('likes')" class="btn sort-btn">Sort</button>
             </th>
             <th>
-              Comments
-              <button onclick="sortTable('comments')" class="btn sort-btn">Sort</button>
-            </th>
-            <th>
               Shares
               <button onclick="sortTable('shares')" class="btn sort-btn">Sort</button>
             </th>
@@ -444,7 +439,10 @@
               <button onclick="sortTable('saves')" class="btn sort-btn">Sort</button>
             </th>
             <th class="caption-cell">Caption</th>
-            <th>Comments</th>
+            <th>
+              Comments
+              <button onclick="sortTable('comments')" class="btn sort-btn">Sort</button>
+            </th>
           </tr>
         </thead>
         <tbody id="postList"></tbody>
