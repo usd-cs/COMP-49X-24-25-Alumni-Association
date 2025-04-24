@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Instagram Demographics</title>
+  <title>Instagram Followers Stats</title>
   <!-- Bootstrap -->
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
@@ -71,6 +71,10 @@
       color: #000;
     }
 
+    .loading-message {
+      text-align: center
+    }
+
     .section-heading {
       color: #000;
       text-align: center;
@@ -113,20 +117,25 @@
     <a class="nav-link" href="{% url 'token_page' %}">Token</a>
   
     <!-- Post Info -->
-    <a class="nav-link" href="{% url 'home' %}">Post Info</a>
+    <a class="nav-link" href="{% url 'home' %}">Post List</a>
   
     <!-- Account Info -->
+
     <a class="nav-link" href="{% url 'account-info' %}">Account Info</a>
 
     <!-- Stories Info -->
     <a class="nav-link" href="{% url 'stories-info' %}">Stories Info</a>
+
   
     <!-- Active tab for Demographics -->
-    <a class="nav-link active" aria-current="page" href="{% url 'demographics' %}">Demographic Info</a>
+    <a class="nav-link active" aria-current="page" href="{% url 'demographics' %}">Followers Stats</a>
   </nav>
 
   <div class="container">
-    <!-- (Optional) <h1>Instagram Demographics</h1> can be commented out if you prefer. -->
+    <div id="loadingMessage" class="text-center my-3" style="display:none;">
+      <div class="spinner-border" role="status" style="margin-right: 10px;"></div>
+      <span>Gathering Data from Instagram... Please Wait</span>
+    </div>
 
     <div class="text-center mb-3">
     </div>
@@ -158,11 +167,14 @@
     window.onload = getDemographics;
 
     async function getDemographics() {
+      document.getElementById("loadingMessage").style.display = "block";
+
       try {
         const response = await fetch("/api/demographics/");
         
         // Parse the JSON response from the API
         const data = await response.json();
+        document.getElementById("loadingMessage").style.display = "none";
 
         // Check if the API call was successful
         if (data.success) {
@@ -177,10 +189,12 @@
         } else {
           console.error("Error fetching demographics:", data.message);
           alert("Unable to fetch demographics data.");
+          document.getElementById("loadingMessage").style.display = "none";
         }
       } catch (error) {
         console.error("Error fetching demographics:", error);
         alert("Unable to fetch demographics data.");
+        document.getElementById("loadingMessage").style.display = "none";
       }
     }
 
