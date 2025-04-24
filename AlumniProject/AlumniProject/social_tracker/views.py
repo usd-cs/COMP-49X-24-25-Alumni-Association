@@ -610,14 +610,11 @@ def get_stories_view(request):
 
     try:
         access_token = AccessToken.objects.get()
-        print(f"Using access token: {access_token.token[:10]}... (truncated)")
 
         result = get_instagram_stories(access_token.token)
-        print(f"API Response: {result}")
 
         # Check if the result is a list (success) or a string (error)
         if isinstance(result, list):
-            print(f"Successfully fetched {len(result)} stories.")
             # Convert datetime objects to strings for JSON serialization
             for story in result:
                 if isinstance(story.get("date_posted"), datetime):
