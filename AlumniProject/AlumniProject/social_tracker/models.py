@@ -157,3 +157,32 @@ class Age(models.Model):
 
     class Meta:
         app_label = "social_tracker"
+
+
+class InstagramStory(models.Model):
+    """
+    Model representing an Instagram story.
+
+    Attributes:
+        story_ID (AutoField): Unique identifier for the story.
+        date_posted (DateTimeField): The date and time when the story was posted.
+        story_link (CharField): A link to the story.
+        num_views (IntegerField): The number of views the story has received.
+        num_profile_clicks (IntegerField): The number of profile clicks from the story.
+        num_replies (IntegerField): The number of replies to the story.
+        num_swipes_up (IntegerField): The number of swipe-ups on the story.
+        story_API_ID (CharField): A unique identifier for the story in an external API.
+    """
+
+    story_ID = models.AutoField(primary_key=True)
+    date_posted = models.DateTimeField(null=True)
+    story_link = models.CharField(max_length=100)
+    num_views = models.IntegerField(default=0)
+    num_profile_clicks = models.IntegerField(default=0)
+    num_replies = models.IntegerField(default=0)
+    num_swipes_up = models.IntegerField(default=0)
+    story_API_ID = models.CharField(max_length=100, default="", unique=True)
+
+    class Meta:
+        ordering = ["-date_posted"]
+        app_label = "social_tracker"

@@ -1,6 +1,6 @@
 # Register your models here.
 from django.contrib import admin
-from .models import Post, Comment, InstagramUser
+from .models import Post, Comment, InstagramUser, InstagramStory
 
 
 # register post
@@ -17,3 +17,4 @@ class PostAdmin(admin.ModelAdmin):
 
 admin.site.register(Comment)
 admin.site.register(InstagramUser)
+admin.site.register(InstagramStory)

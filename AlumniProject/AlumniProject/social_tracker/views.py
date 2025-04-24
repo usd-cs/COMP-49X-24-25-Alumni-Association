@@ -9,6 +9,7 @@ from .utils.get_instagram_data import (
     get_country_demographics,
     get_city_demographics,
     get_age_demographics,
+    get_instagram_stories,
 )
 from .utils.country_code_resolver import load_country_dict, get_country_name
 from .models import Country, City, Age
@@ -18,6 +19,8 @@ from .models import Post
 from .models import AccessToken
 from .models import Comment
 from .models import InstagramUser
+from .models import InstagramStory
+from django.db import models
 
 import json
 
@@ -498,3 +501,75 @@ def account_info(request):
     users = InstagramUser.objects.order_by("-num_comments")
     context = {"users": users}
     return render(request, "account_info.html", context)
+
+
+@login_required
+def stories_info(request):
+    """
+    Renders the stories information page, displaying Instagram stories sorted by date.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The rendered stories information HTML page with story data.
+    """
+    # Fetch stories, order by date posted descending
+    stories = InstagramStory.objects.order_by('-date_posted')
+    
+    # Calculate summary metrics
+    total_views = stories.aggregate(total=models.Sum('num_views'))['total'] or 0
+    total_profile_clicks = stories.aggregate(total=models.Sum('num_profile_clicks'))['total'] or 0
+    total_swipes = stories.aggregate(total=models.Sum('num_swipes_up'))['total'] or 0
+    
+    context = {
+        'stories': stories,
+        'total_views': total_views,
+        'total_profile_clicks': total_profile_clicks,
+        'total_swipes': total_swipes
+    }
+    return render(request, "stories_info.html", context)
+
+
+@login_required
+def get_stories_view(request):
+    """
+    Fetches Instagram stories using the stored access token
+    and uses it to call the Instagram API. The results of
+    the API call are returned as a JSON response.
+
+    Parameters:
+    - request: HttpRequest object.
+
+    Returns:
+    - JsonResponse: A JSON response with the result of the API call.
+    """
+    if request.method != 'GET':
+        return JsonResponse({
+            "success": False,
+            "message": "Only GET requests are allowed"
+        })
+
+    try:
+        access_token = AccessToken.objects.get()
+        print(f"Using access token: {access_token.token[:10]}... (truncated)")
+        
+        result = get_instagram_stories(access_token.token)
+        print(f"API Response: {result}")
+        
+        success = result == "Stories processed successfully."
+        return JsonResponse({
+            "success": success,
+            "message": result
+        })
+    except AccessToken.DoesNotExist:
+        return JsonResponse({
+            "success": False,
+            "message": "No access token found. Please add an access token first."
+        })
+    except Exception as e:
+        print(f"Error in get_stories_view: {str(e)}")
+        return JsonResponse({
+            "success": False,
+            "message": f"Error fetching stories: {str(e)}"
+        })
