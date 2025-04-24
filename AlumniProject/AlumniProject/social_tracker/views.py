@@ -615,8 +615,35 @@ def get_stories_view(request):
         result = get_instagram_stories(access_token.token)
         print(f"API Response: {result}")
 
-        success = result == "Stories processed successfully."
-        return JsonResponse({"success": success, "message": result})
+        # Check if the result is a list (success) or a string (error)
+        if isinstance(result, list):
+            print(f"Successfully fetched {len(result)} stories.")
+            # Convert datetime objects to strings for JSON serialization
+            for story in result:
+                if isinstance(story.get('date_posted'), datetime):
+                    # Format date to ISO 8601 format for consistency
+                    story['date_posted'] = story['date_posted'].isoformat() + "Z" 
+                elif story.get('date_posted') is None:
+                    story['date_posted'] = None # Explicitly set None if missing
+
+            return JsonResponse({
+                "success": True,  # <<< FIX: Should be True on success
+                "stories": result
+            })
+        elif isinstance(result, str):
+            # Result is an error string from get_instagram_stories
+            print(f"API Error/Message from util: {result}")
+            return JsonResponse({
+                "success": False, 
+                "message": result 
+            }, status=400) # Use 400 Bad Request or other appropriate error status
+        else:
+            # Handle unexpected return type from utility function
+            print(f"Unexpected result type from get_instagram_stories: {type(result)}")
+            return JsonResponse({
+                "success": False,
+                "message": "Received unexpected data type from story fetching logic."
+            }, status=500)
     except AccessToken.DoesNotExist:
         return JsonResponse(
             {
