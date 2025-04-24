@@ -17,11 +17,13 @@ From here you can use the command
 
 ```python manage.py makemigrations```
 
+```python manage.py makemigrations social_tracker```
+
 ```python manage.py migrate```
 
 it is possible you may need to also run 
 
-```python manage.py migrate social tracker```
+```python manage.py migrate social_tracker```
 
 You will need to create a user in order to use the website properly. Run ```python manage.py createsuperuser``` in order to create an admin user.
 
