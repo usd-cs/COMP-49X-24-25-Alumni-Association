@@ -75,7 +75,7 @@ class GetInstagramStoriesTests(TestCase):
 
         # Check that requests.get was called twice with correct URLs/params (optional but good)
         expected_calls = [
-            call(f"https://graph.instagram.com/v19.0/me/stories", params={'fields': 'id,timestamp,permalink', 'access_token': 'fake_valid_token'}),
+            call("https://graph.instagram.com/v19.0/me/stories", params={'fields': 'id,timestamp,permalink', 'access_token': 'fake_valid_token'}),
             call(f"https://graph.instagram.com/v19.0/{story_id}/insights", params={'metric': 'reach,navigation,profile_visits', 'period': 'lifetime', 'access_token': 'fake_valid_token'})
         ]
         mock_get.assert_has_calls(expected_calls)
