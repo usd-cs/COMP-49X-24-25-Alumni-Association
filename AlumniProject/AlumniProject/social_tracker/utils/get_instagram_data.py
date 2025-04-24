@@ -432,7 +432,7 @@ def get_instagram_stories(access_token):
     try:
         response = requests.get(stories_url, params=stories_params)
         data = response.json()
-        
+
         if response.status_code != 200:
             error_msg = data.get("error", {}).get("message", "Unknown API error")
             return f"API Error fetching stories ({response.status_code}): {error_msg}"
@@ -446,7 +446,7 @@ def get_instagram_stories(access_token):
                 story_id = story.get("id")
                 if not story_id:
                     continue
-                
+
                 story_metrics = {
                     "story_API_ID": story_id,
                     "date_posted": None,
@@ -454,16 +454,18 @@ def get_instagram_stories(access_token):
                     "num_views": 0,
                     "num_profile_clicks": 0,
                     "num_replies": 0,
-                    "num_swipes_up": 0
+                    "num_swipes_up": 0,
                 }
-                
+
                 timestamp_str = story.get("timestamp")
                 if timestamp_str:
                     try:
-                        story_metrics["date_posted"] = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S%z").replace(tzinfo=None)
+                        story_metrics["date_posted"] = datetime.strptime(
+                            timestamp_str, "%Y-%m-%dT%H:%M:%S%z"
+                        ).replace(tzinfo=None)
                     except ValueError:
                         pass
-                
+
                 try:
                     insights_url = (
                         f"https://graph.instagram.com/v19.0/{story_id}/insights"
@@ -473,31 +475,39 @@ def get_instagram_stories(access_token):
                         "period": "lifetime",
                         "access_token": access_token,
                     }
-                    
-                    insights_response = requests.get(insights_url, params=insights_params)
+
+                    insights_response = requests.get(
+                        insights_url, params=insights_params
+                    )
                     insights_data = insights_response.json()
 
-                    if insights_response.status_code == 200 and "data" in insights_data and insights_data["data"]:
+                    if (
+                        insights_response.status_code == 200
+                        and "data" in insights_data
+                        and insights_data["data"]
+                    ):
                         metrics = {}
                         for metric in insights_data["data"]:
                             if "values" in metric and len(metric["values"]) > 0:
                                 metrics[metric["name"]] = metric["values"][0]["value"]
-                        
-                        story_metrics["num_views"] = metrics.get("reach", 0)              
-                        story_metrics["num_profile_clicks"] = metrics.get("profile_visits", 0)  
-                        story_metrics["num_swipes_up"] = metrics.get("navigation", 0)     
+
+                        story_metrics["num_views"] = metrics.get("reach", 0)
+                        story_metrics["num_profile_clicks"] = metrics.get(
+                            "profile_visits", 0
+                        )
+                        story_metrics["num_swipes_up"] = metrics.get("navigation", 0)
 
                 except Exception:
                     pass
-                
+
                 active_stories_data.append(story_metrics)
-            
-            return active_stories_data 
-        
+
+            return active_stories_data
+
         return []
 
     except requests.exceptions.RequestException as e:
-        return "Error getting Instagram stories: " + str(e) 
+        return "Error getting Instagram stories: " + str(e)
     except json.JSONDecodeError:
         return "Error decoding JSON response for stories."
     except Exception as e:
