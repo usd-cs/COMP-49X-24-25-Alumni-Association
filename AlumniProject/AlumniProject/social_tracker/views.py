@@ -568,18 +568,20 @@ def stories_info(request):
         HttpResponse: The rendered stories information HTML page with story data.
     """
     # Fetch stories, order by date posted descending
-    stories = InstagramStory.objects.order_by('-date_posted')
-    
+    stories = InstagramStory.objects.order_by("-date_posted")
+
     # Calculate summary metrics
-    total_views = stories.aggregate(total=models.Sum('num_views'))['total'] or 0
-    total_profile_clicks = stories.aggregate(total=models.Sum('num_profile_clicks'))['total'] or 0
-    total_swipes = stories.aggregate(total=models.Sum('num_swipes_up'))['total'] or 0
-    
+    total_views = stories.aggregate(total=models.Sum("num_views"))["total"] or 0
+    total_profile_clicks = (
+        stories.aggregate(total=models.Sum("num_profile_clicks"))["total"] or 0
+    )
+    total_swipes = stories.aggregate(total=models.Sum("num_swipes_up"))["total"] or 0
+
     context = {
-        'stories': stories,
-        'total_views': total_views,
-        'total_profile_clicks': total_profile_clicks,
-        'total_swipes': total_swipes
+        "stories": stories,
+        "total_views": total_views,
+        "total_profile_clicks": total_profile_clicks,
+        "total_swipes": total_swipes,
     }
     return render(request, "stories_info.html", context)
 
@@ -597,32 +599,29 @@ def get_stories_view(request):
     Returns:
     - JsonResponse: A JSON response with the result of the API call.
     """
-    if request.method != 'GET':
-        return JsonResponse({
-            "success": False,
-            "message": "Only GET requests are allowed"
-        })
+    if request.method != "GET":
+        return JsonResponse(
+            {"success": False, "message": "Only GET requests are allowed"}
+        )
 
     try:
         access_token = AccessToken.objects.get()
         print(f"Using access token: {access_token.token[:10]}... (truncated)")
-        
+
         result = get_instagram_stories(access_token.token)
         print(f"API Response: {result}")
-        
+
         success = result == "Stories processed successfully."
-        return JsonResponse({
-            "success": success,
-            "message": result
-        })
+        return JsonResponse({"success": success, "message": result})
     except AccessToken.DoesNotExist:
-        return JsonResponse({
-            "success": False,
-            "message": "No access token found. Please add an access token first."
-        })
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "No access token found. Please add an access token first.",
+            }
+        )
     except Exception as e:
         print(f"Error in get_stories_view: {str(e)}")
-        return JsonResponse({
-            "success": False,
-            "message": f"Error fetching stories: {str(e)}"
-        })
+        return JsonResponse(
+            {"success": False, "message": f"Error fetching stories: {str(e)}"}
+        )
