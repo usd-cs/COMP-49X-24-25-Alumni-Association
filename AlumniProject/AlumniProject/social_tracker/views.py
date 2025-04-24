@@ -556,34 +556,43 @@ def account_info(request):
     return render(request, "account_info.html", context)
 
 
+from django.db.models import Sum
+from .models import InstagramStory
+
 @login_required
 def stories_info(request):
-    """
-    Renders the stories information page, displaying Instagram stories sorted by date.
-
-    Args:
-        request (HttpRequest): The HTTP request object.
-
-    Returns:
-        HttpResponse: The rendered stories information HTML page with story data.
-    """
-    # Fetch stories, order by date posted descending
     stories = InstagramStory.objects.order_by("-date_posted")
 
-    # Calculate summary metrics
     total_views = stories.aggregate(total=models.Sum("num_views"))["total"] or 0
-    total_profile_clicks = (
-        stories.aggregate(total=models.Sum("num_profile_clicks"))["total"] or 0
-    )
+    total_profile_clicks = stories.aggregate(total=models.Sum("num_profile_clicks"))["total"] or 0
     total_swipes = stories.aggregate(total=models.Sum("num_swipes_up"))["total"] or 0
+
+    top_view_story = stories.order_by("-num_views").first()
+    top_interaction_story = stories.order_by("-num_swipes_up").first()
+
+    # Prepare scatterplot data: time of day vs views (flipped)
+    scatter_data = []
+    for story in stories:
+        if story.date_posted and story.num_views is not None:
+            time_of_day = story.date_posted.hour + story.date_posted.minute / 60
+            scatter_data.append({
+                "x": round(time_of_day, 2),
+                "y": story.num_views
+            })
 
     context = {
         "stories": stories,
         "total_views": total_views,
         "total_profile_clicks": total_profile_clicks,
         "total_swipes": total_swipes,
+        "top_view_story": top_view_story,
+        "top_interaction_story": top_interaction_story,
+        "scatter_data": scatter_data,
     }
+
     return render(request, "stories_info.html", context)
+
+
 
 
 @login_required

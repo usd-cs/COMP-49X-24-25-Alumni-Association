@@ -10,6 +10,7 @@
 
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --founders-blue: #003b70;
@@ -59,21 +60,20 @@
       background-color: var(--immaculata-blue);
     }
 
-    /* Table styles */
     .table-fixed {
       table-layout: fixed;
       width: 100%;
     }
-    
+
     .table-fixed th,
     .table-fixed td {
-      width: 16.66%; /* 6 columns */
+      width: 16.66%;
     }
-    
+
     .story-row.hidden {
       display: none;
     }
-    
+
     .table-container {
       min-height: 450px;
     }
@@ -97,6 +97,12 @@
       font-size: 14px;
       color: var(--immaculata-blue);
     }
+
+    #storyScatterChart {
+      background-color: white;
+      border-radius: 8px;
+      padding: 10px;
+    }
   </style>
 </head>
 <body>
@@ -116,6 +122,40 @@
       <button id="fetchStoriesBtn" class="btn btn-primary">
         <i class="fas fa-sync-alt"></i> Fetch Latest Stories
       </button>
+    </div>
+
+    <!-- Scatterplot Chart -->
+    <div class="mb-5">
+      <h4 class="text-center mb-3">Views vs Time of Day</h4>
+      <canvas id="storyScatterChart" height="200"></canvas>
+    </div>
+
+    <!-- Highlight Top Stories -->
+    <div class="mb-4">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="metric-card">
+            <div class="metric-label">Top Story (Most Views)</div>
+            {% if top_view_story %}
+              <div class="metric-value">{{ top_view_story.num_views }} views</div>
+              <a href="{{ top_view_story.story_link }}" target="_blank" class="btn btn-sm mt-2">View</a>
+            {% else %}
+              <div class="metric-value">No data available</div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="metric-card">
+            <div class="metric-label">Top Story (Most Interactions)</div>
+            {% if top_interaction_story %}
+              <div class="metric-value">{{ top_interaction_story.num_swipes_up }} interactions</div>
+              <a href="{{ top_interaction_story.story_link }}" target="_blank" class="btn btn-sm mt-2">View</a>
+            {% else %}
+              <div class="metric-value">No data available</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Summary Cards -->
@@ -143,6 +183,7 @@
       </div>
     </div>
 
+    <!-- Story Table -->
     <div class="table-responsive mt-4 table-container">
       <table class="table table-striped table-bordered text-center table-fixed" style="background-color: var(--alcala-white); color: #000;">
         <thead>
@@ -172,25 +213,20 @@
           {% endif %}
         </tbody>
       </table>
-    </div>
-
-    <!-- Pagination Controls -->
-    <div class="d-flex justify-content-center mt-3">
-      <button id="prevBtn" class="btn btn-secondary me-2" onclick="changePage(-1)">Previous</button>
-      <span id="pageInfo" class="align-self-center mx-2 text-white">Page 1</span>
-      <button id="nextBtn" class="btn btn-secondary" onclick="changePage(1)">Next</button>
+      <!-- Pagination Controls below the table -->
+      <div class="d-flex justify-content-center mt-3">
+        <button id="prevBtn" class="btn btn-secondary me-2" onclick="changePage(-1)">Previous</button>
+        <span id="pageInfo" class="align-self-center mx-2 text-white">Page 1</span>
+        <button id="nextBtn" class="btn btn-secondary" onclick="changePage(1)">Next</button>
+      </div>
     </div>
   </div>
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
   <script>
-    // Fetch stories function
-    document.getElementById('fetchStoriesBtn').addEventListener('click', function() {
+    document.getElementById('fetchStoriesBtn').addEventListener('click', function () {
       this.disabled = true;
       this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...';
-      
+
       fetch('/get-stories/')
         .then(response => response.json())
         .then(data => {
@@ -209,53 +245,83 @@
         });
     });
 
-    // Simple pagination script
-    document.addEventListener('DOMContentLoaded', function() {
-      var rows = document.querySelectorAll('.story-row');
-      var pageSize = 10;
-      var currentPage = 1;
-      var totalPages = Math.ceil(rows.length / pageSize);
-      
-      updatePageInfo();
-      updateButtonState();
-      showPage(currentPage);
-      
+    document.addEventListener('DOMContentLoaded', function () {
+      const ctx = document.getElementById('storyScatterChart').getContext('2d');
+      const scatterData = {
+        datasets: [{
+          label: 'Time of Day vs Views',
+          data: {{ scatter_data|safe }},
+          backgroundColor: '#0074c8'
+        }]
+      };
+
+      new Chart(ctx, {
+        type: 'scatter',
+        data: scatterData,
+        options: {
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Time of Day (hours)'
+              },
+              min: 0,
+              max: 24,
+              ticks: {
+                stepSize: 2
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Views'
+              },
+              beginAtZero: true
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            }
+          }
+        }
+      });
+
+      const rows = document.querySelectorAll('.story-row');
+      const pageSize = 10;
+      let currentPage = 1;
+      const totalPages = Math.ceil(rows.length / pageSize);
+
       function showPage(page) {
-        // Hide all rows by adding 'hidden' class
-        for (var i = 0; i < rows.length; i++) {
-          rows[i].classList.add('hidden');
-        }
-        
-        // Show rows for current page by removing 'hidden' class
-        var start = (page - 1) * pageSize;
-        var end = start + pageSize;
-        for (var j = start; j < end && j < rows.length; j++) {
-          rows[j].classList.remove('hidden');
-        }
+        rows.forEach((row, index) => {
+          row.classList.add('hidden');
+          if (index >= (page - 1) * pageSize && index < page * pageSize) {
+            row.classList.remove('hidden');
+          }
+        });
       }
-      
+
       function updatePageInfo() {
         document.getElementById('pageInfo').textContent = 'Page ' + currentPage + ' of ' + totalPages;
       }
-      
+
       function updateButtonState() {
         document.getElementById('prevBtn').disabled = (currentPage === 1);
         document.getElementById('nextBtn').disabled = (currentPage === totalPages || totalPages === 0);
       }
-      
-      // Expose the changePage function to the global scope
-      window.changePage = function(direction) {
-        if (direction === 1 && currentPage < totalPages) {
-          currentPage++;
-        } else if (direction === -1 && currentPage > 1) {
-          currentPage--;
-        }
-        
+
+      window.changePage = function (direction) {
+        if (direction === 1 && currentPage < totalPages) currentPage++;
+        else if (direction === -1 && currentPage > 1) currentPage--;
         showPage(currentPage);
         updatePageInfo();
         updateButtonState();
       };
+
+      updatePageInfo();
+      updateButtonState();
+      showPage(currentPage);
     });
   </script>
 </body>
-</html> 
+</html>
