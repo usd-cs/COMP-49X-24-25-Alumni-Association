@@ -573,7 +573,9 @@ def stories_info(request):
     stories = InstagramStory.objects.order_by("-date_posted")
 
     total_views = stories.aggregate(total=models.Sum("num_views"))["total"] or 0
-    total_profile_clicks = stories.aggregate(total=models.Sum("num_profile_clicks"))["total"] or 0
+    total_profile_clicks = (
+        stories.aggregate(total=models.Sum("num_profile_clicks"))["total"] or 0
+    )
     total_swipes = stories.aggregate(total=models.Sum("num_swipes_up"))["total"] or 0
 
     top_view_story = stories.order_by("-num_views").first()
@@ -584,10 +586,7 @@ def stories_info(request):
     for story in stories:
         if story.date_posted and story.num_views is not None:
             time_of_day = story.date_posted.hour + story.date_posted.minute / 60
-            scatter_data.append({
-                "x": round(time_of_day, 2),
-                "y": story.num_views
-            })
+            scatter_data.append({"x": round(time_of_day, 2), "y": story.num_views})
 
     context = {
         "stories": stories,
@@ -616,8 +615,7 @@ def get_stories_view(request):
     """
     if request.method != "GET":
         return JsonResponse(
-            {"success": False, "message": "Only GET requests are allowed"},
-            status=405
+            {"success": False, "message": "Only GET requests are allowed"}, status=405
         )
 
     try:
@@ -627,12 +625,13 @@ def get_stories_view(request):
         if isinstance(result, list):
             # Convert datetime to ISO strings
             for story in result:
-                if "date_posted" in story and isinstance(story["date_posted"], datetime):
+                if "date_posted" in story and isinstance(
+                    story["date_posted"], datetime
+                ):
                     story["date_posted"] = story["date_posted"].isoformat()
 
             return JsonResponse(
-                {"success": True, "stories": result},
-                encoder=DjangoJSONEncoder
+                {"success": True, "stories": result}, encoder=DjangoJSONEncoder
             )
 
         elif isinstance(result, str):
@@ -641,7 +640,7 @@ def get_stories_view(request):
         else:
             return JsonResponse(
                 {"success": False, "message": "Unexpected data format received."},
-                status=500
+                status=500,
             )
 
     except AccessToken.DoesNotExist:
@@ -650,11 +649,11 @@ def get_stories_view(request):
                 "success": False,
                 "message": "No access token found. Please add an access token first.",
             },
-            status=404
+            status=404,
         )
 
     except Exception as e:
         return JsonResponse(
             {"success": False, "message": f"Error fetching stories: {str(e)}"},
-            status=500
+            status=500,
         )
