@@ -559,27 +559,21 @@ def account_info(request):
 @login_required
 def stories_info(request):
     """
-    Renders the stories information page, displaying Instagram stories sorted by date.
+    Renders the stories information page.
+    The story data will be loaded asynchronously via JavaScript.
 
     Args:
         request (HttpRequest): The HTTP request object.
 
     Returns:
-        HttpResponse: The rendered stories information HTML page with story data.
+        HttpResponse: The rendered stories information HTML page.
     """
-    # Fetch stories, order by date posted descending
-    stories = InstagramStory.objects.order_by('-date_posted')
-    
-    # Calculate summary metrics
-    total_views = stories.aggregate(total=models.Sum('num_views'))['total'] or 0
-    total_profile_clicks = stories.aggregate(total=models.Sum('num_profile_clicks'))['total'] or 0
-    total_swipes = stories.aggregate(total=models.Sum('num_swipes_up'))['total'] or 0
-    
+
     context = {
-        'stories': stories,
-        'total_views': total_views,
-        'total_profile_clicks': total_profile_clicks,
-        'total_swipes': total_swipes
+        'stories': [], # Start with an empty list
+        'total_views': 0,
+        'total_profile_clicks': 0,
+        'total_swipes': 0
     }
     return render(request, "stories_info.html", context)
 
@@ -588,41 +582,63 @@ def stories_info(request):
 def get_stories_view(request):
     """
     Fetches Instagram stories using the stored access token
-    and uses it to call the Instagram API. The results of
-    the API call are returned as a JSON response.
+    and returns the data as a JSON response.
 
-    Parameters:
-    - request: HttpRequest object.
+    This view calls the `get_instagram_stories` utility function.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
 
     Returns:
-    - JsonResponse: A JSON response with the result of the API call.
+        JsonResponse: Contains either:
+            - {"success": True, "stories": [list_of_story_dicts]}
+            - {"success": False, "message": "Error message"}
     """
     if request.method != 'GET':
         return JsonResponse({
             "success": False,
             "message": "Only GET requests are allowed"
-        })
+        }, status=405) # Method Not Allowed
 
     try:
         access_token = AccessToken.objects.get()
         print(f"Using access token: {access_token.token[:10]}... (truncated)")
         
+        # Call the updated utility function
         result = get_instagram_stories(access_token.token)
-        print(f"API Response: {result}")
         
-        success = result == "Stories processed successfully."
-        return JsonResponse({
-            "success": success,
-            "message": result
-        })
+        # Check if the result is a list (success) or a string (error)
+        if isinstance(result, list):
+            print(f"Successfully fetched {len(result)} stories.")
+            # Convert datetime objects to strings for JSON serialization
+            for story in result:
+                if isinstance(story.get('date_posted'), datetime):
+                    story['date_posted'] = story['date_posted'].isoformat()
+
+            return JsonResponse({
+                "success": True,
+                "stories": result
+            })
+        else:
+            # Result is an error string
+            print(f"API Error/Message: {result}")
+            return JsonResponse({
+                "success": False,
+                "message": result 
+            }, status=500) # Internal Server Error or specific error indication
+
     except AccessToken.DoesNotExist:
+        print("Access token not found in database.")
         return JsonResponse({
             "success": False,
             "message": "No access token found. Please add an access token first."
-        })
+        }, status=404) # Not Found
     except Exception as e:
         print(f"Error in get_stories_view: {str(e)}")
+        # Log the full traceback for debugging if needed
+        # import traceback
+        # traceback.print_exc()
         return JsonResponse({
             "success": False,
-            "message": f"Error fetching stories: {str(e)}"
-        })
+            "message": f"An unexpected error occurred: {str(e)}"
+        }, status=500) # Internal Server Error

@@ -58,6 +58,18 @@
     .btn:hover {
       background-color: var(--immaculata-blue);
     }
+    .btn-primary {
+        background-color: var(--founders-blue);
+    }
+    .btn-primary:hover {
+        background-color: var(--immaculata-blue);
+    }
+    .btn-secondary {
+        background-color: var(--immaculata-blue);
+    }
+    .btn-secondary:hover {
+        background-color: #005a9e; /* Darker immaculata blue */
+    }
 
     /* Table styles */
     .table-fixed {
@@ -67,7 +79,8 @@
     
     .table-fixed th,
     .table-fixed td {
-      width: 16.66%; /* 6 columns */
+      width: 20%; /* Adjusted for 5 columns */
+      vertical-align: middle;
     }
     
     .story-row.hidden {
@@ -75,7 +88,12 @@
     }
     
     .table-container {
-      min-height: 450px;
+      min-height: 450px; /* Minimum height for table area */
+      display: flex;
+      flex-direction: column;
+    }
+    .table-responsive {
+        flex-grow: 1;
     }
 
     .metric-card {
@@ -96,6 +114,12 @@
     .metric-label {
       font-size: 14px;
       color: var(--immaculata-blue);
+    }
+    #pagination-controls {
+        display: none; /* Hide pagination initially */
+    }
+    .hidden {
+        display: none;
     }
   </style>
 </head>
@@ -122,19 +146,19 @@
     <div class="row mb-4">
       <div class="col-md-4">
         <div class="metric-card">
-          <div class="metric-value">{{ total_views }}</div>
+          <div id="total-views-value" class="metric-value">{{ total_views }}</div>
           <div class="metric-label">Story Views</div>
         </div>
       </div>
       <div class="col-md-4">
         <div class="metric-card">
-          <div class="metric-value">{{ total_profile_clicks }}</div>
+          <div id="total-clicks-value" class="metric-value">{{ total_profile_clicks }}</div>
           <div class="metric-label">Profile Visits</div>
         </div>
       </div>
       <div class="col-md-4">
         <div class="metric-card">
-          <div class="metric-value">{{ total_swipes }}</div>
+          <div id="total-swipes-value" class="metric-value">{{ total_swipes }}</div>
           <div class="metric-label">Story Interactions</div>
           <div style="font-size: 12px; color: var(--immaculata-blue); margin-top: 5px;">
             (Taps & Swipes)
@@ -143,42 +167,33 @@
       </div>
     </div>
 
-    <div class="table-responsive mt-4 table-container">
-      <table class="table table-striped table-bordered text-center table-fixed" style="background-color: var(--alcala-white); color: #000;">
-        <thead>
-          <tr>
-            <th>Date Posted</th>
-            <th>Views</th>
-            <th>Profile Visits</th>
-            <th>Story Interactions</th>
-            <th>Link</th>
-          </tr>
-        </thead>
-        <tbody id="storyList">
-          {% if stories %}
-            {% for story in stories %}
-              <tr class="story-row">
-                <td>{{ story.date_posted|date:"m/d/Y H:i" }}</td>
-                <td>{{ story.num_views }}</td>
-                <td>{{ story.num_profile_clicks }}</td>
-                <td>{{ story.num_swipes_up }}</td>
-                <td><a href="{{ story.story_link }}" target="_blank" class="btn btn-sm">View Story</a></td>
+    <div class="table-container">
+        <div class="table-responsive">
+          <table class="table table-striped table-bordered text-center table-fixed" style="background-color: var(--alcala-white); color: #000;">
+            <thead>
+              <tr>
+                <th>Date Posted</th>
+                <th>Views</th>
+                <th>Profile Visits</th>
+                <th>Interactions</th>
+                <th>Link</th>
               </tr>
-            {% endfor %}
-          {% else %}
-            <tr>
-              <td colspan="5">No story data available.</td>
-            </tr>
-          {% endif %}
-        </tbody>
-      </table>
+            </thead>
+            <tbody id="storyList">
+              <!-- Initial state (can be empty or show loading) -->
+               <tr>
+                  <td colspan="5">Loading stories...</td>
+               </tr>
+            </tbody>
+          </table>
+        </div>
     </div>
 
     <!-- Pagination Controls -->
-    <div class="d-flex justify-content-center mt-3">
-      <button id="prevBtn" class="btn btn-secondary me-2" onclick="changePage(-1)">Previous</button>
+    <div id="pagination-controls" class="d-flex justify-content-center mt-3">
+      <button id="prevBtn" class="btn btn-secondary me-2">Previous</button>
       <span id="pageInfo" class="align-self-center mx-2 text-white">Page 1</span>
-      <button id="nextBtn" class="btn btn-secondary" onclick="changePage(1)">Next</button>
+      <button id="nextBtn" class="btn btn-secondary">Next</button>
     </div>
   </div>
 
@@ -186,76 +201,212 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    // Fetch stories function
-    document.getElementById('fetchStoriesBtn').addEventListener('click', function() {
-      this.disabled = true;
-      this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...';
-      
-      fetch('/get-stories/')
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            location.reload();
-          } else {
-            alert('Error: ' + data.message);
-          }
-        })
-        .catch(error => {
-          alert('Error fetching stories: ' + error);
-        })
-        .finally(() => {
-          this.disabled = false;
-          this.innerHTML = '<i class="fas fa-sync-alt"></i> Fetch Latest Stories';
-        });
-    });
+    // --- Target elements --- 
+    const fetchBtn = document.getElementById('fetchStoriesBtn');
+    const storyListBody = document.getElementById('storyList');
+    const totalViewsCard = document.getElementById('total-views-value');
+    const totalClicksCard = document.getElementById('total-clicks-value');
+    const totalSwipesCard = document.getElementById('total-swipes-value');
+    const paginationControls = document.getElementById('pagination-controls');
+    const pageInfoSpan = document.getElementById('pageInfo');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
 
-    // Simple pagination script
-    document.addEventListener('DOMContentLoaded', function() {
-      var rows = document.querySelectorAll('.story-row');
-      var pageSize = 10;
-      var currentPage = 1;
-      var totalPages = Math.ceil(rows.length / pageSize);
-      
-      updatePageInfo();
-      updateButtonState();
-      showPage(currentPage);
-      
-      function showPage(page) {
-        // Hide all rows by adding 'hidden' class
-        for (var i = 0; i < rows.length; i++) {
-          rows[i].classList.add('hidden');
+    let currentPage = 1;
+    const pageSize = 10; // Number of stories per page
+
+    // --- Function to display stories and update totals --- 
+    function displayStories(stories) {
+        storyListBody.innerHTML = ''; // Clear existing stories or loading message
+        let totalViews = 0;
+        let totalProfileClicks = 0;
+        let totalSwipes = 0;
+
+        if (!stories || stories.length === 0) {
+            storyListBody.innerHTML = '<tr><td colspan="5">No active stories found.</td></tr>';
+            totalViewsCard.textContent = 0;
+            totalClicksCard.textContent = 0;
+            totalSwipesCard.textContent = 0;
+            // initializePagination(0); // TEMPORARILY DISABLED
+            return;
         }
-        
-        // Show rows for current page by removing 'hidden' class
-        var start = (page - 1) * pageSize;
-        var end = start + pageSize;
-        for (var j = start; j < end && j < rows.length; j++) {
-          rows[j].classList.remove('hidden');
+
+        console.log(`[displayStories] Attempting to display ${stories.length} stories.`); // Log: Start displaying
+
+        stories.forEach((story, index) => {
+            // Calculate totals
+            totalViews += story.num_views || 0;
+            totalProfileClicks += story.num_profile_clicks || 0;
+            totalSwipes += story.num_swipes_up || 0;
+
+            // Create Row
+            const row = document.createElement('tr');
+            // row.classList.add('story-row', 'hidden'); // TEMPORARILY REMOVED 'hidden'
+            row.classList.add('story-row'); // Add only story-row class for now
+
+            // Create Cells
+            const dateCell = document.createElement('td');
+            try {
+                 const date = new Date(story.date_posted);
+                 const formattedDate = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                 dateCell.textContent = formattedDate;
+            } catch(e) {
+                console.error("[displayStories] Error parsing date:", story.date_posted, e);
+                dateCell.textContent = 'Invalid Date';
+            }
+
+            const viewsCell = document.createElement('td');
+            viewsCell.textContent = story.num_views || 0;
+
+            const clicksCell = document.createElement('td');
+            clicksCell.textContent = story.num_profile_clicks || 0;
+
+            const swipesCell = document.createElement('td');
+            swipesCell.textContent = story.num_swipes_up || 0; // Story Interactions
+
+            const linkCell = document.createElement('td');
+            const link = document.createElement('a');
+            link.href = story.story_link || '#';
+            link.textContent = 'View Story';
+            link.target = '_blank';
+            link.classList.add('btn', 'btn-sm', 'btn-primary');
+            linkCell.appendChild(link);
+
+            // Append cells to row
+            row.appendChild(dateCell);
+            row.appendChild(viewsCell);
+            row.appendChild(clicksCell);
+            row.appendChild(swipesCell);
+            row.appendChild(linkCell);
+
+            // Append row to table body
+            storyListBody.appendChild(row);
+        });
+
+        console.log(`[displayStories] Finished appending ${storyListBody.children.length} rows to tbody.`); // Log: Finished appending
+
+        // Update summary cards
+        totalViewsCard.textContent = totalViews;
+        totalClicksCard.textContent = totalProfileClicks;
+        totalSwipesCard.textContent = totalSwipes;
+
+        // Initialize pagination AFTER rows are in the DOM
+        // initializePagination(stories.length); // TEMPORARILY DISABLED
+        console.log("[displayStories] Pagination logic temporarily disabled for testing.");
+    }
+
+    // --- Pagination Logic --- 
+    function initializePagination(totalRows) {
+        currentPage = 1; // Reset to page 1
+        const totalPages = Math.ceil(totalRows / pageSize);
+        console.log(`[initializePagination] Total rows: ${totalRows}, Total pages: ${totalPages}`); // ADDED LOG
+
+        if (totalRows === 0 || totalPages <= 1) {
+             paginationControls.style.display = 'none'; // Hide if no pagination needed
+             console.log("[initializePagination] Hiding pagination controls."); // ADDED LOG
+        } else {
+             paginationControls.style.display = 'flex'; // Show pagination controls
+             console.log("[initializePagination] Showing pagination controls."); // ADDED LOG
+             updatePageInfo(totalPages);
+             updateButtonState(totalPages);
+             showPage(currentPage); // Show the first page
         }
-      }
-      
-      function updatePageInfo() {
-        document.getElementById('pageInfo').textContent = 'Page ' + currentPage + ' of ' + totalPages;
-      }
-      
-      function updateButtonState() {
-        document.getElementById('prevBtn').disabled = (currentPage === 1);
-        document.getElementById('nextBtn').disabled = (currentPage === totalPages || totalPages === 0);
-      }
-      
-      // Expose the changePage function to the global scope
-      window.changePage = function(direction) {
-        if (direction === 1 && currentPage < totalPages) {
-          currentPage++;
-        } else if (direction === -1 && currentPage > 1) {
-          currentPage--;
+    }
+
+    function showPage(page) {
+        const rows = storyListBody.querySelectorAll('.story-row');
+        console.log(`[showPage(${page})] Found ${rows.length} rows with class 'story-row'.`); // ADDED LOG
+        rows.forEach((row, index) => {
+            const start = (page - 1) * pageSize;
+            const end = start + pageSize;
+            if (index >= start && index < end) {
+                row.classList.remove('hidden');
+            } else {
+                row.classList.add('hidden');
+            }
+        });
+        console.log(`[showPage(${page})] Finished updating row visibility.`); // ADDED LOG
+    }
+
+    function updatePageInfo(totalPages) {
+        pageInfoSpan.textContent = `Page ${currentPage} of ${totalPages}`;
+    }
+
+    function updateButtonState(totalPages) {
+        prevBtn.disabled = (currentPage === 1);
+        nextBtn.disabled = (currentPage === totalPages);
+    }
+
+    function changePage(direction) {
+        const rows = storyListBody.querySelectorAll('.story-row');
+        const totalPages = Math.ceil(rows.length / pageSize);
+        const newPage = currentPage + direction;
+
+        if (newPage >= 1 && newPage <= totalPages) {
+            currentPage = newPage;
+            showPage(currentPage);
+            updatePageInfo(totalPages);
+            updateButtonState(totalPages);
         }
-        
-        showPage(currentPage);
-        updatePageInfo();
-        updateButtonState();
-      };
-    });
+    }
+
+    // Add listeners for pagination buttons
+    prevBtn.addEventListener('click', () => changePage(-1));
+    nextBtn.addEventListener('click', () => changePage(1));
+    // --- End Pagination Logic --- 
+
+    // --- Function to fetch stories and trigger display --- 
+    async function fetchAndDisplayStories() {
+        fetchBtn.disabled = true;
+        fetchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...';
+        storyListBody.innerHTML = '<tr><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading stories...</td></tr>';
+        // Reset totals visually during load
+        totalViewsCard.textContent = '-'; 
+        totalClicksCard.textContent = '-';
+        totalSwipesCard.textContent = '-';
+        paginationControls.style.display = 'none'; // Hide pagination during load
+
+        try {
+            const response = await fetch('/get-stories/'); // Use the correct hyphenated URL
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                displayStories(data.stories);
+            } else {
+                // Handle API error messages or non-success responses
+                const errorMessage = data.message || `HTTP error! status: ${response.status}`;
+                console.error('Error fetching stories:', errorMessage);
+                alert('Error fetching stories: ' + errorMessage);
+                 storyListBody.innerHTML = `<tr><td colspan="5">Error: ${errorMessage}</td></tr>`;
+                 // Reset totals on error
+                 totalViewsCard.textContent = 0;
+                 totalClicksCard.textContent = 0;
+                 totalSwipesCard.textContent = 0;
+                 initializePagination(0); // Ensure pagination is hidden
+            }
+        } catch (error) {
+            console.error('Network or fetch error:', error);
+            alert('Could not connect to server or fetch stories: ' + error);
+            storyListBody.innerHTML = `<tr><td colspan="5">Failed to fetch stories. Check network or console.</td></tr>`;
+            // Reset totals on error
+            totalViewsCard.textContent = 0;
+            totalClicksCard.textContent = 0;
+            totalSwipesCard.textContent = 0;
+            initializePagination(0); // Ensure pagination is hidden
+        } finally {
+            fetchBtn.disabled = false;
+            fetchBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Fetch Latest Stories';
+        }
+    }
+
+    // --- Event Listeners --- 
+    // Add event listener for the button click
+    fetchBtn.addEventListener('click', fetchAndDisplayStories);
+
+    // Add event listener to fetch stories when the page loads
+    document.addEventListener('DOMContentLoaded', fetchAndDisplayStories);
+
   </script>
+
 </body>
 </html> 
