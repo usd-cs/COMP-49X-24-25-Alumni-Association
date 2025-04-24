@@ -435,7 +435,7 @@ def get_instagram_stories(access_token):
         if "error" in data:
             error_msg = data["error"].get("message", "Unknown error")
             print(f"API Error: {error_msg}")
-            return f"API Error: {error_msg}"
+            return "API Error: " + error_msg
 
         # Get list of active story IDs from Instagram
         active_story_ids = []
@@ -478,15 +478,15 @@ def get_instagram_stories(access_token):
                         "access_token": access_token
                     }
                     
-                    print(f"\n=== Story Insights Request ===")
+                    print("\n=== Story Insights Request ===")
                     print(f"Story ID: {story_id}")
                     print(f"Requesting metrics: {insights_params['metric']}")
                     
                     insights_response = requests.get(insights_url, params=insights_params)
-                    print(f"\nResponse Status: {insights_response.status_code}")
+                    print("\nResponse Status: " + str(insights_response.status_code))
                     
                     insights_data = insights_response.json()
-                    print(f"\nRaw Response Data: {json.dumps(insights_data, indent=2)}")
+                    print("\nRaw Response Data: " + json.dumps(insights_data, indent=2))
 
                     if "error" in insights_data:
                         print(f"\nError fetching insights: {insights_data['error'].get('message')}")
@@ -502,7 +502,7 @@ def get_instagram_stories(access_token):
                             if "values" in metric and len(metric["values"]) > 0:
                                 metrics[metric["name"]] = metric["values"][0]["value"]
                         
-                        print(f"\nProcessed metrics for story {story_id}:")
+                        print("\nProcessed metrics for story " + str(story_id) + ":")
                         print(json.dumps(metrics, indent=2))
                         
                         # Update story with available metrics using the correct metric names
@@ -511,13 +511,13 @@ def get_instagram_stories(access_token):
                         story_obj.num_swipes_up = metrics.get("navigation", 0)     # Navigation actions
                         story_obj.num_replies = 0  # We don't have likes data available
                         
-                        print(f"\nSaving metrics to database:")
+                        print("\nSaving metrics to database:")
                         print(f"Views (reach): {story_obj.num_views}")
                         print(f"Profile Visits: {story_obj.num_profile_clicks}")
                         print(f"Navigation Actions: {story_obj.num_swipes_up}")
                         
                         story_obj.save()
-                        print(f"Successfully updated story {story_id} with metrics")
+                        print("Successfully updated story " + str(story_id) + " with metrics")
                     
                 except Exception as e:
                     print(f"Could not fetch insights for story {story_id}: {str(e)}")
