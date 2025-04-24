@@ -427,7 +427,7 @@ def get_instagram_stories(access_token):
         print("Access token is missing.")
         return "Access token is missing."
 
-    stories_url = f"https://graph.instagram.com/v19.0/me/stories"
+    stories_url = "https://graph.instagram.com/v19.0/me/stories"
     stories_params = {
         "fields": "id,timestamp,permalink", 
         "access_token": access_token
