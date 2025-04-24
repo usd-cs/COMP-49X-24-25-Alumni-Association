@@ -620,10 +620,11 @@ def get_stories_view(request):
 
     try:
         access_token = AccessToken.objects.get()
+
         result = get_instagram_stories(access_token.token)
 
         if isinstance(result, list):
-            # Convert datetime to ISO strings
+            # Convert datetime objects to strings for JSON serialization
             for story in result:
                 if "date_posted" in story and isinstance(
                     story["date_posted"], datetime

@@ -120,6 +120,14 @@
       border: 1px solid var(--bs-table-border-color);
     }
 
+    /* Keep caption on a single line with ellipsis when too long */
+    .caption-cell {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 240px;      /* fixed column width */
+    }
+
     /* Adjust vertical alignment for 'Post Details' header */
     .table th:last-child {
       vertical-align: middle;
@@ -256,6 +264,7 @@
           <td>${info.likes}</td>
           <td>${info.shares}</td>
           <td>${info.saves}</td>
+          <td class="caption-cell">${info.caption ? info.caption.slice(0, 50) + (info.caption.length > 50 ? '…' : '') : ''}</td>
           <td>
             <button onclick="window.location.href='/post-details/${info.id}/'" class="btn btn-primary btn-sm">
               View <strong>${info.comments}</strong>
@@ -433,6 +442,7 @@
               Saves
               <button onclick="sortTable('saves')" class="btn sort-btn">Sort</button>
             </th>
+            <th class="caption-cell">Caption</th>
             <th>
               Comments
               <button onclick="sortTable('comments')" class="btn sort-btn">Sort</button>
