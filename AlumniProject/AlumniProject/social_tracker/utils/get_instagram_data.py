@@ -418,20 +418,17 @@ def get_instagram_stories(access_token):
                           (Should have instagram_basic, instagram_manage_insights permissions).
 
     Returns:
-        list: A list of dictionaries, each representing an active story 
+        list: A list of dictionaries, each representing an active story
               with its metrics, or an empty list if no stories are found.
         str: An error message string if an API error or processing error occurs.
     """
-    
+
     if not access_token:
         print("Access token is missing.")
         return "Access token is missing."
 
     stories_url = "https://graph.instagram.com/v19.0/me/stories"
-    stories_params = {
-        "fields": "id,timestamp,permalink", 
-        "access_token": access_token
-    }
+    stories_params = {"fields": "id,timestamp,permalink", "access_token": access_token}
 
     try:
         print(f"Fetching stories from: {stories_url}")
@@ -441,7 +438,7 @@ def get_instagram_stories(access_token):
         print("\n=== Stories API Response (/me/stories) ===")
         print("Status Code: " + str(response.status_code))
         # print("Raw Response Data: " + json.dumps(data, indent=2)) # Can be verbose
-        
+
         if response.status_code != 200:
             error_msg = data.get("error", {}).get("message", "Unknown API error")
             print(f"API Error fetching stories: {error_msg}")
@@ -465,37 +462,43 @@ def get_instagram_stories(access_token):
                 if not story_id:
                     print("Skipping story with missing ID:", story)
                     continue
-                    
+
                 print(f"Processing story ID: {story_id}")
-                
+
                 # Initialize default story metrics dictionary
                 story_metrics = {
                     "story_API_ID": story_id,
-                    "date_posted": None, # Initialize
+                    "date_posted": None,  # Initialize
                     "story_link": story.get("permalink", "N/A"),
                     "num_views": 0,
                     "num_profile_clicks": 0,
-                    "num_replies": 0, # Likes/Replies metric not supported for stories
-                    "num_swipes_up": 0
+                    "num_replies": 0,  # Likes/Replies metric not supported for stories
+                    "num_swipes_up": 0,
                 }
-                
+
                 # Parse timestamp if available
                 timestamp_str = story.get("timestamp")
                 if timestamp_str:
                     try:
-                        story_metrics["date_posted"] = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S%z").replace(tzinfo=None)
+                        story_metrics["date_posted"] = datetime.strptime(
+                            timestamp_str, "%Y-%m-%dT%H:%M:%S%z"
+                        ).replace(tzinfo=None)
                     except ValueError as date_err:
-                        print(f"Error parsing timestamp {timestamp_str} for story {story_id}: {date_err}")
+                        print(
+                            f"Error parsing timestamp {timestamp_str} for story {story_id}: {date_err}"
+                        )
                 else:
-                     print(f"Missing timestamp for story {story_id}")
-                
+                    print(f"Missing timestamp for story {story_id}")
+
                 # REMOVED: Create or update story in database with basic information
                 # story_obj, created = InstagramStory.objects.update_or_create(...)
                 # print(f"Saved basic story information for {story_id}")
 
-                # --- Fetch Insights --- 
+                # --- Fetch Insights ---
                 try:
-                    insights_url = f"https://graph.instagram.com/v19.0/{story_id}/insights"
+                    insights_url = (
+                        f"https://graph.instagram.com/v19.0/{story_id}/insights"
+                    )
                     insights_params = {
                         "metric": "reach,navigation,profile_visits",
                         "period": "lifetime",
@@ -503,60 +506,70 @@ def get_instagram_stories(access_token):
                     }
 
                     # print(f"\n=== Story Insights Request for {story_id} ===")
-                    
-                    insights_response = requests.get(insights_url, params=insights_params)
+
+                    insights_response = requests.get(
+                        insights_url, params=insights_params
+                    )
                     insights_data = insights_response.json()
-                    
+
                     # print("Insights Response Status: " + str(insights_response.status_code))
                     # print("Insights Raw Data: " + json.dumps(insights_data, indent=2))
 
                     if insights_response.status_code != 200 or "error" in insights_data:
-                       error_detail = insights_data.get("error", {}).get("message", "Unknown insights error")
-                       print(f"\nError fetching insights for story {story_id}: {error_detail}")
-                       # Don't update metrics, just proceed to append the default dictionary
-                    
+                        error_detail = insights_data.get("error", {}).get(
+                            "message", "Unknown insights error"
+                        )
+                        print(
+                            f"\nError fetching insights for story {story_id}: {error_detail}"
+                        )
+                        # Don't update metrics, just proceed to append the default dictionary
+
                     elif "data" in insights_data and insights_data["data"]:
                         # Process and update metrics dictionary if insights are successful
                         metrics = {}
                         for metric in insights_data["data"]:
                             if "values" in metric and len(metric["values"]) > 0:
                                 metrics[metric["name"]] = metric["values"][0]["value"]
-                        
+
                         # Update story metrics dictionary with fetched values
-                        story_metrics["num_views"] = metrics.get("reach", 0)              
-                        story_metrics["num_profile_clicks"] = metrics.get("profile_visits", 0)  
-                        story_metrics["num_swipes_up"] = metrics.get("navigation", 0)     
+                        story_metrics["num_views"] = metrics.get("reach", 0)
+                        story_metrics["num_profile_clicks"] = metrics.get(
+                            "profile_visits", 0
+                        )
+                        story_metrics["num_swipes_up"] = metrics.get("navigation", 0)
                         # print(f"Updated metrics for {story_id}: {story_metrics}")
-                        
+
                         # REMOVED story_obj.save() and related prints
 
                 except Exception as e:
                     # Catch errors during the insights try block
                     print(f"Could not process insights for story {story_id}: {str(e)}")
                     # Story metrics dictionary already holds default values, will be appended below
-                
+
                 # Append the story_metrics dictionary (either default or updated) to the list
                 active_stories_data.append(story_metrics)
                 print(f"Finished processing story {story_id}, added to results list.")
-            
+
             # <<< IMPORTANT: Return the list AFTER the loop finishes >>>
-            return active_stories_data 
-        
+            return active_stories_data
+
         else:
             # No stories found in the initial /me/stories response
             print("No active stories found in API response from /me/stories")
-            return [] # Return empty list
+            return []  # Return empty list
 
     except requests.exceptions.RequestException as e:
         print(f"Request error fetching /me/stories: {str(e)}")
-        return "Error getting Instagram stories: " + str(e) 
+        return "Error getting Instagram stories: " + str(e)
     except json.JSONDecodeError as e:
         print(f"Error decoding JSON response for /me/stories: {str(e)}")
         # Ensure response is defined for logging
-        raw_text = response.text if 'response' in locals() else 'Response object not available'
-        print(f"Raw response text: {raw_text}") 
+        raw_text = (
+            response.text if "response" in locals() else "Response object not available"
+        )
+        print(f"Raw response text: {raw_text}")
         return "Error decoding JSON response for stories."
     except Exception as e:
         print(f"Unexpected error processing stories: {str(e)}")
-        # import traceback; traceback.print_exc() 
+        # import traceback; traceback.print_exc()
         return "Error processing stories: " + str(e)
