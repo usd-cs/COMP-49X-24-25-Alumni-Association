@@ -568,12 +568,21 @@ def stories_info(request):
     Returns:
         HttpResponse: The rendered stories information HTML page.
     """
+    # Fetch stories, order by date posted descending
+    stories = InstagramStory.objects.order_by("-date_posted")
+
+    # Calculate summary metrics
+    total_views = stories.aggregate(total=models.Sum("num_views"))["total"] or 0
+    total_profile_clicks = (
+        stories.aggregate(total=models.Sum("num_profile_clicks"))["total"] or 0
+    )
+    total_swipes = stories.aggregate(total=models.Sum("num_swipes_up"))["total"] or 0
 
     context = {
-        'stories': [], # Start with an empty list
-        'total_views': 0,
-        'total_profile_clicks': 0,
-        'total_swipes': 0
+        "stories": stories,
+        "total_views": total_views,
+        "total_profile_clicks": total_profile_clicks,
+        "total_swipes": total_swipes,
     }
     return render(request, "stories_info.html", context)
 
@@ -594,51 +603,29 @@ def get_stories_view(request):
             - {"success": True, "stories": [list_of_story_dicts]}
             - {"success": False, "message": "Error message"}
     """
-    if request.method != 'GET':
-        return JsonResponse({
-            "success": False,
-            "message": "Only GET requests are allowed"
-        }, status=405) # Method Not Allowed
+    if request.method != "GET":
+        return JsonResponse(
+            {"success": False, "message": "Only GET requests are allowed"}
+        )
 
     try:
         access_token = AccessToken.objects.get()
         print(f"Using access token: {access_token.token[:10]}... (truncated)")
-        
-        # Call the updated utility function
+
         result = get_instagram_stories(access_token.token)
-        
-        # Check if the result is a list (success) or a string (error)
-        if isinstance(result, list):
-            print(f"Successfully fetched {len(result)} stories.")
-            # Convert datetime objects to strings for JSON serialization
-            for story in result:
-                if isinstance(story.get('date_posted'), datetime):
-                    story['date_posted'] = story['date_posted'].isoformat()
+        print(f"API Response: {result}")
 
-            return JsonResponse({
-                "success": True,
-                "stories": result
-            })
-        else:
-            # Result is an error string
-            print(f"API Error/Message: {result}")
-            return JsonResponse({
-                "success": False,
-                "message": result 
-            }, status=500) # Internal Server Error or specific error indication
-
+        success = result == "Stories processed successfully."
+        return JsonResponse({"success": success, "message": result})
     except AccessToken.DoesNotExist:
-        print("Access token not found in database.")
-        return JsonResponse({
-            "success": False,
-            "message": "No access token found. Please add an access token first."
-        }, status=404) # Not Found
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "No access token found. Please add an access token first.",
+            }
+        )
     except Exception as e:
         print(f"Error in get_stories_view: {str(e)}")
-        # Log the full traceback for debugging if needed
-        # import traceback
-        # traceback.print_exc()
-        return JsonResponse({
-            "success": False,
-            "message": f"An unexpected error occurred: {str(e)}"
-        }, status=500) # Internal Server Error
+        return JsonResponse(
+            {"success": False, "message": f"Error fetching stories: {str(e)}"}
+        )
