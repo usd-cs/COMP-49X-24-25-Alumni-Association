@@ -610,6 +610,16 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 @login_required
 def get_stories_view(request):
+    """
+    Handles a GET request to fetch live Instagram stories and return them as JSON.
+
+    Fetches stories using the stored access token, converts timestamps, and returns the data or an error message.
+
+    Returns:
+        JsonResponse:
+            - On success: {"success": True, "stories": [ ... ]}
+            - On error: {"success": False, "message": "<error details>"}
+    """
     if request.method != "GET":
         return JsonResponse(
             {"success": False, "message": "Only GET requests are allowed"},
