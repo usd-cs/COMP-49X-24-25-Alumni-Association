@@ -557,8 +557,6 @@ def account_info(request):
     return render(request, "account_info.html", context)
 
 
-from django.db.models import Sum
-
 @login_required
 def stories_info(request):
     """
@@ -603,10 +601,6 @@ def stories_info(request):
 
     return render(request, "stories_info.html", context)
 
-
-
-
-from django.core.serializers.json import DjangoJSONEncoder
 
 @login_required
 def get_stories_view(request):
