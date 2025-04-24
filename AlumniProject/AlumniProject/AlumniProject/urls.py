@@ -32,6 +32,7 @@ urlpatterns = [
     path("login", user_login, name="login"),
     path("admin/", admin.site.urls),
     path("get-posts/", views.get_posts_view, name="get-posts"),
+    path("get-stories/", views.get_stories_view, name="get-stories"),
     path("api/posts/list/", views.list_stored_posts, name="list-posts"),
     path("api/demographics/", views.demographics_view, name="api-demographics"),
     path("demographics/", views.demographics_page, name="demographics_page"),
@@ -40,6 +41,7 @@ urlpatterns = [
     path("demographics/", views.get_demographics, name="demographics"),
     path("token/", views.token_landing, name="token_page"),
     path("account-info/", views.account_info, name="account-info"),
+    path("stories-info/", views.stories_info, name="stories-info"),
     path("api/post-comments/<str:post_id>/", views.post_comments, name="post_comments"),
     path(
         "api/instagram-link/<str:post_id>/", views.instagram_link, name="instagram_link"

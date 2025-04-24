@@ -9,6 +9,7 @@ from .utils.get_instagram_data import (
     get_country_demographics,
     get_city_demographics,
     get_age_demographics,
+    get_instagram_stories,
 )
 from .utils.country_code_resolver import load_country_dict, get_country_name
 from .models import Country, City, Age
@@ -18,6 +19,8 @@ from .models import Post
 from .models import AccessToken
 from .models import Comment
 from .models import InstagramUser
+from .models import InstagramStory
+from django.db import models
 
 import json
 from social_tracker.utils.get_time_of_day_statistics import (
@@ -551,3 +554,106 @@ def account_info(request):
         "users": users,
     }
     return render(request, "account_info.html", context)
+
+
+@login_required
+def stories_info(request):
+    """
+    Renders the stories information page.
+    The story data will be loaded asynchronously via JavaScript.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The rendered stories information HTML page.
+    """
+    # Fetch stories, order by date posted descending
+    stories = InstagramStory.objects.order_by("-date_posted")
+
+    # Calculate summary metrics
+    total_views = stories.aggregate(total=models.Sum("num_views"))["total"] or 0
+    total_profile_clicks = (
+        stories.aggregate(total=models.Sum("num_profile_clicks"))["total"] or 0
+    )
+    total_swipes = stories.aggregate(total=models.Sum("num_swipes_up"))["total"] or 0
+
+    context = {
+        "stories": stories,
+        "total_views": total_views,
+        "total_profile_clicks": total_profile_clicks,
+        "total_swipes": total_swipes,
+    }
+    return render(request, "stories_info.html", context)
+
+
+@login_required
+def get_stories_view(request):
+    """
+    Fetches Instagram stories using the stored access token
+    and returns the data as a JSON response.
+
+    This view calls the `get_instagram_stories` utility function.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        JsonResponse: Contains either:
+            - {"success": True, "stories": [list_of_story_dicts]}
+            - {"success": False, "message": "Error message"}
+    """
+    if request.method != "GET":
+        return JsonResponse(
+            {"success": False, "message": "Only GET requests are allowed"}
+        )
+
+    try:
+        access_token = AccessToken.objects.get()
+
+        result = get_instagram_stories(access_token.token)
+
+        # Check if the result is a list (success) or a string (error)
+        if isinstance(result, list):
+            # Convert datetime objects to strings for JSON serialization
+            for story in result:
+                if isinstance(story.get("date_posted"), datetime):
+                    # Format date to ISO 8601 format for consistency
+                    story["date_posted"] = story["date_posted"].isoformat() + "Z"
+                elif story.get("date_posted") is None:
+                    story["date_posted"] = None  # Explicitly set None if missing
+
+            return JsonResponse(
+                {
+                    "success": True,  # <<< FIX: Should be True on success
+                    "stories": result,
+                }
+            )
+        elif isinstance(result, str):
+            # Result is an error string from get_instagram_stories
+            print(f"API Error/Message from util: {result}")
+            return JsonResponse(
+                {"success": False, "message": result}, status=400
+            )  # Use 400 Bad Request or other appropriate error status
+        else:
+            # Handle unexpected return type from utility function
+            print(f"Unexpected result type from get_instagram_stories: {type(result)}")
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": "Received unexpected data type from story fetching logic.",
+                },
+                status=500,
+            )
+    except AccessToken.DoesNotExist:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "No access token found. Please add an access token first.",
+            }
+        )
+    except Exception as e:
+        print(f"Error in get_stories_view: {str(e)}")
+        return JsonResponse(
+            {"success": False, "message": f"Error fetching stories: {str(e)}"}
+        )
