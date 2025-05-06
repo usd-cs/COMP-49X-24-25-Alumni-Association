@@ -24,6 +24,9 @@ from django.db import models
 from django.core.serializers.json import DjangoJSONEncoder
 
 import json
+from google.oauth2 import id_token
+from google.auth.transport import requests
+import os
 from social_tracker.utils.get_time_of_day_statistics import (
     get_avg_likes_by_time_block,
     get_avg_comments_by_time_block,
@@ -52,29 +55,30 @@ from social_tracker.utils.get_time_of_day_statistics import (
         A redirect to the "home" page on success or the login page on failure.
 """
 
-
+@csrf_exempt
 def user_login(request):
-    if request.method == "POST":
-        email = request.POST["email"]
-        password = request.POST["password"]
-        try:
-            user = User.objects.get(email=email)
-            # Django login expects username not email
-        except User.DoesNotExist:
-            user = None
-        if user is not None:
-            user = authenticate(request, username=user.username, password=password)
-        if user is not None:
-            login(request, user)
-            request.session.save()
-            response = redirect("home")
-            response.status_code = 302
-            return response
-        else:
-            response = render(request, "login.html", {"error": "Invalid credentials."})
-            response.status_code = 401
-            return response
     return render(request, "login.html")
+
+@csrf_exempt
+def oauth_receiver(request):
+    token = request.POST['credential']
+
+    try:
+        user_data = id_token.verify_oauth2_token(
+            token, requests.Request(), os.environ['GOOGLE_OAUTH_CLIENT_ID']
+        )
+    except ValueError as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+    user = User.objects.get(email=user_data['email'])
+    if user is not None:
+        login(request,user)
+        response = redirect("home")
+        response.status_code = 302
+        return response
+    response = render(request, "login.html", {"error": "Invalid credentials."})
+    response.status_code = 401
+    return response
 
 
 """
