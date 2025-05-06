@@ -18,15 +18,14 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 load_dotenv()
 
-GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID')
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID")
 if not GOOGLE_OAUTH_CLIENT_ID:
     raise ValueError(
-        'GOOGLE_OAUTH_CLIENT_ID is missing.'
-        'Have you put it in a file at core/.env ?'
+        "GOOGLE_OAUTH_CLIENT_ID is missing." "Have you put it in a file at core/.env ?"
     )
 
 # We need these lines below to allow the Google sign in popup to work.
-SECURE_REFERRER_POLICY = 'no-referrer-when-downgrade'
+SECURE_REFERRER_POLICY = "no-referrer-when-downgrade"
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
 
 # Quick-start development settings - unsuitable for production

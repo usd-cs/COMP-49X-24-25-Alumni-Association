@@ -55,24 +55,26 @@ from social_tracker.utils.get_time_of_day_statistics import (
         A redirect to the "home" page on success or the login page on failure.
 """
 
+
 @csrf_exempt
 def user_login(request):
     return render(request, "login.html")
 
+
 @csrf_exempt
 def oauth_receiver(request):
-    token = request.POST['credential']
+    token = request.POST["credential"]
 
     try:
         user_data = id_token.verify_oauth2_token(
-            token, requests.Request(), os.environ['GOOGLE_OAUTH_CLIENT_ID']
+            token, requests.Request(), os.environ["GOOGLE_OAUTH_CLIENT_ID"]
         )
     except ValueError as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-    user = User.objects.get(email=user_data['email'])
+    user = User.objects.get(email=user_data["email"])
     if user is not None:
-        login(request,user)
+        login(request, user)
         response = redirect("home")
         response.status_code = 302
         return response
@@ -217,12 +219,15 @@ def get_demographics(request):
 def token_landing(request):
     """
     Renders the token management page with a list of all users.
-    Retrieves all users from the database and sends a list of dictionaries containing 
+    Retrieves all users from the database and sends a list of dictionaries containing
     each user's email and superuser status to token.html.
     """
     users = User.objects.all()
-    user_data = [{"email": user.email, "is_superuser": user.is_superuser} for user in users]
+    user_data = [
+        {"email": user.email, "is_superuser": user.is_superuser} for user in users
+    ]
     return render(request, "token.html", {"users": user_data})
+
 
 @login_required
 def delete_user(request):
@@ -245,6 +250,7 @@ def delete_user(request):
         pass
     return redirect("token_page")
 
+
 @login_required
 def add_user(request):
     """
@@ -265,6 +271,7 @@ def add_user(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
     return redirect("token_page")
+
 
 def get_posts_view(request):
     """
