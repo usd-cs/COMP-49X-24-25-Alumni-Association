@@ -10,6 +10,8 @@ RUN python -m venv env
 RUN . env/bin/activate
 RUN python -m pip install --upgrade pip
 RUN python -m pip install Django requests
+RUN python -m pip install python-dotenv
+RUN python -m pip install google-api-python-client
 
 EXPOSE 8000
 
