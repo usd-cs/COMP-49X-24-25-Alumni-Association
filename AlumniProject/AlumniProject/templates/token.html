@@ -144,6 +144,39 @@
     <div class="text-center mt-4">
       <button onclick="saveAccessToken()" class="btn">Save Token</button>
     </div>
+    <div class="mt-5">
+      <h3>Registered Users</h3>
+      <ul class="list-group bg-white text-dark rounded">
+        {% for user in users %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ user.email }}
+            {% if not user.is_superuser %}
+              <form method="post" action="{% url 'delete-user' %}" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                {% csrf_token %}
+                <input type="hidden" name="email" value="{{ user.email }}">
+                <button type="submit" class="btn btn-sm btn-danger">&times;</button>
+              </form>
+            {% endif %}
+          </li>
+        {% empty %}
+          <li class="list-group-item">No users found.</li>
+        {% endfor %}
+      </ul>
+    </div>
+    
+    <div class="mt-5">
+      <h3>Add User</h3>
+      <form method="post"  action="{% url 'add-user' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="newEmail" class="form-label">Email</label>
+          <input type="email" class="form-control" id="newEmail" name="email" required>
+        </div>
+        <button type="submit" class="btn btn-success">Add User</button>
+      </form>
+    </div>
+    
+    
   </div>
 
   <!-- Bootstrap JS -->

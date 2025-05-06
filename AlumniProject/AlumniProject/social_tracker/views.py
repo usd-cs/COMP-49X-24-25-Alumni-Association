@@ -215,8 +215,55 @@ def get_demographics(request):
 
 @login_required
 def token_landing(request):
-    return render(request, "token.html")
+    """
+    Renders the token management page with a list of all users.
+    Retrieves all users from the database and sends a list of dictionaries containing each user's email and superuser status to token.html.
+    """
+    users = User.objects.all()
+    user_data = [{"email": user.email, "is_superuser": user.is_superuser} for user in users]
+    return render(request, "token.html", {"users": user_data})
 
+@login_required
+def delete_user(request):
+    """
+    Handles deletion of a user based on their email address.
+
+    Accepts a POST request with the user's email. If the user is found and is not a superuser, the user is deleted.
+    """
+    if request.method != "POST":
+        return JsonResponse({"message": "Invalid request."}, status=405)
+    email = request.POST.get("email", "").strip()
+    if not email:
+        return JsonResponse({"message": "Invalid request."}, status=405)
+    try:
+        user = User.objects.get(email=email)
+        if user.is_superuser:
+            return JsonResponse({"message": "Cannot delete superuser."}, status=403)
+        user.delete()
+    except User.DoesNotExist:
+        pass
+    return redirect("token_page")
+
+@login_required
+def add_user(request):
+    """
+    Creates a new user with the given email and a default password.
+
+    Accepts a POST request with an 'email' field. If the email is valid, a new user is created.
+    """
+    if request.method != "POST":
+        return JsonResponse({"message": "Invalid request."}, status=405)
+    email = request.POST.get("email", "").strip()
+    if not email:
+        return JsonResponse({"message": "Invalid request."}, status=405)
+    try:
+        username = email.split("@")[0]
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({"message": "User already exists."}, status=409)
+        user = User.objects.create_user(username=username, email=email, password="pass")
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    return redirect("token_page")
 
 def get_posts_view(request):
     """

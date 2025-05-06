@@ -49,4 +49,6 @@ urlpatterns = [
     path("api/days-of-week/", views.get_days_of_week, name="days_of_week"),
     path("post-details/<str:post_api_id>/", views.post_details, name="post_details"),
     path("oauth-receiver", views.oauth_receiver, name="oauth-receiver"),
+    path("delete-user", views.delete_user, name="delete-user"),
+    path("add-user", views.add_user, name="add-user")
 ]
