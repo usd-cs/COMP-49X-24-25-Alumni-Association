@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import login
 from django.contrib.auth.models import User
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
@@ -217,7 +217,8 @@ def get_demographics(request):
 def token_landing(request):
     """
     Renders the token management page with a list of all users.
-    Retrieves all users from the database and sends a list of dictionaries containing each user's email and superuser status to token.html.
+    Retrieves all users from the database and sends a list of dictionaries containing 
+    each user's email and superuser status to token.html.
     """
     users = User.objects.all()
     user_data = [{"email": user.email, "is_superuser": user.is_superuser} for user in users]
@@ -260,7 +261,7 @@ def add_user(request):
         username = email.split("@")[0]
         if User.objects.filter(email=email).exists():
             return JsonResponse({"message": "User already exists."}, status=409)
-        user = User.objects.create_user(username=username, email=email, password="pass")
+        User.objects.create_user(username=username, email=email, password="pass")
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
     return redirect("token_page")
