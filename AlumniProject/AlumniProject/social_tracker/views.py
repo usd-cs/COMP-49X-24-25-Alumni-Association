@@ -1,6 +1,8 @@
 import json
 from datetime import datetime
 
+from django.db import models
+from django.core.serializers.json import DjangoJSONEncoder
 import requests
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
