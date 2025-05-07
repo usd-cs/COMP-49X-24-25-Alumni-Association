@@ -15,7 +15,7 @@ from social_tracker.models import (
 def delete_account_data(account_api_id):
     """
     Delete all data associated with the InstagramAccount identified by account_api_id.
-    
+
     Raises ValueError if the account doesn't exist.
     """
     try:

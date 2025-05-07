@@ -99,10 +99,18 @@ class DeleteAccountDataTests(TestCase):
 
         # Everything for acct1 should be gone
         self.assertEqual(Post.objects.filter(instagram_account=self.account).count(), 0)
-        self.assertEqual(Comment.objects.filter(instagram_account=self.account).count(), 0)
-        self.assertEqual(InstagramStory.objects.filter(instagram_account=self.account).count(), 0)
-        self.assertEqual(InstagramUser.objects.filter(instagram_account=self.account).count(), 0)
-        self.assertEqual(Country.objects.filter(instagram_account=self.account).count(), 0)
+        self.assertEqual(
+            Comment.objects.filter(instagram_account=self.account).count(), 0
+        )
+        self.assertEqual(
+            InstagramStory.objects.filter(instagram_account=self.account).count(), 0
+        )
+        self.assertEqual(
+            InstagramUser.objects.filter(instagram_account=self.account).count(), 0
+        )
+        self.assertEqual(
+            Country.objects.filter(instagram_account=self.account).count(), 0
+        )
         self.assertEqual(City.objects.filter(instagram_account=self.account).count(), 0)
         self.assertEqual(Age.objects.filter(instagram_account=self.account).count(), 0)
 

@@ -14,8 +14,7 @@ class DemographicsTestCase(TestCase):
         # Create a mock Instagram account for all tests
         self.account_id = "fake_account"
         self.account = InstagramAccount.objects.create(
-            account_API_ID=self.account_id,
-            username="testuser"
+            account_API_ID=self.account_id, username="testuser"
         )
         self.token = "fake_token"
 
@@ -44,8 +43,12 @@ class DemographicsTestCase(TestCase):
         get_country_demographics(self.token, self.account_id)
 
         self.assertEqual(Country.objects.count(), 2)
-        self.assertTrue(Country.objects.filter(name="US", num_interactions=500).exists())
-        self.assertTrue(Country.objects.filter(name="AR", num_interactions=300).exists())
+        self.assertTrue(
+            Country.objects.filter(name="US", num_interactions=500).exists()
+        )
+        self.assertTrue(
+            Country.objects.filter(name="AR", num_interactions=300).exists()
+        )
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_city_demographics(self, mock_get):
@@ -58,8 +61,14 @@ class DemographicsTestCase(TestCase):
                         "breakdowns": [
                             {
                                 "results": [
-                                    {"dimension_values": ["San Diego, California"], "value": 400},
-                                    {"dimension_values": ["Madison, Wisconsin"], "value": 250},
+                                    {
+                                        "dimension_values": ["San Diego, California"],
+                                        "value": 400,
+                                    },
+                                    {
+                                        "dimension_values": ["Madison, Wisconsin"],
+                                        "value": 250,
+                                    },
                                 ]
                             }
                         ]
@@ -72,8 +81,16 @@ class DemographicsTestCase(TestCase):
         get_city_demographics(self.token, self.account_id)
 
         self.assertEqual(City.objects.count(), 2)
-        self.assertTrue(City.objects.filter(name="San Diego, California", num_interactions=400).exists())
-        self.assertTrue(City.objects.filter(name="Madison, Wisconsin", num_interactions=250).exists())
+        self.assertTrue(
+            City.objects.filter(
+                name="San Diego, California", num_interactions=400
+            ).exists()
+        )
+        self.assertTrue(
+            City.objects.filter(
+                name="Madison, Wisconsin", num_interactions=250
+            ).exists()
+        )
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_age_demographics(self, mock_get):
@@ -100,8 +117,12 @@ class DemographicsTestCase(TestCase):
         get_age_demographics(self.token, self.account_id)
 
         self.assertEqual(Age.objects.count(), 2)
-        self.assertTrue(Age.objects.filter(age_range="18-24", num_interactions=600).exists())
-        self.assertTrue(Age.objects.filter(age_range="25-34", num_interactions=450).exists())
+        self.assertTrue(
+            Age.objects.filter(age_range="18-24", num_interactions=600).exists()
+        )
+        self.assertTrue(
+            Age.objects.filter(age_range="25-34", num_interactions=450).exists()
+        )
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_country_demographics_api_error(self, mock_get):

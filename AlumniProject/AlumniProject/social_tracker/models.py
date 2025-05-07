@@ -6,12 +6,14 @@ class InstagramAccount(models.Model):
     Model representing one Instagram business/account.
     Deleting this will delete all related posts, comments, users, stories, etc.
     """
+
     account_API_ID = models.CharField(max_length=100, primary_key=True)
-    username       = models.CharField(max_length=100)
-    date_added     = models.DateTimeField(auto_now_add=True)
+    username = models.CharField(max_length=100)
+    date_added = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         app_label = "social_tracker"
+
 
 class Post(models.Model):
     """
@@ -27,10 +29,11 @@ class Post(models.Model):
         num_saves (IntegerField): The number of times the post has been saved.
         post_API_ID (CharField): A unique identifier for the post in an external API.
     """
+
     instagram_account = models.ForeignKey(
         InstagramAccount,
         on_delete=models.CASCADE,
-        null=True,        # <-- allow null for now
+        null=True,  # <-- allow null for now
         blank=True,
         related_name="posts",
     )
@@ -43,7 +46,6 @@ class Post(models.Model):
     num_saves = models.IntegerField(default=0)
     post_API_ID = models.CharField(max_length=100, default="", unique=True)
     caption = models.TextField(null=True)
-    
 
     class Meta:
         ordering = ["-date_posted"]
@@ -59,10 +61,11 @@ class InstagramUser(models.Model):
         username (CharField): The username of the user.
         num_comments (IntegerField): The total number of comments made by the user.
     """
+
     instagram_account = models.ForeignKey(
         InstagramAccount,
         on_delete=models.CASCADE,
-        null=True,       
+        null=True,
         blank=True,
         related_name="instagram_users",
     )
@@ -90,10 +93,11 @@ class Comment(models.Model):
         parent_ID (TextField): The ID of the parent comment if this is a reply, otherwise empty.
         replies (JSONField): A list of replies associated with this comment.
     """
+
     instagram_account = models.ForeignKey(
         InstagramAccount,
         on_delete=models.CASCADE,
-        null=True,        
+        null=True,
         blank=True,
         related_name="comments",
     )
@@ -129,6 +133,7 @@ class AccessToken(models.Model):
     Methods:
         save: Ensures there is only one active access token at a time.
     """
+
     token = models.TextField()
     account_id = models.TextField(default="None")
 
@@ -150,10 +155,11 @@ class Country(models.Model):
         name (TextField): The name of the country.
         num_interactions (IntegerField): The number of interactions from this country.
     """
+
     instagram_account = models.ForeignKey(
         InstagramAccount,
         on_delete=models.CASCADE,
-        null=True,        
+        null=True,
         blank=True,
         related_name="countries",
     )
@@ -172,10 +178,11 @@ class City(models.Model):
         name (TextField): The name of the city.
         num_interactions (IntegerField): The number of interactions from this city.
     """
+
     instagram_account = models.ForeignKey(
         InstagramAccount,
         on_delete=models.CASCADE,
-        null=True,        
+        null=True,
         blank=True,
         related_name="cities",
     )
@@ -194,10 +201,11 @@ class Age(models.Model):
         age_range (TextField): The age range
         num_interactions (IntegerField): The number of interactions from this age range.
     """
+
     instagram_account = models.ForeignKey(
         InstagramAccount,
         on_delete=models.CASCADE,
-        null=True,        
+        null=True,
         blank=True,
         related_name="age_ranges",
     )
@@ -222,10 +230,11 @@ class InstagramStory(models.Model):
         num_swipes_up (IntegerField): The number of swipe-ups on the story.
         story_API_ID (CharField): A unique identifier for the story in an external API.
     """
+
     instagram_account = models.ForeignKey(
         InstagramAccount,
         on_delete=models.CASCADE,
-        null=True,        
+        null=True,
         blank=True,
         related_name="stories",
     )

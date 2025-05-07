@@ -24,7 +24,7 @@ class CommentDataTests(TestCase):
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_comment_data_single_comment(self, mock_get):
-        mock_comment_id = 12345              # int PK
+        mock_comment_id = 12345  # int PK
         mock_post_id = "999"
 
         mock_get.side_effect = [
@@ -113,22 +113,22 @@ class CommentDataTests(TestCase):
             status_code=200,
             json=lambda: {
                 "data": [
-                    {"name": "likes",    "values": [{"value": 99}]},
+                    {"name": "likes", "values": [{"value": 99}]},
                     {"name": "comments", "values": [{"value": 9}]},
-                    {"name": "saved",    "values": [{"value": 5}]},
-                    {"name": "shares",   "values": [{"value": 2}]},
+                    {"name": "saved", "values": [{"value": 5}]},
+                    {"name": "shares", "values": [{"value": 2}]},
                 ]
             },
         )
 
-        caption_resp   = Mock(status_code=200, json=lambda: {"caption": ""})
-        comments_resp  = Mock(status_code=200, json=lambda: {"data": []})
+        caption_resp = Mock(status_code=200, json=lambda: {"caption": ""})
+        comments_resp = Mock(status_code=200, json=lambda: {"data": []})
 
         mock_get.side_effect = [
-            media_resp,      # /me/media
-            insights_resp,   # insights
-            caption_resp,    # caption
-            comments_resp,   # first comments page (empty)
+            media_resp,  # /me/media
+            insights_resp,  # insights
+            caption_resp,  # caption
+            comments_resp,  # first comments page (empty)
         ]
 
         res = get_instagram_posts("fake_token", "fake_account", num_posts=1)

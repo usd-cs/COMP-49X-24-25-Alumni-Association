@@ -51,6 +51,6 @@ urlpatterns = [
     path(
         "accounts/<str:account_api_id>/delete/",
         views.delete_account_view,
-        name="delete_account"
+        name="delete_account",
     ),
 ]

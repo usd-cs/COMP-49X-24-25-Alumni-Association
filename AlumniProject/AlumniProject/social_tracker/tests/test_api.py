@@ -88,7 +88,7 @@ class GetInstagramPostsTest(TestCase):
         self.assertEqual(Post.objects.count(), 0)
 
 
-@override_settings(LOGIN_URL="/")   # bypass @login_required in view
+@override_settings(LOGIN_URL="/")  # bypass @login_required in view
 class InstagramLinkTests(TestCase):
     """Unit‑tests for instagram_link view helper."""
 

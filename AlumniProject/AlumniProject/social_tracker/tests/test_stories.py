@@ -27,6 +27,7 @@ class GetInstagramStoriesTests(TestCase):
         # Create accounts the tests reference
         for acct in ("acct123", "acct456", "acct789", "acct000", "acct001", "acct002"):
             InstagramAccount.objects.create(account_API_ID=acct, username=acct)
+
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_stories_success_one_story(self, mock_get):
         """Test successfully fetching one story with insights."""
