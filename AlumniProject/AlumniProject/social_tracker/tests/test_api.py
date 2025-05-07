@@ -1,10 +1,7 @@
 import json
 from unittest.mock import patch, Mock
-from datetime import datetime
-
 import requests
 from django.test import TestCase, override_settings
-
 from social_tracker.models import Post, InstagramAccount
 from social_tracker.utils.get_instagram_data import get_instagram_posts
 from social_tracker.views import instagram_link

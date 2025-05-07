@@ -1,24 +1,21 @@
-import requests
-from datetime import datetime
-from django.utils.dateparse import parse_datetime
 import json
+from datetime import datetime
+
+import requests
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 from social_tracker.models import (
-    InstagramAccount,
-    Post,
-    Country,
-    City,
     Age,
+    City,
     Comment,
+    Country,
+    InstagramAccount,
+    InstagramStory,
     InstagramUser,
-    InstagramStory
+    Post,
 )
 
-
-import requests
-from datetime import datetime
-from django.utils import timezone
-from social_tracker.models import InstagramAccount, Post
 
 def get_instagram_posts(access_token, account_id, num_posts=100):
     """

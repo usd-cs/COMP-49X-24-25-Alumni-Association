@@ -1,44 +1,45 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import User
+import json
 from datetime import datetime
+
+import requests
+from django.contrib import messages
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
+
+from .models import (
+    AccessToken,
+    Age,
+    City,
+    Comment,
+    Country,
+    InstagramAccount,
+    InstagramStory,
+    InstagramUser,
+    Post,
+)
+from .utils.country_code_resolver import load_country_dict, get_country_name
+from .utils.delete_account_data import delete_account_data
 from .utils.get_instagram_data import (
-    get_instagram_posts,
-    get_country_demographics,
-    get_city_demographics,
     get_age_demographics,
+    get_city_demographics,
+    get_country_demographics,
+    get_instagram_posts,
     get_instagram_stories,
 )
-from django.views.decorators.http import require_GET
-from .utils.country_code_resolver import load_country_dict, get_country_name
-from .models import Country, City, Age
-from .utils.write_database_to_csv import export_posts_to_csv
-from django.views.decorators.csrf import csrf_exempt
-from .models import Post
-from .models import AccessToken
-from .models import Comment
-from .models import InstagramUser
-from .models import InstagramStory
-from django.db import models
-from django.core.serializers.json import DjangoJSONEncoder
-from django.views.decorators.http import require_POST
-from django.contrib import messages
-from django.shortcuts import redirect
-from .utils.delete_account_data import delete_account_data
-import json
-from social_tracker.utils.get_time_of_day_statistics import (
-    get_avg_likes_by_time_block,
+from .utils.get_time_of_day_statistics import (
     get_avg_comments_by_time_block,
+    get_avg_likes_by_time_block,
     get_avg_saves_by_time_block,
     get_avg_shares_by_time_block,
 )
-import json
-import requests
-from django.http               import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from .models import InstagramAccount
+from .utils.write_database_to_csv import export_posts_to_csv
+
+
 
 """
     Handles user login functionality.
