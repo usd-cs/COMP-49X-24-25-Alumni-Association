@@ -1,36 +1,29 @@
-import unittest
-from unittest.mock import patch, Mock
-import sys
-import os
-import requests
-from social_tracker.utils.get_instagram_data import get_instagram_posts
-from social_tracker.models import Post
-from social_tracker.views import instagram_link
-from django.test import override_settings, TestCase
 import json
+from unittest.mock import patch, Mock
+from datetime import datetime
 
-# Add the project root to the Python path
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+import requests
+from django.test import TestCase, override_settings
+
+from social_tracker.models import Post, InstagramAccount
+from social_tracker.utils.get_instagram_data import get_instagram_posts
+from social_tracker.views import instagram_link
 
 
-class GetInstagramPostsTest(unittest.TestCase):
-    """
-    TestCase for the get_instagram_posts function.
+class GetInstagramPostsTest(TestCase):
+    """Unit‑tests for get_instagram_posts().  Uses a fresh DB per test."""
 
-    This class contains unit tests to verify the behavior of the get_instagram_posts function,
-    including successful retrieval and processing of posts, handling no posts found, and API call failures.
-    """
+    def setUp(self):
+        # username is mandatory on InstagramAccount
+        self.account = InstagramAccount.objects.create(
+            account_API_ID="fake_account",
+            username="FakeAccount",
+        )
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_instagram_posts_success(self, mock_get):
-        """
-        Test successful retrieval and processing of Instagram posts.
-        """
-        # Mock first API call fetching post IDs, links, and timestamps
-        mock_response_1 = Mock()
-        mock_response_1.json.return_value = {
+        # 1st call → media list
+        posts_payload = {
             "data": [
                 {
                     "id": "1",
@@ -44,11 +37,8 @@ class GetInstagramPostsTest(unittest.TestCase):
                 },
             ]
         }
-        mock_response_1.status_code = 200
-
-        # Mock second API call that fetches post metrics
-        mock_response_2 = Mock()
-        mock_response_2.json.return_value = {
+        # 2nd call (insights) → metrics
+        insights_payload = {
             "data": [
                 {"name": "likes", "values": [{"value": 10}]},
                 {"name": "comments", "values": [{"value": 5}]},
@@ -56,96 +46,83 @@ class GetInstagramPostsTest(unittest.TestCase):
                 {"name": "shares", "values": [{"value": 1}]},
             ]
         }
-        mock_response_2.status_code = 200
 
-        # Ensure requests.get() returns different responses for the two different URLs we use
+        mock_media = Mock(status_code=200)
+        mock_media.json.return_value = posts_payload
+        mock_insights = Mock(status_code=200)
+        mock_insights.json.return_value = insights_payload
+
         def side_effect(url, params):
-            if "insights" in url:
-                return mock_response_2  # Second request for insights
-            return mock_response_1  # First request for posts
+            return mock_insights if "insights" in url else mock_media
 
         mock_get.side_effect = side_effect
 
-        result = get_instagram_posts("fake_access_token", num_posts=2)
-        self.assertEqual(result, "Posts processed successfully.")
+        res = get_instagram_posts(
+            "fake_access_token",
+            self.account.account_API_ID,
+            num_posts=2,
+        )
+        self.assertEqual(res, "Posts processed successfully.")
         self.assertEqual(Post.objects.count(), 2)
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_instagram_posts_no_posts(self, mock_get):
-        """
-        Test handling of no posts found.
-        """
-        mock_response = Mock()
-        mock_response.json.return_value = {"data": []}
-        mock_response.status_code = 200
-        mock_get.return_value = mock_response
+        mock_resp = Mock(status_code=200)
+        mock_resp.json.return_value = {"data": []}
+        mock_get.return_value = mock_resp
 
-        result = get_instagram_posts("fake_access_token", num_posts=2)
-        self.assertEqual(result, "No posts found.")
+        res = get_instagram_posts(
+            "fake_access_token",
+            self.account.account_API_ID,
+            num_posts=2,
+        )
+        self.assertEqual(res, "No posts found.")
         self.assertEqual(Post.objects.count(), 0)
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_instagram_posts_api_failure(self, mock_get):
-        """
-        Test handling of API call failure.
-        """
-        mock_get.side_effect = requests.exceptions.RequestException("API call failed")
-
-        result = get_instagram_posts("fake_access_token", num_posts=2)
-        self.assertIn("Error getting Instagram posts", result)
+        mock_get.side_effect = requests.exceptions.RequestException("boom")
+        res = get_instagram_posts(
+            "fake_access_token",
+            self.account.account_API_ID,
+            num_posts=2,
+        )
+        self.assertIn("Error getting Instagram posts", res)
         self.assertEqual(Post.objects.count(), 0)
 
 
-@override_settings(LOGIN_URL="/")  # Bypass login for tests
+@override_settings(LOGIN_URL="/")   # bypass @login_required in view
 class InstagramLinkTests(TestCase):
-    """
-    Unit tests for the instagram_link function.
-    """
+    """Unit‑tests for instagram_link view helper."""
 
     @classmethod
     def setUpTestData(cls):
-        """Set up test data before tests run (only executed once)."""
         cls.post = Post.objects.create(
-            post_API_ID="999000999000", post_link="https://instagram.com/p/testpost"
+            post_API_ID="999000999000",
+            post_link="https://instagram.com/p/testpost",
         )
 
-    def test_instagram_link_valid_post(self):
-        """Test that a valid post ID returns the correct link."""
-        mock_request = Mock()
-        mock_request.user = Mock()  # Fake an authenticated user
+    def _dummy_request(self):
+        r = Mock()
+        r.user = Mock(is_authenticated=True)
+        return r
 
-        response = instagram_link(mock_request, "999000999000")
-        self.assertEqual(response.status_code, 200)
+    def test_valid_post(self):
+        resp = instagram_link(self._dummy_request(), "999000999000")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(
+            json.loads(resp.content),
+            {"link": self.post.post_link},
+        )
 
-        response_data = json.loads(
-            response.content
-        )  # Convert JSONResponse content to a Python dict
-        self.assertEqual(response_data, {"link": self.post.post_link})
-
-    def test_instagram_link_invalid_post(self):
-        """Test that an invalid post ID returns an error."""
-        mock_request = Mock()
-        mock_request.user = Mock()
-
-        response = instagram_link(mock_request, "99999")  # Non-existent post
-        self.assertEqual(response.status_code, 500)
-
-        response_data = json.loads(response.content)
-        self.assertIn("error", response_data)
+    def test_invalid_post(self):
+        resp = instagram_link(self._dummy_request(), "does_not_exist")
+        self.assertEqual(resp.status_code, 500)
+        self.assertIn("error", json.loads(resp.content))
 
     @patch("social_tracker.models.Post.objects.get")
-    def test_instagram_link_database_error(self, mock_get):
-        """Test that a database error returns an error response."""
-        mock_request = Mock()
-        mock_request.user = Mock()
-        mock_get.side_effect = Exception("Database error")
-
-        response = instagram_link(mock_request, "999000999000")
-        self.assertEqual(response.status_code, 500)
-
-        response_data = json.loads(response.content)
-        self.assertIn("error", response_data)
-
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_db_error(self, mock_get):
+        mock_get.side_effect = Exception("db‑err")
+        resp = instagram_link(self._dummy_request(), "999000999000")
+        self.assertEqual(resp.status_code, 500)
+        self.assertIn("error", json.loads(resp.content))

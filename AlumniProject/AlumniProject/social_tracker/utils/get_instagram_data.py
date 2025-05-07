@@ -11,6 +11,7 @@ from social_tracker.models import (
     Age,
     Comment,
     InstagramUser,
+    InstagramStory
 )
 
 
@@ -25,6 +26,8 @@ def get_instagram_posts(access_token, account_id, num_posts=100):
     always linking each Post to its InstagramAccount, avoiding duplicate inserts,
     and using timezone-aware datetimes.
     """
+    if not access_token:
+        return "Access token is missing."
     try:
         account = InstagramAccount.objects.get(account_API_ID=account_id)
     except InstagramAccount.DoesNotExist:
@@ -358,6 +361,8 @@ def get_instagram_stories(access_token, account_id):
     Fetches active Instagram stories for the given account,
     saves them to the database with the correct foreign key.
     """
+    if not access_token:
+        return "Access token is missing." 
     try:
         account = InstagramAccount.objects.get(account_API_ID=account_id)
     except InstagramAccount.DoesNotExist:

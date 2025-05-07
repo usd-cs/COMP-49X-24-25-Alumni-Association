@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock, call
 from datetime import datetime
 
 from django.test import TestCase
-
+from social_tracker.models import InstagramAccount
 from social_tracker.utils.get_instagram_data import get_instagram_stories
 
 
@@ -13,11 +13,9 @@ def create_mock_response(status_code=200, json_data=None, text_data=""):
     mock_resp.status_code = status_code
     mock_resp.json.return_value = json_data if json_data is not None else {}
     mock_resp.text = text_data
-    # If status code indicates error, json() might raise an error or return error dict
     if status_code >= 400 and json_data is None:
         mock_resp.json.side_effect = json.JSONDecodeError("Expecting value", "", 0)
     elif status_code >= 400 and json_data is not None:
-        # Ensure error structure is plausible if provided
         if "error" not in json_data:
             json_data["error"] = {"message": "API Error", "code": status_code}
         mock_resp.json.return_value = json_data
@@ -25,7 +23,10 @@ def create_mock_response(status_code=200, json_data=None, text_data=""):
 
 
 class GetInstagramStoriesTests(TestCase):
-
+    def setUp(self):
+        # Create accounts the tests reference
+        for acct in ("acct123", "acct456", "acct789", "acct000", "acct001", "acct002"):
+            InstagramAccount.objects.create(account_API_ID=acct, username=acct)
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_stories_success_one_story(self, mock_get):
         """Test successfully fetching one story with insights."""
@@ -33,7 +34,6 @@ class GetInstagramStoriesTests(TestCase):
         timestamp_str = "2024-04-24T10:00:00+0000"
         permalink = "http://example.com/story1"
 
-        # Mock response for /me/stories
         mock_stories_response = create_mock_response(
             status_code=200,
             json_data={
@@ -43,7 +43,6 @@ class GetInstagramStoriesTests(TestCase):
             },
         )
 
-        # Mock response for /{story_id}/insights
         mock_insights_response = create_mock_response(
             status_code=200,
             json_data={
@@ -55,12 +54,10 @@ class GetInstagramStoriesTests(TestCase):
             },
         )
 
-        # Configure mock_get to return responses in order of calls
         mock_get.side_effect = [mock_stories_response, mock_insights_response]
 
-        result = get_instagram_stories("fake_valid_token")
+        result = get_instagram_stories("fake_valid_token", "acct123")
 
-        # Assertions
         self.assertIsInstance(result, list)
         self.assertEqual(len(result), 1)
 
@@ -72,12 +69,11 @@ class GetInstagramStoriesTests(TestCase):
         self.assertEqual(story_data["story_API_ID"], story_id)
         self.assertEqual(story_data["story_link"], permalink)
         self.assertEqual(story_data["date_posted"], expected_date)
-        self.assertEqual(story_data["num_views"], 150)  # reach
-        self.assertEqual(story_data["num_profile_clicks"], 5)  # profile_visits
-        self.assertEqual(story_data["num_swipes_up"], 20)  # navigation
-        self.assertEqual(story_data["num_replies"], 0)  # Always 0 for now
+        self.assertEqual(story_data["num_views"], 150)
+        self.assertEqual(story_data["num_profile_clicks"], 5)
+        self.assertEqual(story_data["num_swipes_up"], 20)
+        self.assertEqual(story_data["num_replies"], 0)
 
-        # Check that requests.get was called twice with correct URLs/params (optional but good)
         expected_calls = [
             call(
                 "https://graph.instagram.com/v19.0/me/stories",
@@ -104,12 +100,11 @@ class GetInstagramStoriesTests(TestCase):
             status_code=200, json_data={"data": []}
         )
 
-        result = get_instagram_stories("fake_token")
+        result = get_instagram_stories("fake_token", "acct456")
 
         self.assertIsInstance(result, list)
-        self.assertEqual(len(result), 0)
-        self.assertListEqual(result, [])
-        mock_get.assert_called_once()  # Only /me/stories should be called
+        self.assertEqual(result, [])
+        mock_get.assert_called_once()
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_stories_api_error_on_stories_fetch(self, mock_get):
@@ -119,7 +114,7 @@ class GetInstagramStoriesTests(TestCase):
             json_data={"error": {"message": "Invalid token", "code": 190}},
         )
 
-        result = get_instagram_stories("invalid_token")
+        result = get_instagram_stories("invalid_token", "acct789")
 
         self.assertIsInstance(result, str)
         self.assertIn("API Error fetching stories (400)", result)
@@ -148,12 +143,11 @@ class GetInstagramStoriesTests(TestCase):
 
         mock_get.side_effect = [mock_stories_response, mock_insights_response]
 
-        result = get_instagram_stories("token_without_insights_perm")
+        result = get_instagram_stories("token_without_insights_perm", "acct000")
 
         self.assertIsInstance(result, list)
         self.assertEqual(len(result), 1)
 
-        # Story should be included but with default 0 metrics
         story_data = result[0]
         expected_date = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S%z").replace(
             tzinfo=None
@@ -164,15 +158,16 @@ class GetInstagramStoriesTests(TestCase):
         self.assertEqual(story_data["num_views"], 0)
         self.assertEqual(story_data["num_profile_clicks"], 0)
         self.assertEqual(story_data["num_swipes_up"], 0)
+        self.assertEqual(story_data["num_replies"], 0)
 
         self.assertEqual(mock_get.call_count, 2)
 
     def test_get_stories_missing_token(self):
         """Test calling the function with no access token."""
-        result = get_instagram_stories(None)
+        result = get_instagram_stories(None, "acct001")
         self.assertIsInstance(result, str)
         self.assertEqual(result, "Access token is missing.")
 
-        result_empty = get_instagram_stories("")
+        result_empty = get_instagram_stories("", "acct002")
         self.assertIsInstance(result_empty, str)
         self.assertEqual(result_empty, "Access token is missing.")

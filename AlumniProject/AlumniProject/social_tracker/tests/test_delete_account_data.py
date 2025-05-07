@@ -1,5 +1,7 @@
-from django.test import TestCase
 from datetime import datetime
+
+from django.test import TestCase
+
 from social_tracker.models import (
     InstagramAccount,
     Post,
@@ -14,8 +16,10 @@ from social_tracker.utils.delete_account_data import delete_account_data
 
 
 class DeleteAccountDataTests(TestCase):
+    """Tests for the delete_account_data() utility."""
+
     def setUp(self):
-        # Create two accounts: one we'll delete data for, one we leave intact
+        # Two accounts: one to delete, one to keep
         self.account = InstagramAccount.objects.create(
             account_API_ID="acct1",
             username="acct1",
@@ -25,8 +29,9 @@ class DeleteAccountDataTests(TestCase):
             username="acct2",
         )
 
-        # Create child records for self.account
         now = datetime.now()
+
+        # Child records linked to acct1
         Post.objects.create(
             instagram_account=self.account,
             date_posted=now,
@@ -39,37 +44,37 @@ class DeleteAccountDataTests(TestCase):
         )
         Comment.objects.create(
             instagram_account=self.account,
-            comment_API_ID="c1",
+            id=1,
             text="test comment",
-            timestamp=now,
+            date_posted=now,
         )
         InstagramStory.objects.create(
             instagram_account=self.account,
             story_API_ID="s1",
-            timestamp=now,
+            date_posted=now,
         )
         InstagramUser.objects.create(
             instagram_account=self.account,
-            user_API_ID="u1",
+            id=1,
             username="user1",
         )
         Country.objects.create(
             instagram_account=self.account,
-            country="US",
-            count=5,
+            name="US",
+            num_interactions=5,
         )
         City.objects.create(
             instagram_account=self.account,
-            city="San Diego",
-            count=3,
+            name="San Diego",
+            num_interactions=3,
         )
         Age.objects.create(
             instagram_account=self.account,
-            age_range="18-24",
-            count=10,
+            age_range="18‑24",
+            num_interactions=10,
         )
 
-        # Create one post for the other account (to ensure it's not deleted)
+        # One post for the other account (should remain)
         Post.objects.create(
             instagram_account=self.other_account,
             date_posted=now,
@@ -82,7 +87,7 @@ class DeleteAccountDataTests(TestCase):
         )
 
     def test_nonexistent_account_raises(self):
-        """Calling delete_account_data on a missing account should raise ValueError."""
+        """Calling delete_account_data on a missing account should raise."""
         with self.assertRaises(ValueError) as cm:
             delete_account_data("does_not_exist")
         self.assertIn("does_not_exist", str(cm.exception))
@@ -90,12 +95,9 @@ class DeleteAccountDataTests(TestCase):
     def test_delete_all_child_records(self):
         """All child records for the target account should be deleted."""
         msg = delete_account_data("acct1")
-        self.assertEqual(
-            msg,
-            "All data for account 'acct1' has been deleted."
-        )
+        self.assertEqual(msg, "All data for account 'acct1' has been deleted.")
 
-        # Verify all related models for acct1 are empty
+        # Everything for acct1 should be gone
         self.assertEqual(Post.objects.filter(instagram_account=self.account).count(), 0)
         self.assertEqual(Comment.objects.filter(instagram_account=self.account).count(), 0)
         self.assertEqual(InstagramStory.objects.filter(instagram_account=self.account).count(), 0)
@@ -104,13 +106,13 @@ class DeleteAccountDataTests(TestCase):
         self.assertEqual(City.objects.filter(instagram_account=self.account).count(), 0)
         self.assertEqual(Age.objects.filter(instagram_account=self.account).count(), 0)
 
-        # Ensure other account's data remains untouched
+        # Data for the other account must still exist
         self.assertEqual(
             Post.objects.filter(instagram_account=self.other_account).count(),
-            1
+            1,
         )
 
     def test_return_message_includes_id(self):
-        """The return message should include the account API ID."""
+        """Return message should reference the deleted account id."""
         result = delete_account_data("acct1")
         self.assertIn("acct1", result)
