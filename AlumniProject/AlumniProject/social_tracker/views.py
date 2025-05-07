@@ -27,8 +27,6 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.shortcuts import redirect
 from .utils.delete_account_data import delete_account_data
-
-
 import json
 from social_tracker.utils.get_time_of_day_statistics import (
     get_avg_likes_by_time_block,
@@ -36,7 +34,11 @@ from social_tracker.utils.get_time_of_day_statistics import (
     get_avg_saves_by_time_block,
     get_avg_shares_by_time_block,
 )
-
+import json
+import requests
+from django.http               import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import InstagramAccount
 
 """
     Handles user login functionality.
@@ -173,12 +175,6 @@ def post_comments(request, post_id):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-
-import json
-import requests
-from django.http               import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from .models                   import AccessToken, InstagramAccount
 
 @csrf_exempt
 def save_access_token(request):
