@@ -5,7 +5,7 @@ from django.db import models
 from django.core.serializers.json import DjangoJSONEncoder
 import requests
 from django.contrib import messages
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse
@@ -34,9 +34,8 @@ from .utils.get_instagram_data import (
     get_instagram_stories,
 )
 from google.oauth2 import id_token
-from google.auth.transport import requests
+from google.auth.transport import requests as grequests
 import os
-from social_tracker.utils.get_time_of_day_statistics import get_avg_likes_by_time_block
 from .utils.get_time_of_day_statistics import (
     get_avg_comments_by_time_block,
     get_avg_likes_by_time_block,
@@ -78,7 +77,7 @@ def oauth_receiver(request):
 
     try:
         user_data = id_token.verify_oauth2_token(
-            token, requests.Request(), os.environ["GOOGLE_OAUTH_CLIENT_ID"]
+            token, grequests.Request(), os.environ["GOOGLE_OAUTH_CLIENT_ID"]
         )
     except ValueError as e:
         return JsonResponse({"error": str(e)}, status=500)
