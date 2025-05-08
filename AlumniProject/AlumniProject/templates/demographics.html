@@ -117,27 +117,16 @@
 <body>
   <!-- Navigation Tabs  -->
   <nav class="nav nav-tabs justify-content-center">
-    <!-- Token -->
-    <a class="nav-link" href="{% url 'token_page' %}">Token</a>
-  
-    <!-- Post Info -->
-    <a class="nav-link" href="{% url 'home' %}">Post List</a>
-  
-    <!-- Account Info -->
-
-    <a class="nav-link" href="{% url 'account-info' %}">Account Info</a>
-
-    <!-- Stories Info -->
-    <a class="nav-link" href="{% url 'stories-info' %}">Stories Info</a>
-
-  
-    <!-- Active tab for Demographics -->
-    <a class="nav-link active" aria-current="page" href="{% url 'demographics' %}">Followers Stats</a>
+    <a class="nav-link" href="{% url 'home' %}">Post Info</a>
+    <a class="nav-link" aria-current="page" href="{% url 'account-info' %}">Account Stats</a>
+    <a class="nav-link" href="{% url 'stories-info' %}">Stories</a>
+    <a class="nav-link active" href="{% url 'demographics' %}">Follower Stats</a>
+    <a class="nav-link" href="{% url 'token_page' %}">Settings</a>
   </nav>
 
   <div class="container">
     <div class="text-center mb-3">
-      <h1>Follower Info</h1>
+      <h1>Follower Stats</h1>
     </div>
     <div id="loadingMessage" class="text-center my-3" style="display:none;">
       <div class="spinner-border" role="status" style="margin-right: 10px;"></div>
