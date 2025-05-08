@@ -96,17 +96,14 @@
   <!-- Navigation Tabs -->
   <nav class="nav nav-tabs justify-content-center">
     <a class="nav-link" href="{% url 'token_page' %}">Token</a>
-
     <a class="nav-link" href="{% url 'home' %}">Post Info</a>
     <a class="nav-link active" aria-current="page" href="{% url 'account-info' %}">Account Info</a>
     <a class="nav-link" href="{% url 'stories-info' %}">Stories Info</a>
     <a class="nav-link" href="{% url 'demographics' %}">Demographic Info</a>
-
   </nav>
 
-  <h1>Account Stats</h1>
-  
   <div class="container">
+    <h1 class="mb-4">Account Stats</h1>
     <div class="row">
       <!-- Time of Day chart (left side) -->
       <div class="col-md-6">
