@@ -61,6 +61,18 @@
     .btn:hover {
       background-color: var(--immaculata-blue);
     }
+
+    /* Table styling */
+    .table-container {
+      margin-top: 2rem;
+      color: black;
+    }
+    .table thead {
+      background-color: var(--alcala-white);
+    }
+    .table tbody tr {
+      background-color: white;
+    }
   </style>
 
   <script>
@@ -68,11 +80,6 @@
       const accessToken = document.getElementById("accessToken").value;
       if (!accessToken) {
         alert("Please enter a valid access token.");
-        return;
-      }
-      const accountID = document.getElementById("accountID").value;
-      if (!accountID) {
-        alert("Please enter a valid account ID.");
         return;
       }
 
@@ -83,12 +90,13 @@
             "Content-Type": "application/json",
             "X-CSRFToken": "{{ csrf_token }}"
           },
-          body: JSON.stringify({ access_token: accessToken, account_ID: accountID })
+          body: JSON.stringify({ access_token: accessToken })
         });
 
         if (response.ok) {
           const data = await response.json();
           alert(data.message);
+          window.location.reload();
         } else {
           alert("Unable to save access token. Please try again.");
         }
@@ -102,26 +110,17 @@
 <body>
   <!-- Navigation Tabs -->
   <nav class="nav nav-tabs justify-content-center">
-    <!-- Active tab for Token -->
     <a class="nav-link active" aria-current="page" href="{% url 'token_page' %}">Token</a>
-  
-    <!-- Post List tab (home) -->
     <a class="nav-link" href="{% url 'home' %}">Post List</a>
-  
-    <!-- Account Info tab -->
     <a class="nav-link" href="{% url 'account-info' %}">Account Info</a>
-
-    <!-- Stories Info tab -->
     <a class="nav-link" href="{% url 'stories-info' %}">Stories Info</a>
-  
-    <!-- Followers Stats tab -->
     <a class="nav-link" href="{% url 'demographics' %}">Followers Stats</a>
   </nav>
 
   <div class="container">
     <h1>Manage Account</h1>
-    <div class="d-flex justify-content-center gap-3 mt-4">
-      <div>
+    <div class="d-flex justify-content-center mt-4">
+      <div style="width: 100%; max-width: 400px;">
         <label for="accessToken" class="form-label">Access Token:</label>
         <input
           type="text"
@@ -130,20 +129,42 @@
           placeholder="Enter Access Token"
         />
       </div>
-      <div>
-        <label for="accountID" class="form-label">Account ID:</label>
-        <input
-          type="text"
-          id="accountID"
-          class="form-control"
-          placeholder="Enter Account ID"
-        />
-      </div>
     </div>
 
     <div class="text-center mt-4">
       <button onclick="saveAccessToken()" class="btn">Save Token</button>
     </div>
+    
+    <!-- Connected Accounts Table -->
+    <div class="table-container">
+      <h2 class="text-center mb-3">Connected Accounts</h2>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th style="width: 120px;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for account in accounts %}
+          <tr>
+            <td>{{ account.username }}</td>
+            <td>
+              <form
+                method="post"
+                action="{% url 'delete_account' account.account_API_ID %}"
+                onsubmit="return confirm('Are you sure you want to delete this account?');"
+              >
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
     <div class="mt-5">
       <h3>Registered Users</h3>
       <ul class="list-group bg-white text-dark rounded">
@@ -175,7 +196,6 @@
         <button type="submit" class="btn btn-success">Add User</button>
       </form>
     </div>
-    
     
   </div>
 

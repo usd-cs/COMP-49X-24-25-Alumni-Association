@@ -51,4 +51,9 @@ urlpatterns = [
     path("oauth-receiver", views.oauth_receiver, name="oauth-receiver"),
     path("delete-user", views.delete_user, name="delete-user"),
     path("add-user", views.add_user, name="add-user"),
+    path(
+        "accounts/<str:account_api_id>/delete/",
+        views.delete_account_view,
+        name="delete_account",
+    ),
 ]
