@@ -1,35 +1,45 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import User
+import json
 from datetime import datetime
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from .utils.get_instagram_data import (
-    get_instagram_posts,
-    get_country_demographics,
-    get_city_demographics,
-    get_age_demographics,
-    get_instagram_stories,
-)
-from .utils.country_code_resolver import load_country_dict, get_country_name
-from .models import Country, City, Age
-from .utils.write_database_to_csv import export_posts_to_csv
-from django.views.decorators.csrf import csrf_exempt
-from .models import Post
-from .models import AccessToken
-from .models import Comment
-from .models import InstagramUser
-from .models import InstagramStory
+
 from django.db import models
 from django.core.serializers.json import DjangoJSONEncoder
+import requests
+from django.contrib import messages
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
 
-import json
-from social_tracker.utils.get_time_of_day_statistics import (
-    get_avg_likes_by_time_block,
+from .models import (
+    AccessToken,
+    Age,
+    City,
+    Comment,
+    Country,
+    InstagramAccount,
+    InstagramStory,
+    InstagramUser,
+    Post,
+)
+from .utils.country_code_resolver import load_country_dict, get_country_name
+from .utils.delete_account_data import delete_account_data
+from .utils.get_instagram_data import (
+    get_age_demographics,
+    get_city_demographics,
+    get_country_demographics,
+    get_instagram_posts,
+    get_instagram_stories,
+)
+from .utils.get_time_of_day_statistics import (
     get_avg_comments_by_time_block,
+    get_avg_likes_by_time_block,
     get_avg_saves_by_time_block,
     get_avg_shares_by_time_block,
 )
+from .utils.write_database_to_csv import export_posts_to_csv
 
 
 """
@@ -171,37 +181,51 @@ def post_comments(request, post_id):
 @csrf_exempt
 def save_access_token(request):
     """
-    Accepts POST requests containing an access token and saves it to
-    the database. It ensures that only one access token exists and
-    automatically replaces the old tokenwhen a new one is provided.
-
-    Parameters:
-    - request: HttpRequest object that contains the access token.
-
-    Returns:
-    - JsonResponse: JSON response indicating success or failure
-        - 200: If the access token is saved successfully.
-        - 400: If the access token is missing or invalid.
-        - 405: If the request is invalid.
+    Accepts POST requests containing an access token, fetches the associated
+    Instagram user ID (and username) via /me endpoint, saves the token, and
+    ensures an InstagramAccount exists. Returns a JSON response.
     """
     if request.method != "POST":
         return JsonResponse({"message": "Invalid request."}, status=405)
+
     try:
         data = json.loads(request.body)
-        access_token_value = data.get("access_token")
-        account_ID = data.get("account_ID")
-
-        if not access_token_value:
-            return JsonResponse({"message": "Access token required."}, status=400)
-
-        # save new access token
-        access_token = AccessToken(token=access_token_value, account_id=account_ID)
-        # save function should delete old one automatically
-        access_token.save()
-
-        return JsonResponse({"message": "Access token saved successfully."})
     except json.JSONDecodeError:
-        return JsonResponse({"message": "Invalid token."}, status=400)
+        return JsonResponse({"message": "Invalid JSON."}, status=400)
+
+    token_value = data.get("access_token")
+    if not token_value:
+        return JsonResponse({"message": "Access token is required."}, status=400)
+
+    # Fetch user ID and username via /me endpoint
+    try:
+        resp = requests.get(
+            "https://graph.instagram.com/me",
+            params={"fields": "id,username", "access_token": token_value},
+            timeout=5,
+        )
+        resp.raise_for_status()
+        user_data = resp.json()
+        account_id = user_data.get("id")
+        real_username = user_data.get("username", account_id)
+    except requests.RequestException:
+        return JsonResponse({"message": "Failed to validate access token."}, status=400)
+
+    # 1) Save the AccessToken
+    access_token = AccessToken(token=token_value, account_id=account_id)
+    access_token.save()
+
+    # 2) Ensure an InstagramAccount exists for this ID
+    account, created = InstagramAccount.objects.get_or_create(
+        account_API_ID=account_id, defaults={"username": real_username}
+    )
+
+    # 3) Update username if it has changed
+    if account.username != real_username:
+        account.username = real_username
+        account.save()
+
+    return JsonResponse({"message": "Access token saved and account registered."})
 
 
 @login_required
@@ -211,24 +235,25 @@ def get_demographics(request):
 
 @login_required
 def token_landing(request):
-    return render(request, "token.html")
+    accounts = InstagramAccount.objects.all()
+    return render(
+        request,
+        "token.html",
+        {
+            "accounts": accounts,
+        },
+    )
 
 
+@login_required
 def get_posts_view(request):
     """
     Fetches Instagram posts using the stored access token
-    and uses it to call the Instagram API. The results of
-    the API call are returned as a JSON response.
-
-    Parameters:
-    - request: HttpRequest object.
-
-    Returns:
-    - JsonResponse: A JSON response that is
-    the result of the API call.
+    and the associated account ID, calls the Instagram API,
+    and returns the result as JSON.
     """
     access_token = AccessToken.objects.get()
-    result = get_instagram_posts(access_token.token)
+    result = get_instagram_posts(access_token.token, access_token.account_id)
     return JsonResponse({"message": result})
 
 
@@ -602,30 +627,32 @@ def stories_info(request):
     return render(request, "stories_info.html", context)
 
 
+@require_GET
 @login_required
 def get_stories_view(request):
     """
     Handles a GET request to fetch live Instagram stories and return them as JSON.
 
-    Fetches stories using the stored access token, converts timestamps, and returns the data or an error message.
-
-    Returns:
-        JsonResponse:
-            - On success: {"success": True, "stories": [ ... ]}
-            - On error: {"success": False, "message": "<error details>"}
+    Fetches stories using the stored access token and account ID, converts timestamps,
+    and returns the data or an error message.
     """
-    if request.method != "GET":
+    try:
+        access_token = AccessToken.objects.get()
+    except AccessToken.DoesNotExist:
         return JsonResponse(
-            {"success": False, "message": "Only GET requests are allowed"}, status=405
+            {
+                "success": False,
+                "message": "No access token found. Please add an access token first.",
+            },
+            status=404,
         )
 
     try:
-        access_token = AccessToken.objects.get()
-
-        result = get_instagram_stories(access_token.token)
+        # Pass both token and account_id to the helper
+        result = get_instagram_stories(access_token.token, access_token.account_id)
 
         if isinstance(result, list):
-            # Convert datetime objects to strings for JSON serialization
+            # Convert datetime objects to ISO strings for JSON serialization
             for story in result:
                 if "date_posted" in story and isinstance(
                     story["date_posted"], datetime
@@ -645,17 +672,30 @@ def get_stories_view(request):
                 status=500,
             )
 
-    except AccessToken.DoesNotExist:
-        return JsonResponse(
-            {
-                "success": False,
-                "message": "No access token found. Please add an access token first.",
-            },
-            status=404,
-        )
-
     except Exception as e:
         return JsonResponse(
             {"success": False, "message": f"Error fetching stories: {str(e)}"},
             status=500,
         )
+
+
+@require_POST
+@login_required
+def delete_account_view(request, account_api_id):
+    try:
+        # 1) Delete all the child data
+        delete_account_data(account_api_id)
+
+        # 2) Delete the account itself so it vanishes from your list
+        InstagramAccount.objects.filter(account_API_ID=account_api_id).delete()
+
+        # 3) If there are no more connected accounts, clear out the current token
+        if not InstagramAccount.objects.exists():
+            # Remove the lone AccessToken if it exists
+            AccessToken.objects.all().delete()
+
+        messages.success(request, "Account and its data have been removed.")
+    except ValueError as e:
+        messages.error(request, str(e))
+
+    return redirect("token_page")

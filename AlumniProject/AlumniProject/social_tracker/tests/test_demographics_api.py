@@ -1,6 +1,6 @@
 from django.test import TestCase
 from unittest.mock import patch, Mock
-from social_tracker.models import Country, City, Age
+from social_tracker.models import Country, City, Age, InstagramAccount
 from social_tracker.views import update_demographics
 from social_tracker.utils.get_instagram_data import (
     get_country_demographics,
@@ -10,10 +10,16 @@ from social_tracker.utils.get_instagram_data import (
 
 
 class DemographicsTestCase(TestCase):
+    def setUp(self):
+        # Create a mock Instagram account for all tests
+        self.account_id = "fake_account"
+        self.account = InstagramAccount.objects.create(
+            account_API_ID=self.account_id, username="testuser"
+        )
+        self.token = "fake_token"
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_country_demographics(self, mock_get):
-        """Test fetching and storing country demographics from Instagram API."""
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
@@ -34,7 +40,7 @@ class DemographicsTestCase(TestCase):
         }
         mock_get.return_value = mock_response
 
-        get_country_demographics("fake_token", "fake_account")
+        get_country_demographics(self.token, self.account_id)
 
         self.assertEqual(Country.objects.count(), 2)
         self.assertTrue(
@@ -46,7 +52,6 @@ class DemographicsTestCase(TestCase):
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_city_demographics(self, mock_get):
-        """Test fetching and storing city demographics from Instagram API."""
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
@@ -73,7 +78,7 @@ class DemographicsTestCase(TestCase):
         }
         mock_get.return_value = mock_response
 
-        get_city_demographics("fake_token", "fake_account")
+        get_city_demographics(self.token, self.account_id)
 
         self.assertEqual(City.objects.count(), 2)
         self.assertTrue(
@@ -89,7 +94,6 @@ class DemographicsTestCase(TestCase):
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_age_demographics(self, mock_get):
-        """Test fetching and storing age demographics from Instagram API."""
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
@@ -110,7 +114,7 @@ class DemographicsTestCase(TestCase):
         }
         mock_get.return_value = mock_response
 
-        get_age_demographics("fake_token", "fake_account")
+        get_age_demographics(self.token, self.account_id)
 
         self.assertEqual(Age.objects.count(), 2)
         self.assertTrue(
@@ -122,32 +126,23 @@ class DemographicsTestCase(TestCase):
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_country_demographics_api_error(self, mock_get):
-        """Test API failure in country demographics function."""
         mock_get.side_effect = Exception("API Error")
-
-        result = get_country_demographics("fake_token", "fake_account")
-
-        self.assertEqual(result, "Error getting Instagram posts: API Error")
+        result = get_country_demographics(self.token, self.account_id)
+        self.assertIn("Error getting country demographics", result)
         self.assertEqual(Country.objects.count(), 0)
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_city_demographics_api_error(self, mock_get):
-        """Test API failure in city demographics function."""
         mock_get.side_effect = Exception("API Error")
-
-        result = get_city_demographics("fake_token", "fake_account")
-
-        self.assertEqual(result, "Error getting Instagram posts: API Error")
+        result = get_city_demographics(self.token, self.account_id)
+        self.assertIn("Error getting city demographics", result)
         self.assertEqual(City.objects.count(), 0)
 
     @patch("social_tracker.utils.get_instagram_data.requests.get")
     def test_get_age_demographics_api_error(self, mock_get):
-        """Test API failure in age demographics function."""
         mock_get.side_effect = Exception("API Error")
-
-        result = get_age_demographics("fake_token", "fake_account")
-
-        self.assertEqual(result, "Error getting Instagram posts: API Error")
+        result = get_age_demographics(self.token, self.account_id)
+        self.assertIn("Error getting age demographics", result)
         self.assertEqual(Age.objects.count(), 0)
 
     @patch("social_tracker.views.get_country_demographics")
@@ -158,18 +153,12 @@ class DemographicsTestCase(TestCase):
         self, mock_get_access_token, mock_get_age, mock_get_city, mock_get_country
     ):
         mock_access_token = Mock()
-        mock_access_token.token = "fake_token"
-        mock_access_token.account_id = "fake_account"
+        mock_access_token.token = self.token
+        mock_access_token.account_id = self.account_id
         mock_get_access_token.return_value = mock_access_token
 
         update_demographics()
 
-        mock_get_country.assert_called_once_with(
-            mock_access_token.token, mock_access_token.account_id
-        )
-        mock_get_city.assert_called_once_with(
-            mock_access_token.token, mock_access_token.account_id
-        )
-        mock_get_age.assert_called_once_with(
-            mock_access_token.token, mock_access_token.account_id
-        )
+        mock_get_country.assert_called_once_with(self.token, self.account_id)
+        mock_get_city.assert_called_once_with(self.token, self.account_id)
+        mock_get_age.assert_called_once_with(self.token, self.account_id)
