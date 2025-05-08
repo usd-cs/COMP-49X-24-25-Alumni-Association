@@ -1,6 +1,20 @@
 from django.db import models
 
 
+class InstagramAccount(models.Model):
+    """
+    Model representing one Instagram business/account.
+    Deleting this will delete all related posts, comments, users, stories, etc.
+    """
+
+    account_API_ID = models.CharField(max_length=100, primary_key=True)
+    username = models.CharField(max_length=100)
+    date_added = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = "social_tracker"
+
+
 class Post(models.Model):
     """
     Model representing a social media post.
@@ -16,6 +30,13 @@ class Post(models.Model):
         post_API_ID (CharField): A unique identifier for the post in an external API.
     """
 
+    instagram_account = models.ForeignKey(
+        InstagramAccount,
+        on_delete=models.CASCADE,
+        null=True,  # <-- allow null for now
+        blank=True,
+        related_name="posts",
+    )
     post_ID = models.AutoField(primary_key=True)
     date_posted = models.DateTimeField(null=True)
     post_link = models.CharField(max_length=100)
@@ -41,6 +62,13 @@ class InstagramUser(models.Model):
         num_comments (IntegerField): The total number of comments made by the user.
     """
 
+    instagram_account = models.ForeignKey(
+        InstagramAccount,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="instagram_users",
+    )
     id = models.IntegerField(primary_key=True)
     username = models.TextField(default="")
     num_comments = models.IntegerField(default=0)
@@ -66,6 +94,13 @@ class Comment(models.Model):
         replies (JSONField): A list of replies associated with this comment.
     """
 
+    instagram_account = models.ForeignKey(
+        InstagramAccount,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="comments",
+    )
     id = models.IntegerField(primary_key=True)
     date_posted = models.DateTimeField(null=True)
     num_likes = models.IntegerField(default=0)
@@ -121,6 +156,13 @@ class Country(models.Model):
         num_interactions (IntegerField): The number of interactions from this country.
     """
 
+    instagram_account = models.ForeignKey(
+        InstagramAccount,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="countries",
+    )
     name = models.TextField()
     num_interactions = models.IntegerField(default=0)
 
@@ -137,6 +179,13 @@ class City(models.Model):
         num_interactions (IntegerField): The number of interactions from this city.
     """
 
+    instagram_account = models.ForeignKey(
+        InstagramAccount,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="cities",
+    )
     name = models.TextField()
     num_interactions = models.IntegerField(default=0)
 
@@ -153,6 +202,13 @@ class Age(models.Model):
         num_interactions (IntegerField): The number of interactions from this age range.
     """
 
+    instagram_account = models.ForeignKey(
+        InstagramAccount,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="age_ranges",
+    )
     age_range = models.TextField()
     num_interactions = models.IntegerField(default=0)
 
@@ -175,6 +231,13 @@ class InstagramStory(models.Model):
         story_API_ID (CharField): A unique identifier for the story in an external API.
     """
 
+    instagram_account = models.ForeignKey(
+        InstagramAccount,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="stories",
+    )
     story_ID = models.AutoField(primary_key=True)
     date_posted = models.DateTimeField(null=True)
     story_link = models.CharField(max_length=100)

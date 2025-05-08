@@ -2,6 +2,9 @@
 USERNAME="bill@sandiego.edu"
 PASSWORD="Password"
 
+SPRINT5=false
+SPRINT6=false
+
 #Can uncomment these lines if you want to input username/password info, won't be fully automated but may be necessary
 #read -p "Enter username: " USERNAME
 #read -p "Enter password: " PASSWORD
@@ -22,12 +25,35 @@ echo "\nGot cookies:"
 cat cookies.txt
 
 echo "\nAttempting to access /account-info/"
-curl -b cookies.txt -s https://alumni-association.dedyn.io/account-info/ > final_page.html
+curl -b cookies.txt -s https://alumni-association.dedyn.io/account-info/ > account_page.html
 
-if grep -q "<h1>Account Information</h1>" final_page.html; then
-  echo "\nTest passed! Logged in and accessed account-info page"
+if grep -q "<title>Account Stats</title>" account_page.html; then
+  echo "Test passed! Logged in and accessed account-info page"
+  SPRINT5=true
 else
-  echo "\nTest failed"
+  echo "Account info test failed"
+  SPRINT5=false
 fi
 
-rm final_page.html login_page.html cookies.txt
+rm account_page.html login_page.html 
+
+echo "\nAttempting to access /stories-info/"
+curl -b cookies.txt -s https://alumni-association.dedyn.io/stories-info/ > stories_page.html
+
+if grep -q "<title>Stories Info</title>" stories_page.html; then
+  echo "Test passed! Logged in and accessed stories-info page"
+  SPRINT6=true
+else
+  echo "Stories info test failed"
+  SPRINT6=false
+fi
+
+rm stories_page.html
+
+if [ $SPRINT5 == "true" ] && [ $SPRINT6 == "true" ] ; then
+  echo "\nAll tests passed!"
+else
+  echo "\nOne or more tests failing"
+fi
+
+rm cookies.txt
