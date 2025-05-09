@@ -395,6 +395,7 @@ def demographics_page(request):
     }
     return render(request, "demographics.html", context)
 
+
 @csrf_exempt
 @require_POST
 @login_required
@@ -409,11 +410,12 @@ def save_name(request):
         if not obj:
             return JsonResponse({"success": False, "msg": "not found"})
         obj.name = name
-        #print(f"Saving name '{name}' for user ID {user_id}") Old debug statement
+        # print(f"Saving name '{name}' for user ID {user_id}") Old debug statement
         obj.save(update_fields=["name"])
         return JsonResponse({"success": True})
     except Exception as exc:
         return JsonResponse({"success": False, "msg": str(exc)})
+
 
 def list_stored_posts(request):
     """
