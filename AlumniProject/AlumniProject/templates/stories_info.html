@@ -10,6 +10,7 @@
 
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --founders-blue: #003b70;
@@ -58,42 +59,30 @@
     .btn:hover {
       background-color: var(--immaculata-blue);
     }
-    .btn-primary {
-        background-color: var(--founders-blue);
-    }
-    .btn-primary:hover {
-        background-color: var(--immaculata-blue);
-    }
-    .btn-secondary {
-        background-color: var(--immaculata-blue);
-    }
-    .btn-secondary:hover {
-        background-color: #005a9e; /* Darker immaculata blue */
-    }
 
-    /* Table styles */
     .table-fixed {
       table-layout: fixed;
       width: 100%;
     }
-    
+
     .table-fixed th,
     .table-fixed td {
-      width: 20%; /* Adjusted for 5 columns */
-      vertical-align: middle;
+      width: 20%;
     }
-    
-    .story-row.hidden {
-      display: none;
-    }
-    
+
     .table-container {
-      min-height: 450px; /* Minimum height for table area */
-      display: flex;
-      flex-direction: column;
+      min-height: 450px;
+      position: relative;
     }
-    .table-responsive {
-        flex-grow: 1;
+
+    .pagination-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
     }
 
     .metric-card {
@@ -115,17 +104,16 @@
       font-size: 14px;
       color: var(--immaculata-blue);
     }
-    #pagination-controls {
-        display: none; /* Hide pagination initially */
-    }
-    .hidden {
-        display: none;
+
+    #storyScatterChart {
+      background-color: white;
+      border-radius: 8px;
+      padding: 10px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Navigation Tabs -->
   <nav class="nav nav-tabs justify-content-center">
     <a class="nav-link" href="{% url 'token_page' %}">Token</a>
     <a class="nav-link" href="{% url 'home' %}">Post Info</a>
@@ -142,271 +130,188 @@
       </button>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="row mb-4">
-      <div class="col-md-4">
-        <div class="metric-card">
-          <div id="total-views-value" class="metric-value">{{ total_views }}</div>
-          <div class="metric-label">Story Views</div>
+    <div class="mb-4">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="metric-card">
+            <div class="metric-label">Top Story (Most Views)</div>
+            <div class="metric-value" id="topViews">No data</div>
+          </div>
         </div>
-      </div>
-      <div class="col-md-4">
-        <div class="metric-card">
-          <div id="total-clicks-value" class="metric-value">{{ total_profile_clicks }}</div>
-          <div class="metric-label">Profile Visits</div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="metric-card">
-          <div id="total-swipes-value" class="metric-value">{{ total_swipes }}</div>
-          <div class="metric-label">Story Interactions</div>
-          <div style="font-size: 12px; color: var(--immaculata-blue); margin-top: 5px;">
-            (Taps & Swipes)
+        <div class="col-md-6">
+          <div class="metric-card">
+            <div class="metric-label">Top Story (Most Interactions)</div>
+            <div class="metric-value" id="topInteractions">No data</div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="table-container">
-        <div class="table-responsive">
-          <table class="table table-striped table-bordered text-center table-fixed" style="background-color: var(--alcala-white); color: #000;">
-            <thead>
-              <tr>
-                <th>Date Posted</th>
-                <th>Views</th>
-                <th>Profile Visits</th>
-                <th>Interactions</th>
-                <th>Link</th>
-              </tr>
-            </thead>
-            <tbody id="storyList">
-              <!-- Initial state (can be empty or show loading) -->
-               <tr>
-                  <td colspan="5">Loading stories...</td>
-               </tr>
-            </tbody>
-          </table>
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <div class="metric-card">
+          <div class="metric-value" id="totalViews">0</div>
+          <div class="metric-label">Story Views</div>
         </div>
+      </div>
+      <div class="col-md-4">
+        <div class="metric-card">
+          <div class="metric-value" id="totalClicks">0</div>
+          <div class="metric-label">Profile Visits</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="metric-card">
+          <div class="metric-value" id="totalSwipes">0</div>
+          <div class="metric-label">Story Interactions</div>
+          <div style="font-size: 12px; color: var(--immaculata-blue); margin-top: 5px;">(Taps & Swipes)</div>
+        </div>
+      </div>
     </div>
 
-    <!-- Pagination Controls -->
-    <div id="pagination-controls" class="d-flex justify-content-center mt-3">
-      <button id="prevBtn" class="btn btn-secondary me-2">Previous</button>
-      <span id="pageInfo" class="align-self-center mx-2 text-white">Page 1</span>
-      <button id="nextBtn" class="btn btn-secondary">Next</button>
+    <div class="mb-5">
+      <h4 class="text-center mb-3">Views vs Time of Day</h4>
+      <canvas id="storyScatterChart" height="200"></canvas>
+    </div>
+
+    <div class="table-responsive mt-4 table-container">
+      <table class="table table-striped table-bordered text-center table-fixed" style="background-color: var(--alcala-white); color: #000;">
+        <thead>
+          <tr>
+            <th>Date Posted</th>
+            <th>Views</th>
+            <th>Profile Visits</th>
+            <th>Story Interactions</th>
+            <th>Link</th>
+          </tr>
+        </thead>
+        <tbody id="storyList"></tbody>
+      </table>
+      <div class="pagination-controls">
+        <button id="prevBtn" class="btn btn-secondary me-2" onclick="changePage(-1)">Previous</button>
+        <span id="pageInfo" class="align-self-center mx-2 text-white">Page 1</span>
+        <button id="nextBtn" class="btn btn-secondary" onclick="changePage(1)">Next</button>
+      </div>
     </div>
   </div>
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
   <script>
-    // --- Target elements --- 
-    const fetchBtn = document.getElementById('fetchStoriesBtn');
-    const storyListBody = document.getElementById('storyList');
-    const totalViewsCard = document.getElementById('total-views-value');
-    const totalClicksCard = document.getElementById('total-clicks-value');
-    const totalSwipesCard = document.getElementById('total-swipes-value');
-    const paginationControls = document.getElementById('pagination-controls');
-    const pageInfoSpan = document.getElementById('pageInfo');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-
+    let storyData = [];
     let currentPage = 1;
-    const pageSize = 10; // Number of stories per page
+    const pageSize = 10;
+    let scatterChart = null;
 
-    // --- Function to display stories and update totals --- 
-    function displayStories(stories) {
-        storyListBody.innerHTML = ''; // Clear existing stories or loading message
-        let totalViews = 0;
-        let totalProfileClicks = 0;
-        let totalSwipes = 0;
+    function renderStoryTable(data) {
+      storyData = data;
+      currentPage = 1;
+      updateTable();
+      updateMetrics();
+    }
 
-        if (!stories || stories.length === 0) {
-            storyListBody.innerHTML = '<tr><td colspan="5">No active stories found.</td></tr>';
-            totalViewsCard.textContent = 0;
-            totalClicksCard.textContent = 0;
-            totalSwipesCard.textContent = 0;
-            // initializePagination(0); // TEMPORARILY DISABLED
-            return;
+    function updateTable() {
+      const tbody = document.getElementById('storyList');
+      tbody.innerHTML = '';
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+      const pageData = storyData.slice(start, end);
+      for (const story of pageData) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${new Date(story.date_posted).toLocaleString()}</td>
+          <td>${story.num_views}</td>
+          <td>${story.num_profile_clicks}</td>
+          <td>${story.num_swipes_up}</td>
+          <td><a href="${story.story_link}" class="btn btn-sm" target="_blank">View Story</a></td>
+        `;
+        tbody.appendChild(row);
+      }
+      document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${Math.ceil(storyData.length / pageSize)}`;
+      document.getElementById('prevBtn').disabled = currentPage === 1;
+      document.getElementById('nextBtn').disabled = currentPage === Math.ceil(storyData.length / pageSize);
+    }
+
+    window.changePage = function (direction) {
+      const newPage = currentPage + direction;
+      if (newPage > 0 && newPage <= Math.ceil(storyData.length / pageSize)) {
+        currentPage = newPage;
+        updateTable();
+      }
+    }
+
+    function updateMetrics() {
+      let topViews = 0, topInteractions = 0;
+      let topViewStory = null, topInteractionStory = null;
+      let totalViews = 0, totalClicks = 0, totalSwipes = 0;
+      const scatterPoints = [];
+
+      for (const s of storyData) {
+        totalViews += s.num_views;
+        totalClicks += s.num_profile_clicks;
+        totalSwipes += s.num_swipes_up;
+
+        if (s.num_views > topViews) {
+          topViews = s.num_views;
+          topViewStory = s;
+        }
+        if (s.num_swipes_up > topInteractions) {
+          topInteractions = s.num_swipes_up;
+          topInteractionStory = s;
         }
 
-        console.log(`[displayStories] Attempting to display ${stories.length} stories.`); // Log: Start displaying
+        const d = new Date(s.date_posted);
+        scatterPoints.push({ x: d.getHours() + d.getMinutes() / 60, y: s.num_views });
+      }
 
-        stories.forEach((story, index) => {
-            // Calculate totals
-            totalViews += story.num_views || 0;
-            totalProfileClicks += story.num_profile_clicks || 0;
-            totalSwipes += story.num_swipes_up || 0;
+      document.getElementById('totalViews').textContent = totalViews;
+      document.getElementById('totalClicks').textContent = totalClicks;
+      document.getElementById('totalSwipes').textContent = totalSwipes;
 
-            // Create Row
-            const row = document.createElement('tr');
-            // row.classList.add('story-row', 'hidden'); // TEMPORARILY REMOVED 'hidden'
-            row.classList.add('story-row'); // Add only story-row class for now
+      document.getElementById('topViews').innerHTML = topViewStory
+        ? `${topViewStory.num_views} views<br><a href="${topViewStory.story_link}" class="btn btn-sm mt-2" target="_blank">View</a>`
+        : 'No data';
 
-            // Create Cells
-            const dateCell = document.createElement('td');
-            try {
-                 const date = new Date(story.date_posted);
-                 const formattedDate = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-                 dateCell.textContent = formattedDate;
-            } catch(e) {
-                console.error("[displayStories] Error parsing date:", story.date_posted, e);
-                dateCell.textContent = 'Invalid Date';
-            }
+      document.getElementById('topInteractions').innerHTML = topInteractionStory
+        ? `${topInteractionStory.num_swipes_up} interactions<br><a href="${topInteractionStory.story_link}" class="btn btn-sm mt-2" target="_blank">View</a>`
+        : 'No data';
 
-            const viewsCell = document.createElement('td');
-            viewsCell.textContent = story.num_views || 0;
-
-            const clicksCell = document.createElement('td');
-            clicksCell.textContent = story.num_profile_clicks || 0;
-
-            const swipesCell = document.createElement('td');
-            swipesCell.textContent = story.num_swipes_up || 0; // Story Interactions
-
-            const linkCell = document.createElement('td');
-            const link = document.createElement('a');
-            link.href = story.story_link || '#';
-            link.textContent = 'View Story';
-            link.target = '_blank';
-            link.classList.add('btn', 'btn-sm', 'btn-primary');
-            linkCell.appendChild(link);
-
-            // Append cells to row
-            row.appendChild(dateCell);
-            row.appendChild(viewsCell);
-            row.appendChild(clicksCell);
-            row.appendChild(swipesCell);
-            row.appendChild(linkCell);
-
-            // Append row to table body
-            storyListBody.appendChild(row);
-        });
-
-        console.log(`[displayStories] Finished appending ${storyListBody.children.length} rows to tbody.`); // Log: Finished appending
-
-        // Update summary cards
-        totalViewsCard.textContent = totalViews;
-        totalClicksCard.textContent = totalProfileClicks;
-        totalSwipesCard.textContent = totalSwipes;
-
-        // Initialize pagination AFTER rows are in the DOM
-        // initializePagination(stories.length); // TEMPORARILY DISABLED
-        console.log("[displayStories] Pagination logic temporarily disabled for testing.");
-    }
-
-    // --- Pagination Logic --- 
-    function initializePagination(totalRows) {
-        currentPage = 1; // Reset to page 1
-        const totalPages = Math.ceil(totalRows / pageSize);
-        console.log(`[initializePagination] Total rows: ${totalRows}, Total pages: ${totalPages}`); // ADDED LOG
-
-        if (totalRows === 0 || totalPages <= 1) {
-             paginationControls.style.display = 'none'; // Hide if no pagination needed
-             console.log("[initializePagination] Hiding pagination controls."); // ADDED LOG
-        } else {
-             paginationControls.style.display = 'flex'; // Show pagination controls
-             console.log("[initializePagination] Showing pagination controls."); // ADDED LOG
-             updatePageInfo(totalPages);
-             updateButtonState(totalPages);
-             showPage(currentPage); // Show the first page
+      if (scatterChart) scatterChart.destroy();
+      scatterChart = new Chart(document.getElementById('storyScatterChart').getContext('2d'), {
+        type: 'scatter',
+        data: { datasets: [{ label: 'Views vs Time of Day', data: scatterPoints, backgroundColor: '#0074c8' }] },
+        options: {
+          scales: {
+            x: { title: { display: true, text: 'Time of Day (hours)' }, min: 0, max: 24, ticks: { stepSize: 2 } },
+            y: { title: { display: true, text: 'Views' }, beginAtZero: true }
+          },
+          plugins: { legend: { display: false } }
         }
+      });
     }
 
-    function showPage(page) {
-        const rows = storyListBody.querySelectorAll('.story-row');
-        console.log(`[showPage(${page})] Found ${rows.length} rows with class 'story-row'.`); // ADDED LOG
-        rows.forEach((row, index) => {
-            const start = (page - 1) * pageSize;
-            const end = start + pageSize;
-            if (index >= start && index < end) {
-                row.classList.remove('hidden');
-            } else {
-                row.classList.add('hidden');
-            }
-        });
-        console.log(`[showPage(${page})] Finished updating row visibility.`); // ADDED LOG
+    function fetchStories() {
+      fetch('/get-stories/')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            renderStoryTable(data.stories);
+          } else {
+            alert('Error: ' + data.message);
+          }
+        })
+        .catch(err => alert('Error fetching stories: ' + err));
     }
 
-    function updatePageInfo(totalPages) {
-        pageInfoSpan.textContent = `Page ${currentPage} of ${totalPages}`;
-    }
+    document.getElementById('fetchStoriesBtn').addEventListener('click', function () {
+      this.disabled = true;
+      this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...';
+      fetchStories();
+      setTimeout(() => {
+        this.disabled = false;
+        this.innerHTML = '<i class="fas fa-sync-alt"></i> Fetch Latest Stories';
+      }, 1000);
+    });
 
-    function updateButtonState(totalPages) {
-        prevBtn.disabled = (currentPage === 1);
-        nextBtn.disabled = (currentPage === totalPages);
-    }
-
-    function changePage(direction) {
-        const rows = storyListBody.querySelectorAll('.story-row');
-        const totalPages = Math.ceil(rows.length / pageSize);
-        const newPage = currentPage + direction;
-
-        if (newPage >= 1 && newPage <= totalPages) {
-            currentPage = newPage;
-            showPage(currentPage);
-            updatePageInfo(totalPages);
-            updateButtonState(totalPages);
-        }
-    }
-
-    // Add listeners for pagination buttons
-    prevBtn.addEventListener('click', () => changePage(-1));
-    nextBtn.addEventListener('click', () => changePage(1));
-    // --- End Pagination Logic --- 
-
-    // --- Function to fetch stories and trigger display --- 
-    async function fetchAndDisplayStories() {
-        fetchBtn.disabled = true;
-        fetchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...';
-        storyListBody.innerHTML = '<tr><td colspan="5"><i class="fas fa-spinner fa-spin"></i> Loading stories...</td></tr>';
-        // Reset totals visually during load
-        totalViewsCard.textContent = '-'; 
-        totalClicksCard.textContent = '-';
-        totalSwipesCard.textContent = '-';
-        paginationControls.style.display = 'none'; // Hide pagination during load
-
-        try {
-            const response = await fetch('/get-stories/'); // Use the correct hyphenated URL
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                displayStories(data.stories);
-            } else {
-                // Handle API error messages or non-success responses
-                const errorMessage = data.message || `HTTP error! status: ${response.status}`;
-                console.error('Error fetching stories:', errorMessage);
-                alert('Error fetching stories: ' + errorMessage);
-                 storyListBody.innerHTML = `<tr><td colspan="5">Error: ${errorMessage}</td></tr>`;
-                 // Reset totals on error
-                 totalViewsCard.textContent = 0;
-                 totalClicksCard.textContent = 0;
-                 totalSwipesCard.textContent = 0;
-                 initializePagination(0); // Ensure pagination is hidden
-            }
-        } catch (error) {
-            console.error('Network or fetch error:', error);
-            alert('Could not connect to server or fetch stories: ' + error);
-            storyListBody.innerHTML = `<tr><td colspan="5">Failed to fetch stories. Check network or console.</td></tr>`;
-            // Reset totals on error
-            totalViewsCard.textContent = 0;
-            totalClicksCard.textContent = 0;
-            totalSwipesCard.textContent = 0;
-            initializePagination(0); // Ensure pagination is hidden
-        } finally {
-            fetchBtn.disabled = false;
-            fetchBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Fetch Latest Stories';
-        }
-    }
-
-    // --- Event Listeners --- 
-    // Add event listener for the button click
-    fetchBtn.addEventListener('click', fetchAndDisplayStories);
-
-    // Add event listener to fetch stories when the page loads
-    document.addEventListener('DOMContentLoaded', fetchAndDisplayStories);
-
+    document.addEventListener('DOMContentLoaded', fetchStories);
   </script>
-
 </body>
-</html> 
+</html>

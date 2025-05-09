@@ -1,38 +1,35 @@
-import requests
-from datetime import datetime
-from social_tracker.models import (
-    Post,
-    Country,
-    City,
-    Age,
-    Comment,
-    InstagramUser,
-)
-from django.utils.dateparse import parse_datetime
 import json
+from datetime import datetime
+
+import requests
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
+
+from social_tracker.models import (
+    Age,
+    City,
+    Comment,
+    Country,
+    InstagramAccount,
+    InstagramStory,
+    InstagramUser,
+    Post,
+)
 
 
-def get_instagram_posts(access_token, num_posts=100):
+def get_instagram_posts(access_token, account_id, num_posts=100):
     """
-    Gets recent Instagram posts using the provided access token
-    and adds them to the database. This function makes a GET request
-    to the Instagram API to retrieve recent post data and then another
-    get request that gets the post attributes with the ID. Any post not
-    already in in the database is added.
-
-    Parameters:
-    - access_token (str): A valid access token for the Instagram API.
-    - num_posts (int): number of recent posts to process (default: 100).
-
-    Returns:
-    - str: Message indicating the result of the operation:
-        - "Posts processed successfully." if posts are retrieved and processed.
-        - "No posts found." if no posts are returned by the API.
-        - Error message if the API call fails.
-
-    Exceptions:
-    - Handles requests.exceptions.RequestException for API-related errors.
+    Gets recent Instagram posts for the given account and saves or updates them,
+    always linking each Post to its InstagramAccount, avoiding duplicate inserts,
+    and using timezone-aware datetimes.
     """
+    if not access_token:
+        return "Access token is missing."
+    try:
+        account = InstagramAccount.objects.get(account_API_ID=account_id)
+    except InstagramAccount.DoesNotExist:
+        return f"Account with id {account_id} does not exist."
+
     url = "https://graph.instagram.com/me/media"
     params = {
         "fields": "id,media_url,timestamp,permalink",
@@ -42,82 +39,77 @@ def get_instagram_posts(access_token, num_posts=100):
 
     try:
         response = requests.get(url, params=params)
-        response.raise_for_status()  # raise error if it is not a success code
+        response.raise_for_status()
         data = response.json()
 
-        if "data" in data and len(data["data"]) > 0:
-            posts = data["data"][:num_posts]
-
-            # get post data
-            for post in posts:
-                date = datetime.strptime(
-                    post["timestamp"], "%Y-%m-%dT%H:%M:%S%z"
-                ).replace(tzinfo=None)
-                permalink = post.get("permalink", "N/A")
-                api_id = str(post.get("id", ""))
-
-                # check if link already exists and add to database if not duplicate post and post exists
-                if api_id != "" and api_id is not None:
-                    # make request for insights based on post ID
-                    url = (
-                        "https://graph.instagram.com/v19.0/" + str(api_id) + "/insights"
-                    )
-                    params = {
-                        "metric": "likes,comments,saved,shares",
-                        "period": "lifetime",
-                        "access_token": access_token,
-                    }
-                    response = requests.get(url, params=params)
-                    resp_json = response.json()
-                    data = resp_json.get("data")
-                    url = "https://graph.instagram.com/v19.0/" + str(api_id)
-                    params = {"access_token": access_token, "fields": "caption"}
-                    try:
-                        caption_data = (
-                            requests.get(url, params=params).json().get("caption")
-                        )
-                    except Exception as e:
-                        print(e)
-                        caption_data = ""
-                    # data is only none if posts were from before the account became a business account.
-                    if data != [] and data is not None:
-                        # get post attributes
-                        num_likes = data[0].get("values")[0].get("value")
-                        num_comments = data[1].get("values")[0].get("value")
-                        num_saved = data[2].get("values")[0].get("value")
-                        num_shares = data[3].get("values")[0].get("value")
-                        if not Post.objects.filter(post_link=permalink).exists():
-                            # post does not exist in database, create new post
-                            Post.objects.create(
-                                date_posted=date,
-                                post_link=permalink,
-                                num_likes=num_likes,
-                                num_comments=num_comments,
-                                num_shares=num_shares,
-                                num_saves=num_saved,
-                                post_API_ID=api_id,
-                                caption=caption_data,
-                            )
-                        else:
-                            # modifies existing post instead of creating a new post.
-                            existing_post = Post.objects.get(post_link=permalink)
-                            existing_post.num_likes = num_likes
-                            existing_post.num_comments = num_comments
-                            existing_post.num_shares = num_shares
-                            existing_post.num_saves = num_saved
-                            existing_post.post_API_ID = api_id
-                            existing_post.caption = caption_data
-                            existing_post.save()
-
-                        if num_comments > 0:
-                            get_comment_data(access_token, api_id)
-
-                else:
-                    print(f"Invalid post- not added: {permalink}")
-
-            return "Posts processed successfully."
-        else:
+        if not data.get("data"):
             return "No posts found."
+
+        for post_info in data["data"][:num_posts]:
+            raw_ts = post_info.get("timestamp")
+            if not raw_ts:
+                continue
+
+            # parse timestamp and make it timezone-aware
+            naive_dt = datetime.strptime(raw_ts, "%Y-%m-%dT%H:%M:%S%z").replace(
+                tzinfo=None
+            )
+            date_posted = timezone.make_aware(naive_dt, timezone.get_current_timezone())
+
+            permalink = post_info.get("permalink", "")
+            api_id = str(post_info.get("id", ""))
+            if not api_id:
+                continue
+
+            # fetch insights
+            insights_url = f"https://graph.instagram.com/v19.0/{api_id}/insights"
+            insights_params = {
+                "metric": "likes,comments,saved,shares",
+                "period": "lifetime",
+                "access_token": access_token,
+            }
+            insights_data = (
+                requests.get(insights_url, params=insights_params)
+                .json()
+                .get("data", [])
+            )
+
+            # fetch caption
+            caption = ""
+            try:
+                cap_url = f"https://graph.instagram.com/v19.0/{api_id}"
+                cap_resp = requests.get(
+                    cap_url, params={"access_token": access_token, "fields": "caption"}
+                )
+                caption = cap_resp.json().get("caption") or ""
+            except Exception:
+                pass
+
+            if insights_data:
+                num_likes = insights_data[0]["values"][0]["value"]
+                num_comments = insights_data[1]["values"][0]["value"]
+                num_saved = insights_data[2]["values"][0]["value"]
+                num_shares = insights_data[3]["values"][0]["value"]
+
+                # update_or_create to avoid unique constraint errors
+                post_obj, created = Post.objects.update_or_create(
+                    post_API_ID=api_id,
+                    defaults={
+                        "instagram_account": account,
+                        "date_posted": date_posted,
+                        "post_link": permalink,
+                        "num_likes": num_likes,
+                        "num_comments": num_comments,
+                        "num_shares": num_shares,
+                        "num_saves": num_saved,
+                        "caption": caption,
+                    },
+                )
+
+                if num_comments > 0:
+                    get_comment_data(access_token, api_id, account_id)
+
+        return "Posts processed successfully."
 
     except requests.exceptions.RequestException as e:
         return f"Error getting Instagram posts: {e}"
@@ -125,20 +117,15 @@ def get_instagram_posts(access_token, num_posts=100):
 
 def get_country_demographics(access_token, account_id):
     """
-    Fetches and stores Instagram engagement demographics by country.
-
-    This function queries the Instagram Graph API for engagement demographic
-    data, specifically breaking down interactions by country. The retrieved
-    data is then stored in the `Country` model.
-
-    Args:
-        access_token (str): The access token for authenticating API requests.
-        account_id (str): The Instagram account ID for which to retrieve data.
-
-    Returns:
-        str: An error message if the API request fails, otherwise None.
+    Fetches engagement breakdown by country for the given account
+    and saves Country rows linked to that InstagramAccount.
     """
-    url = "https://graph.instagram.com/v22.0/" + str(account_id) + "/insights"
+    try:
+        account = InstagramAccount.objects.get(account_API_ID=account_id)
+    except InstagramAccount.DoesNotExist:
+        return f"Account with id {account_id} does not exist."
+
+    url = f"https://graph.instagram.com/v22.0/{account_id}/insights"
     params = {
         "metric": "engaged_audience_demographics",
         "metric_type": "total_value",
@@ -147,39 +134,38 @@ def get_country_demographics(access_token, account_id):
         "timeframe": "this_month",
         "breakdown": "country",
     }
+
     try:
         response = requests.get(url, params=params)
-        response.raise_for_status()  # raise error if it is not a success code
+        response.raise_for_status()
         data = response.json()
-        if "total_value" in data["data"][0]:
-            countries = data["data"][0]["total_value"]["breakdowns"][0]["results"]
-            if len(countries) > 0:
-                Country.objects.all().delete()
-            for i in range(0, len(countries)):
+
+        breakdowns = data["data"][0].get("total_value", {}).get("breakdowns", [])
+        countries = breakdowns[0].get("results", []) if breakdowns else []
+
+        if countries:
+            Country.objects.filter(instagram_account=account).delete()
+            for c in countries:
                 Country.objects.create(
-                    name=countries[i]["dimension_values"][0],
-                    num_interactions=countries[i]["value"],
+                    instagram_account=account,
+                    name=c["dimension_values"][0],
+                    num_interactions=c["value"],
                 )
     except Exception as e:
-        return f"Error getting Instagram posts: {e}"
+        return f"Error getting country demographics: {e}"
 
 
 def get_city_demographics(access_token, account_id):
     """
-    Fetches and stores Instagram engagement demographics by city.
-
-    This function queries the Instagram Graph API for engagement demographic
-    data, specifically breaking down interactions by city. The retrieved
-    data is then stored in the `City` model.
-
-    Args:
-        access_token (str): The access token for authenticating API requests.
-        account_id (str): The Instagram account ID for which to retrieve data.
-
-    Returns:
-        str: An error message if the API request fails, otherwise None.
+    Fetches engagement breakdown by city for the given account
+    and saves City rows linked to that InstagramAccount.
     """
-    url = "https://graph.instagram.com/v22.0/" + str(account_id) + "/insights"
+    try:
+        account = InstagramAccount.objects.get(account_API_ID=account_id)
+    except InstagramAccount.DoesNotExist:
+        return f"Account with id {account_id} does not exist."
+
+    url = f"https://graph.instagram.com/v22.0/{account_id}/insights"
     params = {
         "metric": "engaged_audience_demographics",
         "metric_type": "total_value",
@@ -188,39 +174,38 @@ def get_city_demographics(access_token, account_id):
         "timeframe": "this_month",
         "breakdown": "city",
     }
+
     try:
         response = requests.get(url, params=params)
-        response.raise_for_status()  # raise error if it is not a success code
+        response.raise_for_status()
         data = response.json()
-        if "total_value" in data["data"][0]:
-            cities = data["data"][0]["total_value"]["breakdowns"][0]["results"]
-            if len(cities) > 0:
-                City.objects.all().delete()
-            for i in range(0, len(cities)):
+
+        breakdowns = data["data"][0].get("total_value", {}).get("breakdowns", [])
+        cities = breakdowns[0].get("results", []) if breakdowns else []
+
+        if cities:
+            City.objects.filter(instagram_account=account).delete()
+            for c in cities:
                 City.objects.create(
-                    name=cities[i]["dimension_values"][0],
-                    num_interactions=cities[i]["value"],
+                    instagram_account=account,
+                    name=c["dimension_values"][0],
+                    num_interactions=c["value"],
                 )
     except Exception as e:
-        return f"Error getting Instagram posts: {e}"
+        return f"Error getting city demographics: {e}"
 
 
 def get_age_demographics(access_token, account_id):
     """
-    Fetches and stores Instagram engagement demographics by age group.
-
-    This function queries the Instagram Graph API for engagement demographic
-    data, specifically breaking down interactions by age group. The retrieved
-    data is then stored in the `Age` model.
-
-    Args:
-        access_token (str): The access token for authenticating API requests.
-        account_id (str): The Instagram account ID for which to retrieve data.
-
-    Returns:
-        str: An error message if the API request fails, otherwise None.
+    Fetches engagement breakdown by age group for the given account
+    and saves Age rows linked to that InstagramAccount.
     """
-    url = "https://graph.instagram.com/v22.0/" + str(account_id) + "/insights"
+    try:
+        account = InstagramAccount.objects.get(account_API_ID=account_id)
+    except InstagramAccount.DoesNotExist:
+        return f"Account with id {account_id} does not exist."
+
+    url = f"https://graph.instagram.com/v22.0/{account_id}/insights"
     params = {
         "metric": "engaged_audience_demographics",
         "metric_type": "total_value",
@@ -229,112 +214,85 @@ def get_age_demographics(access_token, account_id):
         "timeframe": "this_month",
         "breakdown": "age",
     }
+
     try:
         response = requests.get(url, params=params)
-        response.raise_for_status()  # raise error if it is not a success code
+        response.raise_for_status()
         data = response.json()
-        if "total_value" in data["data"][0]:
-            ages = data["data"][0]["total_value"]["breakdowns"][0]["results"]
-            if len(ages) > 0:
-                Age.objects.all().delete()
-            for i in range(0, len(ages)):
+
+        breakdowns = data["data"][0].get("total_value", {}).get("breakdowns", [])
+        ages = breakdowns[0].get("results", []) if breakdowns else []
+
+        if ages:
+            Age.objects.filter(instagram_account=account).delete()
+            for a in ages:
                 Age.objects.create(
-                    age_range=ages[i]["dimension_values"][0],
-                    num_interactions=ages[i]["value"],
+                    instagram_account=account,
+                    age_range=a["dimension_values"][0],
+                    num_interactions=a["value"],
                 )
     except Exception as e:
-        return f"Error getting Instagram posts: {e}"
+        return f"Error getting age demographics: {e}"
 
 
-def get_comment_data(access_token, post_id):
+def get_comment_data(access_token, post_id, account_id):
     """
-    Gets all comments and replies for a specific Instagram post and stores them in the database.
-
-    Uses the Instagram Graph API to retrieve all top-level and nested replies for
-    a given post. It saves each comment and updates or creates the associated
-    user. It also handles setting the correct parent_id for replies by linking them to their
-    corresponding parent comments after all data has been fetched.
-
-    Args:
-        access_token (str): The access token used to authenticate with the Instagram API.
-        post_id (str): The ID of the Instagram post to fetch comments for.
-
-    Returns:
-        None
+    Fetches all comments for a post and saves them,
+    always linking Comment and InstagramUser to the given account.
     """
     try:
-        all_comment_ids = []
-        url = f"https://graph.instagram.com/{post_id}/comments"
-        params = {
-            "access_token": access_token,
-            "fields": "id",
-            "limit": 50,
-        }
+        account = InstagramAccount.objects.get(account_API_ID=account_id)
+    except InstagramAccount.DoesNotExist:
+        print(f"Account with id {account_id} does not exist.")
+        return
 
-        # get all comment IDs using pagination during the api call
-        while True:
-            response = requests.get(url, params=params)
-            resp_json = response.json()
+    all_comment_ids = []
+    url = f"https://graph.instagram.com/{post_id}/comments"
+    params = {
+        "access_token": access_token,
+        "fields": "id",
+        "limit": 50,
+    }
 
-            if "error" in resp_json:
-                print(f"Error fetching comments: {resp_json['error'].get('message')}")
-                return
+    # paginate to collect all comment IDs
+    while True:
+        resp = requests.get(url, params=params).json()
+        if "error" in resp:
+            print(f"Error fetching comments: {resp['error'].get('message')}")
+            return
 
-            for comment in resp_json.get("data", []):
-                comment_id = comment.get("id")
-                if comment_id:
-                    all_comment_ids.append(comment_id)
+        for c in resp.get("data", []):
+            cid = c.get("id")
+            if cid:
+                all_comment_ids.append(cid)
 
-            paging = resp_json.get("paging", {})
-            next_url = paging.get("next")
-            if next_url:
-                url = next_url
-                params = {}
-            else:
-                break
+        nxt = resp.get("paging", {}).get("next")
+        if not nxt:
+            break
+        url = nxt
+        params = {}
 
-        # Get all attributes of and save each comment
-        comment_map = {}
-        for comment_id in all_comment_ids:
-            comment_obj, reply_ids = get_comments_helper(
-                access_token, comment_id, post_id
-            )
-            if comment_obj:
-                comment_map[comment_obj.id] = (comment_obj, reply_ids)
+    comment_map = {}
+    for cid in all_comment_ids:
+        obj, replies = get_comments_helper(access_token, cid, post_id, account)
+        if obj:
+            comment_map[obj.id] = (obj, replies)
 
-        # Loop through each comment and assign parent_id to its replies
-        for comment_id, (comment, reply_ids) in comment_map.items():
-            for reply_id in reply_ids:
-                if reply_id in comment_map:
-                    reply, _ = comment_map[reply_id]
-                    if not reply.parent_ID:
-                        reply.parent_ID = comment_id
-                        reply.save()
-
-    except Exception as e:
-        print(f"Unexpected error in get_comment_data: {e}")
+    # assign parent_ID for replies
+    for cid, (comment, replies) in comment_map.items():
+        for rid in replies:
+            if rid in comment_map:
+                reply_obj, _ = comment_map[rid]
+                if not reply_obj.parent_ID:
+                    reply_obj.parent_ID = cid
+                    reply_obj.save()
 
 
-def get_comments_helper(access_token, comment_id, post_id=None):
+def get_comments_helper(access_token, comment_id, post_id, account):
     """
-    Gets attribute for an Instagram comment and stores it along with user and reply data.
-
-    Pulls information about a comment from the Instagram API. This includes the
-    user who posted it, the number of likes, the comment text, timestamp, and
-    any replies. It then checks for duplicates and creates or updates the corresponding
-    Comment and User records in the database.
-
-    If the comment is new, it increments the user's total comment count. It also collects
-    any reply IDs so they can be processed later.
-
-    Args:
-        access_token (str): The access token used to authenticate with the Instagram API.
-        comment_id (str): The ID of the comment to fetch.
-        post_id (str, optional): The ID of the post the comment belongs to.
-
-    Returns:
-        tuple: A tuple containing the saved Comment object and a list of its reply IDs.
-               Returns (None, []) if something goes wrong.
+    Helper to fetch a single comment, save it and its user,
+    always linking both to the given InstagramAccount.
+    Returns (Comment instance, list_of_reply_ids).
     """
     try:
         url = f"https://graph.instagram.com/{comment_id}"
@@ -342,89 +300,73 @@ def get_comments_helper(access_token, comment_id, post_id=None):
             "fields": "id,from,like_count,text,timestamp,replies,username,parent_id",
             "access_token": access_token,
         }
-
-        response = requests.get(url, params=params)
-        data = response.json()
-
+        data = requests.get(url, params=params).json()
         if "error" in data:
-            print(
-                f"Skipping comment {comment_id} due to an error: {data['error'].get('message')}"
-            )
+            print(f"Skipping comment {comment_id}: {data['error'].get('message')}")
             return None, []
 
-        # get user and comment attributes
         user_data = data.get("from", {})
-        user_id = user_data.get("id")
-        username = user_data.get("username")
-        if not user_id or not username:
-            print(f"Skipping comment {comment_id} due to missing user info")
+        uid = user_data.get("id")
+        uname = user_data.get("username")
+        if not uid or not uname:
+            print(f"Skipping comment {comment_id} for missing user info")
             return None, []
+
         timestamp = data.get("timestamp")
-        text = data.get("text")
-        num_likes = data.get("like_count")
-        reply_ids = [
+        text = data.get("text", "")
+        likes = data.get("like_count", 0)
+        replies = [
             r.get("id") for r in data.get("replies", {}).get("data", []) if r.get("id")
         ]
         parent_id = data.get("parent_id") or ""
 
-        # Save or update user
-        try:
-            user_obj, _ = InstagramUser.objects.get_or_create(id=user_id)
-            user_obj.username = username
-        except Exception as e:
-            print(f"User save error: {e}")
-            return None, []
+        # save or update user
+        user_obj, created = InstagramUser.objects.get_or_create(
+            id=uid, defaults={"instagram_account": account}
+        )
+        user_obj.instagram_account = account
+        user_obj.username = uname
+        user_obj.save()
 
-        # Save or update comment
-        try:
-            comment_obj, created = Comment.objects.get_or_create(id=comment_id)
+        # save or update comment
+        comment_obj, created = Comment.objects.get_or_create(id=comment_id)
+        comment_obj.instagram_account = account
+        # ensure we get the right Post for this account
+        comment_obj.post_API_ID = Post.objects.get(
+            instagram_account=account, post_API_ID=post_id
+        )
+        comment_obj.date_posted = parse_datetime(timestamp)
+        comment_obj.num_likes = likes
+        comment_obj.replies = replies
+        comment_obj.text = text
+        comment_obj.username = uname
+        comment_obj.user_ID = user_obj
+        if not comment_obj.parent_ID:
+            comment_obj.parent_ID = parent_id
+        comment_obj.save()
 
-            comment_obj.date_posted = parse_datetime(timestamp)
-            comment_obj.post_API_ID = Post.objects.get(post_API_ID=post_id)
-            comment_obj.num_likes = num_likes
-            comment_obj.replies = reply_ids
-            comment_obj.text = text
-            comment_obj.username = username
-            comment_obj.user_ID = InstagramUser.objects.get(id=user_id)
+        if created:
+            user_obj.num_comments += 1
+            user_obj.save()
 
-            if not comment_obj.parent_ID:
-                comment_obj.parent_ID = parent_id
-
-            comment_obj.save()
-
-            # Only increment comment count if this is a new comment
-            if created:
-                user_obj.num_comments += 1
-                user_obj.save()
-
-            return comment_obj, reply_ids
-
-        except Exception as e:
-            print(f"Error saving comment {comment_id}: {e}")
-            return None, []
+        return comment_obj, replies
 
     except Exception as e:
-        print(f"Error fetching comment {comment_id}: {e}")
+        print(f"Error processing comment {comment_id}: {e}")
         return None, []
 
 
-def get_instagram_stories(access_token):
+def get_instagram_stories(access_token, account_id):
     """
-    Fetches active Instagram stories using the /me/stories endpoint and their insights.
-    Does NOT save data to the database.
-
-    Args:
-        access_token (str): The access token for the Instagram Graph API.
-                          (Should have instagram_basic, instagram_manage_insights permissions).
-
-    Returns:
-        list: A list of dictionaries, each representing an active story
-              with its metrics, or an empty list if no stories are found.
-        str: An error message string if an API error or processing error occurs.
+    Fetches active Instagram stories for the given account,
+    saves them to the database with the correct foreign key.
     """
-
     if not access_token:
         return "Access token is missing."
+    try:
+        account = InstagramAccount.objects.get(account_API_ID=account_id)
+    except InstagramAccount.DoesNotExist:
+        return f"Account with id {account_id} does not exist."
 
     stories_url = "https://graph.instagram.com/v19.0/me/stories"
     stories_params = {"fields": "id,timestamp,permalink", "access_token": access_token}
@@ -432,38 +374,33 @@ def get_instagram_stories(access_token):
     try:
         response = requests.get(stories_url, params=stories_params)
         data = response.json()
-        
+
         if response.status_code != 200:
             error_msg = data.get("error", {}).get("message", "Unknown API error")
             return f"API Error fetching stories ({response.status_code}): {error_msg}"
 
-        active_stories_data = []
-
-        if "data" in data and len(data["data"]) > 0:
-            stories = data["data"]
-
-            for story in stories:
+        active_stories = []
+        if "data" in data and data["data"]:
+            for story in data["data"]:
                 story_id = story.get("id")
                 if not story_id:
                     continue
-                
-                story_metrics = {
-                    "story_API_ID": story_id,
-                    "date_posted": None,
-                    "story_link": story.get("permalink", "N/A"),
-                    "num_views": 0,
-                    "num_profile_clicks": 0,
-                    "num_replies": 0,
-                    "num_swipes_up": 0
-                }
-                
-                timestamp_str = story.get("timestamp")
-                if timestamp_str:
+
+                # parse timestamp
+                date_posted = None
+                ts = story.get("timestamp")
+                if ts:
                     try:
-                        story_metrics["date_posted"] = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S%z").replace(tzinfo=None)
+                        date_posted = datetime.strptime(
+                            ts, "%Y-%m-%dT%H:%M:%S%z"
+                        ).replace(tzinfo=None)
                     except ValueError:
                         pass
-                
+
+                # default metrics
+                metrics = {"num_views": 0, "num_profile_clicks": 0, "num_swipes_up": 0}
+
+                # fetch insights
                 try:
                     insights_url = (
                         f"https://graph.instagram.com/v19.0/{story_id}/insights"
@@ -473,32 +410,54 @@ def get_instagram_stories(access_token):
                         "period": "lifetime",
                         "access_token": access_token,
                     }
-                    
-                    insights_response = requests.get(insights_url, params=insights_params)
-                    insights_data = insights_response.json()
-
-                    if insights_response.status_code == 200 and "data" in insights_data and insights_data["data"]:
-                        metrics = {}
-                        for metric in insights_data["data"]:
-                            if "values" in metric and len(metric["values"]) > 0:
-                                metrics[metric["name"]] = metric["values"][0]["value"]
-                        
-                        story_metrics["num_views"] = metrics.get("reach", 0)              
-                        story_metrics["num_profile_clicks"] = metrics.get("profile_visits", 0)  
-                        story_metrics["num_swipes_up"] = metrics.get("navigation", 0)     
-
+                    resp_ins = (
+                        requests.get(insights_url, params=insights_params)
+                        .json()
+                        .get("data", [])
+                    )
+                    for m in resp_ins:
+                        name = m.get("name")
+                        val = m.get("values", [{}])[0].get("value", 0)
+                        if name == "reach":
+                            metrics["num_views"] = val
+                        elif name == "profile_visits":
+                            metrics["num_profile_clicks"] = val
+                        elif name == "navigation":
+                            metrics["num_swipes_up"] = val
                 except Exception:
                     pass
-                
-                active_stories_data.append(story_metrics)
-            
-            return active_stories_data 
-        
-        return []
+
+                active_stories.append(
+                    {
+                        "story_API_ID": story_id,
+                        "date_posted": date_posted,
+                        "story_link": story.get("permalink", ""),
+                        "num_views": metrics["num_views"],
+                        "num_profile_clicks": metrics["num_profile_clicks"],
+                        "num_replies": 0,
+                        "num_swipes_up": metrics["num_swipes_up"],
+                    }
+                )
+
+            # delete old stories for this account and save new ones
+            InstagramStory.objects.filter(instagram_account=account).delete()
+            for s in active_stories:
+                InstagramStory.objects.create(
+                    instagram_account=account,
+                    date_posted=s["date_posted"],
+                    story_link=s["story_link"],
+                    num_views=s["num_views"],
+                    num_profile_clicks=s["num_profile_clicks"],
+                    num_replies=s["num_replies"],
+                    num_swipes_up=s["num_swipes_up"],
+                    story_API_ID=s["story_API_ID"],
+                )
+
+        return active_stories
 
     except requests.exceptions.RequestException as e:
-        return "Error getting Instagram stories: " + str(e) 
+        return f"Error getting Instagram stories: {e}"
     except json.JSONDecodeError:
         return "Error decoding JSON response for stories."
     except Exception as e:
-        return "Error processing stories: " + str(e)
+        return f"Error processing stories: {e}"
