@@ -5,7 +5,7 @@ from django.db import models
 from django.core.serializers.json import DjangoJSONEncoder
 import requests
 from django.contrib import messages
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse
@@ -33,6 +33,9 @@ from .utils.get_instagram_data import (
     get_instagram_posts,
     get_instagram_stories,
 )
+from google.oauth2 import id_token
+from google.auth.transport import requests as grequests
+import os
 from .utils.get_time_of_day_statistics import (
     get_avg_comments_by_time_block,
     get_avg_likes_by_time_block,
@@ -63,28 +66,31 @@ from .utils.write_database_to_csv import export_posts_to_csv
 """
 
 
+@csrf_exempt
 def user_login(request):
-    if request.method == "POST":
-        email = request.POST["email"]
-        password = request.POST["password"]
-        try:
-            user = User.objects.get(email=email)
-            # Django login expects username not email
-        except User.DoesNotExist:
-            user = None
-        if user is not None:
-            user = authenticate(request, username=user.username, password=password)
-        if user is not None:
-            login(request, user)
-            request.session.save()
-            response = redirect("home")
-            response.status_code = 302
-            return response
-        else:
-            response = render(request, "login.html", {"error": "Invalid credentials."})
-            response.status_code = 401
-            return response
     return render(request, "login.html")
+
+
+@csrf_exempt
+def oauth_receiver(request):
+    token = request.POST["credential"]
+
+    try:
+        user_data = id_token.verify_oauth2_token(
+            token, grequests.Request(), os.environ["GOOGLE_OAUTH_CLIENT_ID"]
+        )
+    except ValueError as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+    user = User.objects.get(email=user_data["email"])
+    if user is not None:
+        login(request, user)
+        response = redirect("home")
+        response.status_code = 302
+        return response
+    response = render(request, "login.html", {"error": "Invalid credentials."})
+    response.status_code = 401
+    return response
 
 
 """
@@ -235,14 +241,61 @@ def get_demographics(request):
 
 @login_required
 def token_landing(request):
+    """
+    Renders the token management page with a list of all users.
+    Retrieves all users from the database and sends a list of dictionaries containing
+    each user's email and superuser status to token.html.
+    """
+    users = User.objects.all()
+    user_data = [
+        {"email": user.email, "is_superuser": user.is_superuser} for user in users
+    ]
     accounts = InstagramAccount.objects.all()
-    return render(
-        request,
-        "token.html",
-        {
-            "accounts": accounts,
-        },
-    )
+    return render(request, "token.html", {"users": user_data, "accounts": accounts})
+
+
+@login_required
+def delete_user(request):
+    """
+    Handles deletion of a user based on their email address.
+
+    Accepts a POST request with the user's email. If the user is found and is not a superuser, the user is deleted.
+    """
+    if request.method != "POST":
+        return JsonResponse({"message": "Invalid request."}, status=405)
+    email = request.POST.get("email", "").strip()
+    if not email:
+        return JsonResponse({"message": "Invalid request."}, status=405)
+    try:
+        user = User.objects.get(email=email)
+        if user.is_superuser:
+            return JsonResponse({"message": "Cannot delete superuser."}, status=403)
+        user.delete()
+    except User.DoesNotExist:
+        pass
+    return redirect("token_page")
+
+
+@login_required
+def add_user(request):
+    """
+    Creates a new user with the given email and a default password.
+
+    Accepts a POST request with an 'email' field. If the email is valid, a new user is created.
+    """
+    if request.method != "POST":
+        return JsonResponse({"message": "Invalid request."}, status=405)
+    email = request.POST.get("email", "").strip()
+    if not email:
+        return JsonResponse({"message": "Invalid request."}, status=405)
+    try:
+        username = email.split("@")[0]
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({"message": "User already exists."}, status=409)
+        User.objects.create_user(username=username, email=email, password="pass")
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    return redirect("token_page")
 
 
 @login_required
