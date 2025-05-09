@@ -53,4 +53,5 @@ urlpatterns = [
         views.delete_account_view,
         name="delete_account",
     ),
+    path("api/save-name/", views.save_name, name="save-name"),
 ]
