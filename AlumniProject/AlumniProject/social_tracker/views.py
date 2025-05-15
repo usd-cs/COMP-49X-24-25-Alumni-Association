@@ -621,7 +621,7 @@ def account_info(request):
     'day_metric' for the day of week chart.
     """
     metric = request.GET.get("metric", "likes")
-    day_metric = request.GET.get("day_metric", "likes")
+    day_metric = request.GET.get("metric", "likes")
 
     # Time block data
     if metric == "likes":
