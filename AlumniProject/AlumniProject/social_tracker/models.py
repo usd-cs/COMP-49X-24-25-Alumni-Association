@@ -72,6 +72,7 @@ class InstagramUser(models.Model):
     id = models.IntegerField(primary_key=True)
     username = models.TextField(default="")
     num_comments = models.IntegerField(default=0)
+    name = models.CharField(max_length=100, blank=True)
 
     class Meta:
         ordering = ["num_comments"]

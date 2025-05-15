@@ -156,21 +156,33 @@
       <table class="table table-striped table-bordered text-center table-fixed" style="background-color: var(--alcala-white); color: #000;">
         <thead>
           <tr>
+            <th>Name</th>
             <th>Username</th>
             <th>Number of Comments</th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="userList">
           {% if users %}
             {% for user in users %}
               <tr class="user-row">
+                <td>
+                  <div class="input-group input-group-sm">
+                    <input id="name-{{ user.id }}" type="text"
+                           class="form-control form-control-sm name-input"
+                           value="{{ user.name|default_if_none:'' }}">
+                    <button class="btn btn-primary btn-sm"
+                            onclick="saveNameById({{ user.id }})">Save</button>
+                  </div>
+                </td>
                 <td>{{ user.username }}</td>
                 <td>{{ user.num_comments }}</td>
+                <td></td>
               </tr>
             {% endfor %}
           {% else %}
             <tr>
-              <td colspan="2">No user data available.</td>
+              <td colspan="4">No user data available.</td>
             </tr>
           {% endif %}
         </tbody>
@@ -306,6 +318,47 @@
 
         cityList.appendChild(li);
       });
+    }
+  </script>
+
+  <script>
+    function getCSRF(){
+      return document.cookie
+              .split(';')
+              .find(c=>c.trim().startsWith('csrftoken='))?.split('=')[1] || '';
+    }
+
+    /* save name for given user id */
+    async function saveNameById(userId){
+      const input = document.getElementById(`name-${userId}`);
+      if(!input) return;
+
+      const raw = input.value.trim();
+
+      const btn = input.nextElementSibling;
+      btn.disabled = true;
+      const original = btn.textContent;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+      try{
+        const res = await fetch("{% url 'save-name' %}", {
+          method:"POST",
+          headers:{
+            "Content-Type":"application/json",
+            "X-CSRFToken": getCSRF()
+          },
+          body: JSON.stringify({ id: userId, name: raw })
+        });
+        const data = await res.json();
+        if(!data.success){
+          alert("Error saving name: " + (data.msg || "unknown error"));
+        }
+      }catch(e){
+        alert("Network error saving name");
+      }finally{
+        btn.disabled = false;
+        btn.textContent = original;
+      }
     }
   </script>
 

@@ -1,9 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Get Instagram Posts</title>
+  <link rel="icon" type="image/png" href="{% static 'admin/img/usd-alumni-logo2.png' %}">
 
   <!-- Font Awesome (for the filter icon) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -366,7 +368,10 @@
   </nav>
 
   <div class="container">
-    <h1>Get Instagram Post Info</h1>
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h1 class="mb-0">Get Instagram Post Info</h1>
+      <img src="{% static 'admin/img/usd-alumni-logo2.png' %}" alt="USD Alumni Association Logo" style="height: 90px; max-width: 220px;">
+    </div>
 
     <!-- Removed the token input group section. -->
 
