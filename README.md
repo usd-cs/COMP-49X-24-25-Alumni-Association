@@ -1,64 +1,98 @@
-The Alumni Association project is a web-based solution aimed at tracking social media engagement to help the University of San Diego's Alumni Association better connect with alumnis. 
+# Alumni Association Project
 
-## Installation
-Clone Git repository to your local machine.
+The Alumni Association project is a web-based solution aimed at tracking social media engagement to help the University of San Diego's Alumni Association better connect with alumni.
 
-Run ```python3 -m venv env``` if you do not have a proper Django-equipped virtual environment setup already. This command will create the environment.
+---
 
-If you have the environment already, run ```source env/bin/activate``` on Mac or ```env\\Scripts\\activate``` on Windows.
+## Installation & Setup
 
-To install dependencies run ```python -m pip install --upgrade pip``` followed by ```pip install Django``` and ```pip install requests```
+### 1. Clone the Repository Inside your Docker
 
-From here you can use the command
+```bash
+git clone https://github.com/usd-cs/COMP-49X-24-25-Alumni-Association.git
+cd COMP-49X-24-25-Alumni-Association
+````
 
- ```cd AlumniProject``` 
- 
- and then you will need to migrate the database by doing 
+### 2. Start the Project with Docker
 
-```python manage.py makemigrations```
+Ensure Docker and Docker Compose are installed. Then, run the following command to build and start the application:
 
-```python manage.py makemigrations social_tracker```
-
-```python manage.py migrate```
-
-it is possible you may need to also run 
-
-```python manage.py migrate social_tracker```
-
-You will need to create a user in order to use the website properly. Run ```python manage.py createsuperuser``` in order to create an admin user.
-
-## Usage
-
-```python
-
-#Open terminal and run:
-
-sh run.sh dev
-
-#Navigate to http://127.0.0.1:8000/ in any browser
+```bash
+docker compose up --build
 ```
-Once we are on the web page, you will be redirected to the login page. Use the credentials created in the last step to login.
 
-After successfully logging in, navigate to the homepage where you can input your Instagram API code and download your data.
+This will launch the web server and other required services.
 
-To run code tests please use ```python manage.py test``` in order to run tests correctly on a mock database.
+### 3. Set Up Google OAuth
+
+Create a `.env` file inside the `Alumni/Alumni/` directory with your Google OAuth client ID:
+
+```env
+GOOGLE_OAUTH_CLIENT_ID=your-google-client-id
+```
+
+> Make sure your Google API credentials are configured for web application use.
+
+### 4. Create a Superuser
+
+In a separate terminal window, run the following command to create a Django admin user:
+
+```bash
+docker compose exec web python manage.py createsuperuser
+```
+
+Follow the prompts to complete user setup.
+
+---
+
+## Logging In
+
+You can access the project locally or via the live deployment:
+
+* **Local**: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+* **Live**: [https://alumni-association.dedyn.io/](https://alumni-association.dedyn.io/)
+
+Log in using the admin credentials created in the setup step.
+After logging in, you will be prompted to enter your **Instagram API Key**.
+
+> Required scopes for the Instagram API:
+>
+> * `instagram_basic`
+> * `instagram_business_basic`
+> * `instagram_manage_comments`
+
+---
+
+## Running Tests
+
+To run tests on the mock database:
+
+```bash
+docker compose exec web python manage.py test
+```
+
+---
 
 ## Contributing
 
-This project was created by
-Bill Erdene Ochir, Connor Boll, Audrey Naidu, and Eli Zublin
+This project was created by:
 
-## Contacts
+* Bill Erdene Ochir
+* Connor Boll
+* Audrey Naidu
+* Eli Zublin
 
-berdeneochir@sandiego.edu
+---
 
-cboll@sandiego.edu
+## Contact
 
-anaidu@sandiego.edu
+* [berdeneochir@sandiego.edu](mailto:berdeneochir@sandiego.edu)
+* [cboll@sandiego.edu](mailto:cboll@sandiego.edu)
+* [anaidu@sandiego.edu](mailto:anaidu@sandiego.edu)
+* [ezublin@sandiego.edu](mailto:ezublin@sandiego.edu)
 
-ezublin@sandiego.edu
-
+---
 
 ## License
 
-[MIT](https://choosealicense.com/licenses/mit/)
+This project is licensed under the [MIT License](https://choosealicense.com/licenses/mit/).
