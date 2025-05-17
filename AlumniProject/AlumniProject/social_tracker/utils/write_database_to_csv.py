@@ -3,7 +3,8 @@ from django.http import HttpResponse
 from django.utils.text import slugify
 
 from social_tracker.models import (
-    InstagramAccount, Post, InstagramUser, Comment, InstagramStory,
+    InstagramAccount, Post, 
+    InstagramUser, Comment, InstagramStory,
     Country, City, Age
 )
 
