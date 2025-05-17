@@ -1,4 +1,6 @@
-import csv, io, zipfile
+import csv
+import io
+import zipfile
 from django.http import HttpResponse
 from django.utils.text import slugify
 
