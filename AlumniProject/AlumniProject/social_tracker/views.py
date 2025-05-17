@@ -42,7 +42,7 @@ from .utils.get_time_of_day_statistics import (
     get_avg_saves_by_time_block,
     get_avg_shares_by_time_block,
 )
-from .utils.write_database_to_csv import export_posts_to_csv
+from .utils.write_database_to_csv import export_all_models_zip
 
 
 """
@@ -543,7 +543,7 @@ def export_csv_view(request):
     Returns:
     - HttpResponse: Response that contains downloadable csv file
     """
-    return export_posts_to_csv()
+    return export_all_models_zip()
 
 
 def get_days_of_week(request):
