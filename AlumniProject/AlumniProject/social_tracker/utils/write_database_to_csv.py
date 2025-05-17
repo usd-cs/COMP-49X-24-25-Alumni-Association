@@ -3,9 +3,14 @@ from django.http import HttpResponse
 from django.utils.text import slugify
 
 from social_tracker.models import (
-    InstagramAccount, Post, 
-    InstagramUser, Comment, InstagramStory,
-    Country, City, Age
+    InstagramAccount, 
+    Post, 
+    InstagramUser, 
+    Comment, 
+    InstagramStory,
+    Country, 
+    City, 
+    Age
 )
 
 def export_all_models_zip() -> HttpResponse:
